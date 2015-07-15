@@ -77,7 +77,7 @@ void* ssdpAlive(void* data){
 	SendSSDPGoodbyes(lan_addr[0].snotify);
 }
 
-//서비스앱 main
+// main
 void* tdlnamain(void* data)
 {
 		app_data *ad = data;

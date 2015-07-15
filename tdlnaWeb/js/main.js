@@ -26,6 +26,15 @@ var gServiceAppId = 'org.tizen.tdlnaservice',
     isStarting = false,
     start;
 
+function changeSwitch(state){
+	'use strict';
+	if(state.indexOf("OFF") >= 0){
+		$('#btn-test-div-text').text('S_ON');
+	}else{
+		$('#btn-test-div-text').text('S_OFF');
+	}
+}
+
 function writeToScreen(message) {
     'use strict';
     var today = new Date(),
@@ -59,9 +68,13 @@ function onReceive(data) {
     for (i in data) {
         if (data.hasOwnProperty(i) && data[i].key === 'server') {
             message = data[i].value;
+            if(data[i].value.indexOf('dlna') >= 0 ){
+            	var state = $('#btn-test-div-text').text();
+            	changeSwitch(state);//OnOff 버튼 변경
+            }
         }
     }
-
+   
     writeToScreen('Received : ' + message);
 
     if (message === 'WELCOME') {
@@ -236,26 +249,14 @@ $(document).delegate('#main', 'pageinit', function onMainPageInit() {
          }
         return false;
     });
-    /*
-    $('#btn-stop').on('tap', function onStopBtnTap() {
-        if (isStarting) {
-            showAlert('Cannot stop:<br>service is starting');
-        } else if (gRemoteMessagePort) {
-            sendCommand('stop');
-        } else {
-            showAlert('Cannot stop:<br>not running');
-        }
-        return false;
-    });
-
-    $('#btn-clear').on('tap', function onClearBtnTap() {
-        $('#logs').empty().listview('refresh');
-        return false;
-    }); */
     $('#btn-test').on('tap', function onTestBtnTap() {
-        //$('#logs').empty().listview('test');
-        sendCommand('test');
-    	//showAlert('서비스를 시작합니다.');
+    	var state = $('#btn-test-div-text').text();
+    	if(state.indexOf('OFF') >= 0){//OFF 상태라면 ON 전달
+    		sendCommand('dlna on');	
+    	}else{
+    		sendCommand('dlna off');
+    	}
+        
         return false;
     });
 

@@ -32,7 +32,7 @@ typedef struct _app_data
     pthread_mutex_t proxy_locker;           /**< mutex for locking sending messages process by proxy client*/
     bool run_svc;                           /**< service run state condition */
     bool run_tdlna;
-    pthread_mutex_t tdlna_mutex;
+//    pthread_mutex_t tdlna_mutex;
     pthread_t tdlna_td;
 } app_data;
 
