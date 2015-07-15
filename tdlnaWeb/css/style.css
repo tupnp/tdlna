@@ -1,0 +1,21 @@
+body {
+    width: 100%;
+    -webkit-user-select: none;
+}
+
+.ui-tabbar-margin-back {
+    margin-right:0 !important;
+}
+
+#alert-popup {
+    padding: 10px 0;
+}
+
+#alert-popup #message {
+    margin: 0 0 10px 0;
+    padding: 0;
+}
+
+#alert-popup #button a {
+    width: 100px;
+}

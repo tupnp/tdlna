@@ -1,0 +1,64 @@
+################################################################################
+# Automatically-generated file. Do not edit!
+################################################################################
+
+SA_C_OPTIONS := -I"pch" -D_DEBUG -I"C:\Users\Taehyeong\workspace\tdlnaService\inc" -O0 -g3 -Wall -c -fmessage-length=0 $(TC_COMPILER_MISC) $(RS_COMPILER_MISC) -fPIE --sysroot="$(SBI_SYSROOT)" -mthumb -I@system_includes -Werror-implicit-function-declaration
+SA_CPP_OPTIONS := -I"pch" -D_DEBUG -I"C:\Users\Taehyeong\workspace\tdlnaService\inc" -O0 -g3 -Wall -c -fmessage-length=0 -target arm-tizen-linux-gnueabi -gcc-toolchain "D:\tizen-sdk\tools\smart-build-interface/../arm-linux-gnueabi-gcc-4.6/" -ccc-gcc-name arm-linux-gnueabi-g++ -march=armv7-a -mfloat-abi=softfp -mfpu=vfpv3-d16 -mtune=cortex-a8 -Wno-gnu -fPIE --sysroot="D:/tizen-sdk/tools/smart-build-interface/../../platforms/mobile-2.3/rootstraps/mobile-2.3-device.core" -mthumb -I@system_includes
+
+REL_C_SRCS = $(filter-out $(wildcard ../*),$(wildcard $(C_SRCS)))
+REL_CC_SRCS = $(filter-out $(wildcard ../*),$(wildcard $(CC_SRCS)))
+REL_CPP_SRCS = $(filter-out $(wildcard ../*),$(wildcard $(CPP_SRCS)))
+
+C_AST := $(REL_C_SRCS:../%=%.ast)
+C_FN := $(REL_C_SRCS:../%=%.fn)
+C_SA := $(REL_C_SRCS:../%=%.sa)
+
+CPP_AST := $(REL_CC_SRCS:../%=%.ast) $(REL_CPP_SRCS:../%=%.ast)
+CPP_FN := $(REL_CC_SRCS:..%=%.fn) $(REL_CPP_SRCS:../%=%.fn)
+CPP_SA := $(REL_CC_SRCS:..%=%.sa) $(REL_CPP_SRCS:../%=%.sa)
+
+CHECKERS=alpha.cplusplus.NewDeleteLeaks,alpha.unix.cstring,alpha.security.ArrayBoundV2,resourceLeak,core,unix,tizen
+
+$(C_AST): %.ast : ../%
+	clang -emit-ast  -o $@ $< $(SA_C_OPTIONS)
+	-@echo 'Finished building: $@'
+	-@echo ' '
+	
+$(C_FN): %.fn : %.ast
+	$(RM) $@
+	clangFnMapGen -o $@ -ast $< $< --
+	-@echo 'Finished generating: $@'
+	-@echo ' '
+	
+$(C_SA): %: pre_sa
+	clang --analyze $(@:%.sa=../%) -Xclang -analyzer-output=$(SA_REPORT_TYPE) -Xclang -analyzer-checker=$(CHECKERS) -Xclang -analyzer-purge=block -o $(SA_REPORT_PATH) $(SA_C_OPTIONS)
+	-@echo 'Finished Analyzing: $(@:%.sa=../%)'
+	-@echo ' '
+	
+$(CPP_AST): %.ast : ../%
+	clang++ -emit-ast  -o $@ $< $(SA_CPP_OPTIONS)
+	-@echo 'Finished building: $@'
+	-@echo ' '
+	
+$(CPP_FN): %.fn : %.ast
+	$(RM) $@
+	clangFnMapGen -o $@ -ast $< $< --
+	-@echo 'Finished generating: $@'
+	-@echo ' '
+	
+$(CPP_SA): %: pre_sa
+	clang++ --analyze $(@:%.sa=../%) -Xclang -analyzer-output=$(SA_REPORT_TYPE) -Xclang -analyzer-checker=$(CHECKERS) -Xclang -analyzer-purge=block -o $(SA_REPORT_PATH) $(SA_CPP_OPTIONS)
+	-@echo 'Finished Analyzing: $(@:%.sa=../%)'
+	-@echo ' '
+
+sa_clean:
+	$(RM) $(C_AST) $(C_FN) $(CPP_AST) $(CPP_FN) $(wildcard $(SA_REPORT_PATH)/*)
+	-@echo ' '
+	
+pre_sa: $(C_AST) $(C_FN) $(CPP_AST) $(CPP_FN)
+	-$(RM) $(wildcard $(SA_REPORT_PATH)/*)
+	cat $(C_FN) $(CPP_FN) > $(SA_REPORT_PATH)/externalFnMap.txt
+	
+sa: $(C_SA) $(CPP_SA)
+
+.PHONY: sa pre_sa sa_clean $(C_SA) $(CPP_SA)
