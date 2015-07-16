@@ -279,7 +279,7 @@ static bool _vedioMetadataGet(app_data* data){
 
    int ret = metadata_extractor_create(&g_metadata_h);
    dlog_print(DLOG_INFO,"tdlna","metadata_extractor_create %d",ret);
-   ret = metadata_extractor_set_path(g_metadata_h, "/opt/usr/media/DCIM/Camera/test.mp4");
+   ret = metadata_extractor_set_path(g_metadata_h, "/opt/usr/media/DCIM/Camera/20150716.mp4");
    dlog_print(DLOG_INFO,"tdlna","metadata_extractor_set_path %d",ret);
 
    char *value = NULL;
@@ -287,7 +287,13 @@ static bool _vedioMetadataGet(app_data* data){
 //   ======================================================================================================
    ret = metadata_extractor_get_metadata(g_metadata_h, METADATA_DURATION, &value);
    dlog_print(DLOG_INFO,"tdlna","metadata_extractor_get_metadata %d",ret);
-   dlog_print(DLOG_DEBUG, "tdlna", "METADATA_DURATION: %s\n", value);
+   int duration = 0,min = 0,sec=0;
+   duration = atoi(value);
+   duration/= 1000;//단위 변경 밀리세컨드 -> 초
+   min = duration/60;//분
+   sec = duration%60;//초
+   dlog_print(DLOG_DEBUG, "tdlna", "METADATA_DURATION: %d분 %d초\n", min,sec);
+
    if (value != NULL)
    {
       free(value);
