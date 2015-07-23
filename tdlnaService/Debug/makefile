@@ -45,7 +45,7 @@ all: tdlnaservice secondary-outputs
 tdlnaservice: $(OBJS) $(USER_OBJS)
 	@echo 'Building target: $@'
 	@echo 'Invoking: C++ Linker'
-	$(CXX) -o"tdlnaservice" $(OBJS) $(USER_OBJS) $(LIBS) -L"$(PROJ_PATH)\lib" $(TC_LINKER_MISC) $(RS_LINKER_MISC) -pie -lpthread -Xlinker -rpath="/home/developer/sdk_tools/lib" --sysroot="$(SBI_SYSROOT)" -Xlinker --version-script=$(PROJ_PATH)/.exportMap -L"$(SBI_SYSROOT)/usr/lib" $(RS_LIBRARIES) -Xlinker -rpath="/opt/usr/apps/$(APPID)/lib" -Werror-implicit-function-declaration
+	$(CXX) -o"tdlnaservice" $(OBJS) $(USER_OBJS) $(LIBS) $(TC_LINKER_MISC) $(RS_LINKER_MISC) -pie -lpthread -Xlinker -rpath="/home/developer/sdk_tools/lib" --sysroot="$(SBI_SYSROOT)" -Xlinker --version-script=$(PROJ_PATH)/.exportMap -L"$(SBI_SYSROOT)/usr/lib" $(RS_LIBRARIES) -Xlinker -rpath="/opt/usr/apps/$(APPID)/lib" -Werror-implicit-function-declaration
 	@echo 'Finished building target: $@'
 	@echo ' '
 

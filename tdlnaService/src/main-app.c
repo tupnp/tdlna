@@ -105,6 +105,7 @@ static int _on_proxy_client_msg_received_cb(void *data, bundle *const rec_msg)
     result = _app_process_received_message(rec_msg, resp_msg, &req_operation);
     if (result != SVC_RES_OK)
     {
+
         ERR("Failed to generate response bundle");
         bundle_free(resp_msg);
         return result;
@@ -191,11 +192,18 @@ static int _app_process_received_message(bundle *rec_msg,
         resp_key_val = "metaget";
         *req_oper = REQ_OPER_META_GET_APP;
     }
-    else if (strcmp(rec_key_val,"test") == 0)
+    else if (strcmp(rec_key_val,"dlna on") == 0)//서비스 ON 요청
     {
-    	dlog_print(DLOG_INFO ,"tdlna", "test _ _app_process_received_message");
-        resp_key_val = "test";
-        *req_oper = REQ_OPER_TEST_APP;
+    	dlog_print(DLOG_INFO ,"tdlna", "서비스 ON 요청 app_process_received_message");
+        resp_key_val = "(dlna 실행)수신..";
+        *req_oper = REQ_OPER_DLNA_APP;
+        //*req_oper = REQ_OPER_EXIT_APP;
+    }
+    else if (strcmp(rec_key_val,"dlna off") == 0)//서비스 ON 요청
+    {
+    	dlog_print(DLOG_INFO ,"tdlna", "서비스 OFF 요청 app_process_received_message");
+        resp_key_val = "(dlna 종료)수신..";
+        *req_oper = REQ_OPER_DLNA_APP_OFF;
         //*req_oper = REQ_OPER_EXIT_APP;
     }
     else
@@ -212,34 +220,55 @@ static int _app_process_received_message(bundle *rec_msg,
 static int _app_execute_operation(app_data *appdata, req_operation operation_type)
 {
 	dlog_print(DLOG_INFO ,"tdlna", "_app_execute_operation 실행");
+	bundle *resp_msg = bundle_create();
+
     RETVM_IF(!appdata, SVC_RES_FAIL, "Application data is NULL");
+
+    char *resp_key_val = NULL;
 
     switch (operation_type)
     {
         case REQ_OPER_META_GET_APP:
-        	dlog_print(DLOG_INFO,"tdlna","메타정보 가져오기 실행");
+        	dlog_print(DLOG_INFO,"tdlna","메타정보 가져오기 실행 ");
         	_vedioMetadataGet(appdata);
         	break;
-        case REQ_OPER_TEST_APP:
-        	dlog_print(DLOG_INFO,"tdlna","test 실행");
+        case REQ_OPER_DLNA_APP://실행 요청시
+        	dlog_print(DLOG_INFO,"tdlna","dlna on 처리");
 
         	if(!(appdata->run_tdlna)){
         		// 서비스가 꺼져있는 상태라면
-        		serviceOn(appdata);
-        		dlog_print(DLOG_INFO,"tdlna","★ 서비스 ON ★ %d", appdata->run_tdlna);
+        		if(serviceOn(appdata)){
+            		dlog_print(DLOG_INFO,"tdlna","★ 서비스 ON ★ %d", appdata->run_tdlna);
+            		resp_key_val = "실행 성공!";
+        		}else{
+            		dlog_print(DLOG_INFO,"tdlna","★ 이미 실행중 ★ %d", appdata->run_tdlna);
+            		resp_key_val = "이미 실행중!";
+        		}
         	}
         	else{
-        		serviceOff(appdata);
-        		dlog_print(DLOG_INFO,"tdlna","★ 서비스 OFF ★ %d", appdata->run_tdlna);
+        		resp_key_val = "이미 실행중!";
+        		dlog_print(DLOG_INFO,"tdlna","★ 이미 실행중 ★ %d", appdata->run_tdlna);
         	}
-
         	break;
+
+        case REQ_OPER_DLNA_APP_OFF://종료 요청시
+		if (!(appdata->run_tdlna)) {// 서비스가 꺼져있는 상태라면
+			resp_key_val = "종료 되어있음!";
+			dlog_print(DLOG_INFO, "tdlna", "★ 이미 종료상태★ %d",appdata->run_tdlna);
+		} else {
+			serviceOff(appdata);
+			resp_key_val = "종료 성공!";
+			dlog_print(DLOG_INFO, "tdlna", "★ 서비스 OFF ★ %d",appdata->run_tdlna);
+		}
+			break;
         default:
             DBG("Unknown request id");
             return SVC_RES_FAIL;
             break;
     }
-
+    RETVM_IF(bundle_add_str(resp_msg, "server", resp_key_val) != 0, SVC_RES_FAIL, "Failed to add data by key to bundle");
+    _app_send_response(appdata, resp_msg);
+    bundle_free(resp_msg);
     return SVC_RES_OK;
 }
 
@@ -322,7 +351,7 @@ static bool _vedioMetadataGet(app_data* data){
       frame = NULL;
    }
 //   ======================================================================================================
-metadata_extractor_destroy(g_metadata_h);
+   metadata_extractor_destroy(g_metadata_h);
 
    return 1;
 }

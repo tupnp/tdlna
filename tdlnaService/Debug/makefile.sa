@@ -2,8 +2,8 @@
 # Automatically-generated file. Do not edit!
 ################################################################################
 
-SA_C_OPTIONS := -I"pch" -D_DEBUG -I"C:\Users\Taehyeong\workspace\tdlnaService\inc" -O0 -g3 -Wall -c -fmessage-length=0 $(TC_COMPILER_MISC) $(RS_COMPILER_MISC) -fPIE --sysroot="$(SBI_SYSROOT)" -mthumb -I@system_includes -Werror-implicit-function-declaration
-SA_CPP_OPTIONS := -I"pch" -D_DEBUG -I"C:\Users\Taehyeong\workspace\tdlnaService\inc" -O0 -g3 -Wall -c -fmessage-length=0 -target arm-tizen-linux-gnueabi -gcc-toolchain "D:\tizen-sdk\tools\smart-build-interface/../arm-linux-gnueabi-gcc-4.6/" -ccc-gcc-name arm-linux-gnueabi-g++ -march=armv7-a -mfloat-abi=softfp -mfpu=vfpv3-d16 -mtune=cortex-a8 -Wno-gnu -fPIE --sysroot="D:/tizen-sdk/tools/smart-build-interface/../../platforms/mobile-2.3/rootstraps/mobile-2.3-device.core" -mthumb -I@system_includes
+SA_C_OPTIONS := -I"pch" -D_DEBUG -I"C:\Users\Taehyeong\git\tdlna\tdlnaService\inc" -O0 -g3 -Wall -c -fmessage-length=0 $(TC_COMPILER_MISC) $(RS_COMPILER_MISC) -fPIE --sysroot="$(SBI_SYSROOT)" -mthumb -I@system_includes -Werror-implicit-function-declaration
+SA_CPP_OPTIONS := -I"pch" -D_DEBUG -I"C:\Users\Taehyeong\git\tdlna\tdlnaService\inc" -O0 -g3 -Wall -c -fmessage-length=0 -target arm-tizen-linux-gnueabi -gcc-toolchain "D:\tizen-sdk\tools\smart-build-interface/../arm-linux-gnueabi-gcc-4.6/" -ccc-gcc-name arm-linux-gnueabi-g++ -march=armv7-a -mfloat-abi=softfp -mfpu=vfpv3-d16 -mtune=cortex-a8 -Wno-gnu -fPIE --sysroot="D:/tizen-sdk/tools/smart-build-interface/../../platforms/mobile-2.3/rootstraps/mobile-2.3-device.core" -mthumb -I@system_includes
 
 REL_C_SRCS = $(filter-out $(wildcard ../*),$(wildcard $(C_SRCS)))
 REL_CC_SRCS = $(filter-out $(wildcard ../*),$(wildcard $(CC_SRCS)))

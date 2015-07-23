@@ -27,7 +27,8 @@ typedef enum
 {
     REQ_OPER_NONE = 0,
     REQ_OPER_EXIT_APP,
-    REQ_OPER_TEST_APP,
+    REQ_OPER_DLNA_APP,
+    REQ_OPER_DLNA_APP_OFF,
     REQ_OPER_META_GET_APP
 } req_operation;
 
