@@ -12,17 +12,11 @@
 #include <ctype.h>
 #include <sys/param.h>
 #include <stdarg.h>
+#include <dlog.h>
 
 #include "upnpglobalvars.h"
-//#include "utils.h"
 #include "upnphttp.h"
 #include "upnpsoap.h"
-//#include "containers.h"
-//#include "upnpreplyparse.h"
-//#include "getifaddr.h"
-//#include "scanner.h"
-//#include "sql.h"
-//#include "log.h"
 
 static inline int
 __attribute__((__format__ (__printf__, 2, 3)))
@@ -196,6 +190,7 @@ GetProtocolInfo(struct upnphttp * h, const char * action)
 
 	bodylen = sprintf(body, resp, action, "urn:schemas-upnp-org:service:ConnectionManager:1", action);
 	BuildSendAndCloseSoapResp(h, body, bodylen);
+
 	free(body);
 }
 
@@ -1882,18 +1877,18 @@ static const struct
 //Soap 메소드들의 처리를 담당하는 함수포인터
 soapMethods[] =
 {
+		{ "IsAuthorized", IsAuthorizedValidated},
+		{ "IsValidated", IsAuthorizedValidated},
+		{ "RegisterDevice", RegisterDevice},
+	//{ "GetProtocolInfo", GetProtocolInfo}, // 현재 프로그램이 멈추는 문제가 있음
 	//{ "QueryStateVariable", QueryStateVariable},
-	// { "Browse", BrowseContentDirectory},
+	//{ "Browse", BrowseContentDirectory},
 	//{ "Search", SearchContentDirectory},
 	//{ "GetSearchCapabilities", GetSearchCapabilities},
 	//{ "GetSortCapabilities", GetSortCapabilities},
 	//{ "GetSystemUpdateID", GetSystemUpdateID},
-	//{ "GetProtocolInfo", GetProtocolInfo},
 	//{ "GetCurrentConnectionIDs", GetCurrentConnectionIDs},
 	//{ "GetCurrentConnectionInfo", GetCurrentConnectionInfo},
-	{ "IsAuthorized", IsAuthorizedValidated},
-	{ "IsValidated", IsAuthorizedValidated},
-	{ "RegisterDevice", RegisterDevice},
 	//{ "X_GetFeatureList", SamsungGetFeatureList},
 	//{ "X_SetBookmark", SamsungSetBookmark},
 	{ 0, 0 }
@@ -1905,7 +1900,7 @@ ExecuteSoapAction(struct upnphttp * h, const char * action, int n)
 {
 	char * p;
 
-	p = strchr(action, '#');
+	p = strchr(action, '#'); //Soap 액션은 #뒤에 붙어있으므로 #을기준으로 파싱
 	if(p)
 	{
 		int i = 0;
@@ -1918,7 +1913,7 @@ ExecuteSoapAction(struct upnphttp * h, const char * action, int n)
 			methodlen = p2 - p;
 		else
 			methodlen = n - (p - action);
-		printf("SoapMethod: %.*s\n", methodlen, p);
+		dlog_print(DLOG_DEBUG,"tdlna", "SoapMethod: %.*s\n", methodlen, p);
 		while(soapMethods[i].methodName)
 		{
 			len = strlen(soapMethods[i].methodName);
@@ -1931,8 +1926,7 @@ ExecuteSoapAction(struct upnphttp * h, const char * action, int n)
 			i++;
 		}
 
-		printf("SoapMethod: Unknown: %.*s\n", methodlen, p);
-		printf("soap [%s] 메소드 처리하지 못함\n", soapMethods[i].methodName);
+		dlog_print(DLOG_ERROR,"tdlna", "soap [%.*s] 메소드 처리하지 못함\n", methodlen, p);
 	}
 
 	SoapError(h, 401, "Invalid Action");

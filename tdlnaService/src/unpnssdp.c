@@ -146,7 +146,7 @@ static const char * const known_service_types[] =
 	"urn:schemas-upnp-org:device:MediaServer:",
 	"urn:schemas-upnp-org:service:ContentDirectory:",
 	"urn:schemas-upnp-org:service:ConnectionManager:",
-	"urn:microsoft.com:service:X_MS_MediaReceiverRegistrar:",
+//	"urn:microsoft.com:service:X_MS_MediaReceiverRegistrar:",
 	0
 };
 

@@ -30,10 +30,6 @@
 #include "main-app.h"
 #include "tdlnamain.h"
 
-//static int OpenAndConfHTTPSocket(unsigned short port);
-//static int getifaddr(const char *ifname);
-//void reload_ifaces(int force_notify);
-
 //서비스 시작
 int serviceOn(void* data){
 	app_data *ad = data;
@@ -45,7 +41,7 @@ int serviceOn(void* data){
 	}
 	ad->run_tdlna = true;
 	r = pthread_create(&(ad->tdlna_td), NULL, tdlnamain, (void*)data);
-	dlog_print(DLOG_INFO,"tdlna","◆ 서비스 스레드 생성: %d", r);
+	dlog_print(DLOG_INFO,"tdlna", "◆ 서비스 스레드 생성: %d", r);
 
 	return 1;
 }
@@ -77,11 +73,11 @@ void* ssdpAlive(void* data){
 	SendSSDPGoodbyes(lan_addr[0].snotify);
 }
 
-// main
+//  upnp server main
 void* tdlnamain(void* data)
 {
 		app_data *ad = data;
-		pthread_t ssdptd;
+		pthread_t ssdptd; //ssdp alive thread
 
 		int shttpl = -1; //http 수신 소켓
 		int sssdp = -1;  //ssdp (udp) 소켓
@@ -94,7 +90,7 @@ void* tdlnamain(void* data)
 		int max_fd = -1;
 		struct timeval timeout;
 
-		dlog_print(DLOG_INFO, "tdlna", "Main Start!!!");
+		dlog_print(DLOG_INFO, "tdlna", "Server Main Start!!!");
 
 		//초기화
 		runtime_vars.port = 9090; //http요청 수신 포트
@@ -398,10 +394,11 @@ void reload_ifaces(int force_notify)
 			if (memcmp(&lan_addr[i].addr, &old_addr[j], sizeof(struct in_addr)) == 0)
 				break;
 		}
-		//Send out startup notifies if it's a new interface, or on SIGHUP 
+		//초기 ssdp 패킷을 보낼때 모든 네트워크로 ssdp byebye를 먼저 보낸 후
+		// ssdi alive notifiy를 보낸다.
 		if (force_notify || j == MAX_LAN_ADDR)
 		{
-			dlog_print(DLOG_INFO, "tdlna", "Enabling interface %s/%s\n",
+			dlog_print(DLOG_DEBUG, "tdlna", "Enabling interface %s/%s\n",
 				lan_addr[i].str, inet_ntoa(lan_addr[i].mask));
 			SendSSDPGoodbyes(lan_addr[i].snotify);
 			SendSSDPNotifies(lan_addr[i].snotify, lan_addr[i].str, runtime_vars.port, runtime_vars.notify_interval);

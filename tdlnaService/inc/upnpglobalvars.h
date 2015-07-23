@@ -8,7 +8,7 @@
 #include "clients.h"
 //#include <sqlite3.h>
 
-#define MINIDLNA_VERSION "tizen 2.3"
+#define MINIDLNA_VERSION "1.0"
 
 #define SERVER_NAME "TDLNA"
 #define ROOTDESC_PATH "/rootDesc.xml"

@@ -20,14 +20,11 @@
 #include <dlog.h>
 
 #include "upnphttp.h"
-//#include "process.h"
 #include "upnpglobalvars.h"
-//#include "utils.h"
 #include "upnpsoap.h"
 #include "upnpevents.h"
 
-#define HOME_DIR "/opt/usr/media/DCIM/Camera"
-//#define HOME_DIR "/home/taehyeong/tdlna/media"
+#define HOME_DIR "/opt/usr/media/DCIM/Camera" //HTTP 파일 홈 디렉터리
 
 #define MAX_BUFFER_SIZE 2147483647
 #define MIN_BUFFER_SIZE 65536
@@ -89,7 +86,6 @@ strcatf(struct string_s *str, const char *fmt, ...)
 	return ret;
 }
 
-/* Find the first occurrence of p in s, where s is terminated by t */
 char* strstrc(const char *s, const char *p, const char t)
 {
 	char *endptr;
@@ -132,7 +128,7 @@ void Process_upnphttp(struct upnphttp * h)
 		n = recv(h->socket, buf, 2048, 0); //접속된 소켓의 데이터를 수신
 		if(n<0)
 		{ //수신실패
-			printf("recv state - 0\n");
+			dlog_print(DLOG_ERROR, "tdlna", "http recv state: 0\n");
 			h->state = 100;
 		}
 		else if(n==0)
@@ -150,8 +146,7 @@ void Process_upnphttp(struct upnphttp * h)
 			//헤더가 너무 크면 처리하지 않는다. 
 			if (new_req_buflen >= 1024 * 1024)
 			{
-				printf("Receive headers too large (received %d bytes)\n", new_req_buflen);
-				dlog_print(DLOG_DEBUG, "tdlna", "http 헤더가 너무 커서 처리하지 않음");
+				dlog_print(DLOG_DEBUG, "tdlna", "http 헤더가 너무 커서 처리하지 않음(%d byte)", new_req_buflen);
 				h->state = 100;
 				break;
 			}
@@ -186,12 +181,12 @@ void Process_upnphttp(struct upnphttp * h)
 
 		if(n < 0)
 		{
-			printf("recv (state%d)\n", h->state);
+			dlog_print(DLOG_ERROR, "tdlna", "recv (state %d)\n", h->state);
 			h->state = 100;
 		}
 		else if(n == 0)
 		{
-			printf("2_HTTP Connection closed unexpectedly\n");
+			dlog_print(DLOG_ERROR, "tdlna", "2_HTTP Connection closed unexpectedly\n");
 			h->state = 100;
 		}
 		else
@@ -203,7 +198,7 @@ void Process_upnphttp(struct upnphttp * h)
 			h->req_buf = (char *)realloc(h->req_buf, n + h->req_buflen);
 			if (!h->req_buf)
 			{
-				printf("Receive request body \n");
+				dlog_print(DLOG_INFO, "tdlna", "http post 요청 본문 수신중 \n");
 				h->state = 100;
 				break;
 			}
@@ -227,7 +222,7 @@ void Process_upnphttp(struct upnphttp * h)
 		}
 		break;
 	default:
-		printf("Unexpected state: %d\n", h->state);
+		dlog_print(DLOG_ERROR, "tdlna", "Unexpected state: %d\n", h->state);
 	}
 }
 
@@ -266,11 +261,10 @@ ProcessHTTPPOST_upnphttp(struct upnphttp * h)
 	{
 		if(h->req_soapAction)
 		{
-			/* we can process the request */
-			printf("SOAPAction: %.*s\n", h->req_soapActionLen, h->req_soapAction);
-			ExecuteSoapAction(h, 
-				h->req_soapAction,
-				h->req_soapActionLen);
+			// *** Post 요청을 처리한다. POST 요청은 여기에서 SOAP처리에 쓰인다.
+			dlog_print(DLOG_DEBUG, "tdlna", "SOAPAction: %.*s\n", h->req_soapActionLen, h->req_soapAction);
+
+			ExecuteSoapAction(h, h->req_soapAction,	h->req_soapActionLen);
 		}
 		else
 		{
@@ -344,8 +338,8 @@ ProcessHTTPSubscribe_upnphttp(struct upnphttp * h, const char * path)
 {
 	const char * sid;
 	enum event_type type;
-	printf("ProcessHTTPSubscribe %s\n", path);
-	printf("Callback '%.*s' Timeout=%d\n",
+	dlog_print(DLOG_DEBUG,"tdlna", "ProcessHTTPSubscribe %s\n", path);
+	dlog_print(DLOG_DEBUG,"tdlna", "Callback '%.*s' Timeout=%d\n",
 		h->req_CallbackLen, h->req_Callback, h->req_Timeout);
 	printf("SID '%.*s'\n", h->req_SIDLen, h->req_SID);
 
@@ -397,8 +391,8 @@ ProcessHTTPUnSubscribe_upnphttp(struct upnphttp * h, const char * path)
 {
 
 	enum event_type type;
-	printf("ProcessHTTPUnSubscribe %s\n", path);
-	printf("SID '%.*s'\n", h->req_SIDLen, h->req_SID);
+	dlog_print(DLOG_DEBUG,"tdlna","ProcessHTTPUnSubscribe %s\n", path);
+	dlog_print(DLOG_DEBUG,"tdlna","SID '%.*s'\n", h->req_SIDLen, h->req_SID);
 
 	// Remove from the list 
 	type = check_event(h);
@@ -636,7 +630,7 @@ static void ProcessHttpQuery_upnphttp(struct upnphttp * h)
 			else
 			{
 				SendResp_dlnafile(h, HttpUrl); //파일요청 처리
-				dlog_print(DLOG_DEBUG, "tdlna", "파일 요청 처리");
+				dlog_print(DLOG_DEBUG, "tdlna", "파일 요청 %s", HttpUrl);
 			}
 		}
 		else if(strcmp("SUBSCRIBE", HttpCommand) == 0)  //SUBSCRIBE 요청이 오면 ssid가 포함된 헤더를 보내준다.
@@ -767,7 +761,7 @@ static void ParseHttpHeaders(struct upnphttp * h)
 					h->req_RangeEnd = colon ? atoll(colon+1) : 0;
 				}
 
-				printf("Range - %d %d %d\n", h->reqflags, (int)h->req_RangeStart, (int)h->req_RangeEnd);
+				dlog_print(DLOG_DEBUG,"tdlna", "Range - %d %d %d\n", h->reqflags, (int)h->req_RangeStart, (int)h->req_RangeEnd);
 			}
 			else if(strncasecmp(line, "Host", 4)==0)
 			{
@@ -998,7 +992,7 @@ Send400(struct upnphttp * h)
 	CloseSocket_upnphttp(h);
 }
 
-/* very minimalistic 404 error message */
+//404(찾을 수 없음): 서버가 요청한 페이지를 찾을 수 없다.
 static void
 Send404(struct upnphttp * h)
 {
@@ -1012,7 +1006,7 @@ Send404(struct upnphttp * h)
 	CloseSocket_upnphttp(h);
 }
 
-/* very minimalistic 406 error message */
+//406(허용되지 않음): 요청한 페이지가 요청한 콘텐츠 특성으로 응답할 수 없다.
 static void
 Send406(struct upnphttp * h)
 {
@@ -1026,7 +1020,7 @@ Send406(struct upnphttp * h)
 	CloseSocket_upnphttp(h);
 }
 
-/* very minimalistic 416 error message */
+//416(처리할 수 없는 요청범위): 요청이 페이지에서 처리할 수 없는 범위에 해당되는 경우 서버는 이 상태 코드를 표시한다.
 static void
 Send416(struct upnphttp * h)
 {
@@ -1041,7 +1035,7 @@ Send416(struct upnphttp * h)
 	CloseSocket_upnphttp(h);
 }
 
-/* very minimalistic 500 error message */
+//500(내부 서버 오류): 서버에 오류가 발생하여 요청을 수행할 수 없다.
 void
 Send500(struct upnphttp * h)
 {
@@ -1056,7 +1050,7 @@ Send500(struct upnphttp * h)
 	CloseSocket_upnphttp(h);
 }
 
-/* very minimalistic 501 error message */
+//501(구현되지 않음): 서버에 요청을 수행할 수 있는 기능이 없다. (요청 메소드를 인식하지 못할 때)
 void
 Send501(struct upnphttp * h)
 {
@@ -1071,6 +1065,7 @@ Send501(struct upnphttp * h)
 	CloseSocket_upnphttp(h);
 }
 
+// rootDesc.xml 요청에 대해 xml data전송
 static void
 sendXMLdesc(struct upnphttp * h)
 {
@@ -1095,7 +1090,7 @@ sendXMLdesc(struct upnphttp * h)
 	dlog_print(DLOG_DEBUG, "tdlna", "Send RootDisc.XML");
 }
 
-
+//응답헤더 빌드
 void
 BuildResp2_upnphttp(struct upnphttp * h, int respcode,
                     const char * respmsg,
@@ -1180,7 +1175,7 @@ void BuildHeader_upnphttp(struct upnphttp * h, int respcode,
 	}
 }
 
-
+//파일 요청에 대해 해당하는 경로(object로 넘어옴)의 파일을 가져와 네트워크 스트림으로 전송한다.
 static void SendResp_dlnafile(struct upnphttp *h, char *object)
 {
 	char header[1024];
@@ -1242,7 +1237,7 @@ static void SendResp_dlnafile(struct upnphttp *h, char *object)
 	if( sendfh < 0 ) {
 	//	DPRINTF(E_ERROR, L_HTTP, "Error opening %s\n", last_file.path);
 		Send404(h);
-		dlog_print(DLOG_DEBUG, "tdlna", "http로 요청한 파일을 로컬에서 열지못함 ㅠ %s", last_file.path);
+		dlog_print(DLOG_ERROR, "tdlna", "http로 요청한 파일을 로컬에서 열지못함 ㅠ %s", last_file.path);
 		goto error;
 	}
 	size = lseek(sendfh, 0, SEEK_END);

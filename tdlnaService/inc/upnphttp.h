@@ -8,7 +8,7 @@
 
 /* server: HTTP header returned in all HTTP responses : */
 //#define MINIDLNA_SERVER_STRING	OS_VERSION " DLNADOC/1.50 UPnP/1.0 " SERVER_NAME "/" MINIDLNA_VERSION
-#define MINIDLNA_SERVER_STRING "DLNADOC/1.50 UPnP/1.0 " SERVER_NAME "/" MINIDLNA_VERSION
+#define MINIDLNA_SERVER_STRING "TIZEN/2.3 UPnP/1.0 " SERVER_NAME "/" MINIDLNA_VERSION
 
 /*
  states :
@@ -88,7 +88,7 @@ struct upnphttp {
 "    </specVersion>" \
 "    <device>" \
 "        <deviceType>urn:schemas-upnp-org:device:MediaServer:1</deviceType>" \
-"        <friendlyName>Samsung Z1</friendlyName>" \
+"        <friendlyName>Samsung Z1 TEST</friendlyName>" \
 "        <manufacturer>T-DLNA Team</manufacturer>" \
 "        <manufacturerURL>http://www.taengz.tk/</manufacturerURL>" \
 "        <modelDescription>Samsung Z1 Tizen Phone</modelDescription>" \
