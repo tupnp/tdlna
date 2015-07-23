@@ -978,7 +978,7 @@ next_header:
 	}
 } 
 
-/* very minimalistic 400 error message */
+//400(잘못된 요청): 서버가 요청의 구문을 인식하지 못했다.
 static void
 Send400(struct upnphttp * h)
 {
@@ -1072,13 +1072,13 @@ sendXMLdesc(struct upnphttp * h)
 	char * desc;
 	int len = 4096;
 
+	//rootDesc.xml 빌드
 	desc = malloc(len);
-	len = sprintf(desc, ROOT_DESC_XML, lan_addr[0].str , runtime_vars.port );
+	len = sprintf(desc, ROOT_DESC_XML, uuidvalue, lan_addr[0].str , runtime_vars.port );
 
 	if(desc < 1)
 	{
 		dlog_print(DLOG_DEBUG, "tdlna", "Failed to generate XML description");
-		//DPRINTF(E_ERROR, L_HTTP, "Failed to generate XML description\n");
 		Send500(h);
 		return;
 	}

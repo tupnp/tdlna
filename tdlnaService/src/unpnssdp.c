@@ -220,7 +220,8 @@ SendSSDPNotifies(int s, const char *host, unsigned short port,
 	sockname.sin_family = AF_INET;
 	sockname.sin_port = htons(SSDP_PORT);
 	sockname.sin_addr.s_addr = inet_addr(SSDP_MCAST_ADDR);
-	lifetime = interval;//(interval << 1) + 10;
+	//lifetime = interval;//(interval << 1) + 10;
+	lifetime = 1800;
 
 	for (dup = 0; dup < 2; dup++)
 	{
