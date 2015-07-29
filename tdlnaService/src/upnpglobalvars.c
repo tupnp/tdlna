@@ -13,8 +13,8 @@
 struct runtime_vars_s runtime_vars;
 uint32_t runtime_flags = INOTIFY_MASK;
 
-char uuidvalue[] = "uuid:12345678-0000-0000-0000-00000000abce";
-char modelname[MODELNAME_MAX_LEN] = "Samsung Z1";
+char uuidvalue[] = "uuid:12345678-0000-0000-0000-00001234abcd";
+char modelname[MODELNAME_MAX_LEN] = "Z1 Test";
 char modelnumber[MODELNUMBER_MAX_LEN] = MINIDLNA_VERSION;
 char serialnumber[SERIALNUMBER_MAX_LEN] = "12345678";
 #if PNPX
