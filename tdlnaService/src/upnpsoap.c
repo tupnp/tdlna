@@ -1329,8 +1329,8 @@ browse_error:
 	ClearNameValueList(&data);
 	free(orderBy);
 	free(str.data);
-}  */
-
+} */
+/*
 inline void
 charcat(struct string_s *str, char c)
 {
@@ -1880,9 +1880,9 @@ soapMethods[] =
 		{ "IsAuthorized", IsAuthorizedValidated},
 		{ "IsValidated", IsAuthorizedValidated},
 		{ "RegisterDevice", RegisterDevice},
+		{ "Browse", BrowseContentDirectory},
 	//{ "GetProtocolInfo", GetProtocolInfo}, // 현재 프로그램이 멈추는 문제가 있음
 	//{ "QueryStateVariable", QueryStateVariable},
-	//{ "Browse", BrowseContentDirectory},
 	//{ "Search", SearchContentDirectory},
 	//{ "GetSearchCapabilities", GetSearchCapabilities},
 	//{ "GetSortCapabilities", GetSortCapabilities},
