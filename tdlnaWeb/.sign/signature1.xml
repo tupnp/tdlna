@@ -16,7 +16,7 @@
 </Reference>
 <Reference URI="author-signature.xml">
 <DigestMethod Algorithm="http://www.w3.org/2001/04/xmlenc#sha256"></DigestMethod>
-<DigestValue>affuwiJ9lHzvwfehJHd+RMNNzbiyuwhxKVMTFiKulq4=</DigestValue>
+<DigestValue>zT5XKlSB41M/VP7O3SJML7v2MMvHi0Q6+oYRtwNUUcA=</DigestValue>
 </Reference>
 <Reference URI="config.xml">
 <DigestMethod Algorithm="http://www.w3.org/2001/04/xmlenc#sha256"></DigestMethod>
@@ -32,7 +32,7 @@
 </Reference>
 <Reference URI="index.html">
 <DigestMethod Algorithm="http://www.w3.org/2001/04/xmlenc#sha256"></DigestMethod>
-<DigestValue>biNDtPd/cFSf2LzNfzddeEF6SLjeB51zqqL1E5S+eoI=</DigestValue>
+<DigestValue>pTsHcWJB0ZPzPHfqW23HOyR41aeTA1sKrgFArn1PlhE=</DigestValue>
 </Reference>
 <Reference URI="js%2Fconfig.js">
 <DigestMethod Algorithm="http://www.w3.org/2001/04/xmlenc#sha256"></DigestMethod>
@@ -40,7 +40,7 @@
 </Reference>
 <Reference URI="js%2Fmain.js">
 <DigestMethod Algorithm="http://www.w3.org/2001/04/xmlenc#sha256"></DigestMethod>
-<DigestValue>96lMrrUAb6TA1f3mSPmaSR92BROiOuJz5ipbZ/1jUT0=</DigestValue>
+<DigestValue>oEgiScKsQunconBTHrQxa7/ZnNL1ADgkGwqOBftACVE=</DigestValue>
 </Reference>
 <Reference URI="lib%2Ftau%2Fmobile%2Fjs%2Fcultures%2Fglobalize.culture.af-ZA.js">
 <DigestMethod Algorithm="http://www.w3.org/2001/04/xmlenc#sha256"></DigestMethod>
@@ -4863,11 +4863,11 @@
 </Reference>
 </SignedInfo>
 <SignatureValue>
-cml9j9/BwyvVtVLUOy3vxU3kVOBxgUcjvQ12DS90bKYK1WaxcNDxy3zcUCD3doHZvq/8RffFaLj2
-ONG3MWeiueGqw2kOOCdBk5+XpDLSBF7QI/9xrHuZv486MBuCUynPev9Umv/iwyVRZ8aYQnNsQpbP
-FsNIvTwTtBE7VTMif4cDet2WluBM6HMVidVD3sTm8aTLUoob6m6UQ0kvakcaJrCr8X5b6dwNayaQ
-lbNbEqanODIz3Tv8EF4ZQBoRDB3EkKJWk8TD8PdytMAvu5kYbAmsK8UiedzvzomIRdbepLCSapRX
-rHugRAh/2Dk+EYZiv6SjnWN+UbTUgrE7hto1Ww==
+HAbjKEhrO98DGAA4JGVtQU3XW8hfJdgL0zXp7pltGcYe9s/Sgy0YyaZP5dt2k6gV8o2IUX31iohw
+3NvGjGVIcsZL5VARIgdIsJvB1lIC24IN1fy6grhVQu99wez5SEJV073JCARSnwXpx1bodXZl28Ym
+sNgNyUJzMVHI48b46aEPOEx06vKAVUiJC5JTw2NCgzU2miIo8W8lVoF0SD6yO09CoIVJ8bTTnbZ+
+baEuzFchkJgnP4+H6tjzu34isNQDl2TXRCkQQO9aIYYkbE8IWqitSX3tdPXQZVI4BQKekWxfhjYe
++6IP7gXF1Pxncrmzd1eQjCiuzR3DRaWp8M912g==
 </SignatureValue>
 <KeyInfo>
 <X509Data>

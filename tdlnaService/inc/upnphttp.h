@@ -88,7 +88,7 @@ struct upnphttp {
 "    </specVersion>" \
 "    <device>" \
 "        <deviceType>urn:schemas-upnp-org:device:MediaServer:1</deviceType>" \
-"        <friendlyName>Samsung Z1 TEST</friendlyName>" \
+"        <friendlyName>%s</friendlyName>" \
 "        <manufacturer>T-DLNA Team</manufacturer>" \
 "        <manufacturerURL>http://www.taengz.tk/</manufacturerURL>" \
 "        <modelDescription>Samsung Z1 Tizen Phone</modelDescription>" \

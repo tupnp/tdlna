@@ -15,6 +15,7 @@
 #include <dlog.h>
 
 #include "upnpglobalvars.h"
+#include "upnpreplyparse.h"
 #include "upnphttp.h"
 #include "upnpsoap.h"
 
@@ -102,7 +103,8 @@ static void BuildSendAndCloseSoapResp(struct upnphttp * h, const char * body, in
 	SendResp_upnphttp(h);
 	CloseSocket_upnphttp(h);
 }
-/*
+
+
 static void
 GetSystemUpdateID(struct upnphttp * h, const char * action)
 {
@@ -120,7 +122,8 @@ GetSystemUpdateID(struct upnphttp * h, const char * action)
 		updateID, action);
 	BuildSendAndCloseSoapResp(h, body, bodylen);
 }
-*/ 
+
+
 static void
 IsAuthorizedValidated(struct upnphttp * h, const char * action)
 {
@@ -201,11 +204,11 @@ GetSortCapabilities(struct upnphttp * h, const char * action)
 		"<u:%sResponse "
 		"xmlns:u=\"%s\">"
 		"<SortCaps>"
-		  "dc:title,"
+/*		  "dc:title,"
 		  "dc:date,"
 		  "upnp:class,"
 		  "upnp:album,"
-		  "upnp:originalTrackNumber"
+		  "upnp:originalTrackNumber" */
 		"</SortCaps>"
 		"</u:%sResponse>";
 
@@ -343,8 +346,6 @@ GetCurrentConnectionInfo(struct upnphttp * h, const char * action)
 #define FILTER_PV_SUBTITLE_FILE_URI              0x08000000
 #define FILTER_PV_SUBTITLE                       0x0C000000
 #define FILTER_AV_MEDIA_CLASS                    0x10000000
-
-	/*
 
 static uint32_t
 set_filter_flags(char *filter, struct upnphttp *h)
@@ -509,7 +510,7 @@ set_filter_flags(char *filter, struct upnphttp *h)
 
 	return flags;
 }
-
+/*
 char *
 parse_sort_criteria(char *sortCriteria, int *error)
 {
@@ -1116,10 +1117,11 @@ callback(void *args, int argc, char **argv, char **azColName)
 
 	*/
 
-/*
+
 static void
 BrowseContentDirectory(struct upnphttp * h, const char * action)
 {
+
 	static const char resp0[] =
 			"<u:BrowseResponse "
 			"xmlns:u=\"urn:schemas-upnp-org:service:ContentDirectory:1\">"
@@ -1144,6 +1146,8 @@ BrowseContentDirectory(struct upnphttp * h, const char * action)
 	int RequestedCount = 0;
 	int StartingIndex = 0;
 
+	dlog_print(DLOG_INFO,"tdlna", "★★★  Browse 액션 처리중 ★★★");
+
 	memset(&args, 0, sizeof(args));
 	memset(&str, 0, sizeof(str));
 
@@ -1153,6 +1157,7 @@ BrowseContentDirectory(struct upnphttp * h, const char * action)
 	Filter = GetValueFromNameValueList(&data, "Filter");
 	BrowseFlag = GetValueFromNameValueList(&data, "BrowseFlag");
 	SortCriteria = GetValueFromNameValueList(&data, "SortCriteria");
+
 
 	if( (ptr = GetValueFromNameValueList(&data, "RequestedCount")) )
 		RequestedCount = atoi(ptr);
@@ -1186,11 +1191,14 @@ BrowseContentDirectory(struct upnphttp * h, const char * action)
 	str.off = sprintf(str.data, "%s", resp0);
 	// See if we need to include DLNA namespace reference 
 	args.iface = h->iface;
+
+
 	args.filter = set_filter_flags(Filter, h);
 	if( args.filter & FILTER_DLNA_NAMESPACE )
 		ret = strcatf(&str, DLNA_NAMESPACE);
 	if( args.filter & FILTER_PV_SUBTITLE )
 		ret = strcatf(&str, PV_NAMESPACE);
+
 	strcatf(&str, "&gt;\n");
 
 	args.returned = 0;
@@ -1198,6 +1206,8 @@ BrowseContentDirectory(struct upnphttp * h, const char * action)
 	args.client = h->req_client ? h->req_client->type->type : 0;
 	args.flags = h->req_client ? h->req_client->type->flags : 0;
 	args.str = &str;
+
+	/*
 	printf("Browsing ContentDirectory:\n"
 	                         " * ObjectID: %s\n"
 	                         " * Count: %d\n"
@@ -1207,11 +1217,25 @@ BrowseContentDirectory(struct upnphttp * h, const char * action)
 	                         " * SortCriteria: %s\n",
 				ObjectID, RequestedCount, StartingIndex,
 	                        BrowseFlag, Filter, SortCriteria);
+	 */
 
+	dlog_print(DLOG_WARN,"tdlna", " ObjectID: %s", ObjectID);
+	dlog_print(DLOG_WARN,"tdlna", " RequestedCount: %d", RequestedCount);
+	dlog_print(DLOG_WARN,"tdlna", " StartingIndex: %d", StartingIndex);
+	dlog_print(DLOG_WARN,"tdlna", " BrowseFlag: %s", BrowseFlag);
+	dlog_print(DLOG_WARN,"tdlna", " Filter: %s", Filter);
+	//dlog_print(DLOG_INFO,"tdlna", " SortCriteria: %s", SortCriteria);
+
+	//=========================================== 여기까지는 정상작동할것으로 봄 ==================================
+
+
+	/*
+	 //BrowseDirectChildren or BrowseMetadata
 	if( strcmp(BrowseFlag+6, "Metadata") == 0 )
 	{
 		const char *id = ObjectID;
 		args.requested = 1;
+
 		magic = in_magic_container(ObjectID, args.flags, &id);
 		if (magic)
 		{
@@ -1227,7 +1251,9 @@ BrowseContentDirectory(struct upnphttp * h, const char * action)
 				      " where OBJECT_ID = '%q';",
 				      objectid_sql, parentid_sql, refid_sql, id);
 		ret = sqlite3_exec(db, sql, callback, (void *) &args, &zErrMsg);
-		totalMatches = args.returned;
+
+		totalMatches = 0; //args.returned;
+
 	}
 	else
 	{
@@ -1318,18 +1344,23 @@ BrowseContentDirectory(struct upnphttp * h, const char * action)
 			goto browse_error;
 		}
 	}
+	*/
+
 	ret = strcatf(&str, "&lt;/DIDL-Lite&gt;</Result>\n"
 	                    "<NumberReturned>%u</NumberReturned>\n"
 	                    "<TotalMatches>%u</TotalMatches>\n"
 	                    "<UpdateID>%u</UpdateID>"
 	                    "</u:BrowseResponse>",
 	                    args.returned, totalMatches, updateID);
+
+
+
 	BuildSendAndCloseSoapResp(h, str.data, str.off);
 browse_error:
 	ClearNameValueList(&data);
 	free(orderBy);
 	free(str.data);
-} */
+}
 /*
 inline void
 charcat(struct string_s *str, char c)
@@ -1661,7 +1692,7 @@ SearchContentDirectory(struct upnphttp * h, const char * action)
 	if( args.filter & FILTER_DLNA_NAMESPACE )
 	{
 		ret = strcatf(&str, DLNA_NAMESPACE);
-	} */ strcatf(&str, DLNA_NAMESPACE);
+	}  strcatf(&str, DLNA_NAMESPACE);
 	strcatf(&str, "&gt;\n");
 //------------------------------------
 /*
@@ -1745,7 +1776,7 @@ SearchContentDirectory(struct upnphttp * h, const char * action)
 		sqlite3_free(zErrMsg);
 	}
 	sqlite3_free(sql);
-*/
+
 //------------------------------------
 
 	strcatf(&str, "&lt;item id=\"64$6$0\" parentID=\"64$6\" restricted=\"1\"&gt;&lt;dc:title&gt;720p&lt;/dc:title&gt;&lt;upnp:class&gt;object.item.videoItem&lt;/upnp:class&gt;&lt;dc:date&gt;2015-06-19T18:16:02&lt;/dc:date&gt;&lt;res size=\"175812287\" duration=\"0:08:52.608\" bitrate=\"330096\" sampleFrequency=\"48000\" nrAudioChannels=\"2\" resolution=\"1280x720\" protocolInfo=\"http-get:*:video/mp4:DLNA.ORG_PN=AVC_MP4_HP_HD_AAC;DLNA.ORG_OP=01;DLNA.ORG_CI=0\"&gt;http://192.168.137.2:9090/720p.mp4&lt;/res&gt;&lt;/item&gt;\n");
@@ -1764,7 +1795,7 @@ search_error:
 	free(where);
 	free(str.data);
 }
-
+*/
 /*
 If a control point calls QueryStateVariable on a state variable that is not
 buffered in memory within (or otherwise available from) the service,
@@ -1885,8 +1916,8 @@ soapMethods[] =
 	//{ "QueryStateVariable", QueryStateVariable},
 	//{ "Search", SearchContentDirectory},
 	//{ "GetSearchCapabilities", GetSearchCapabilities},
-	//{ "GetSortCapabilities", GetSortCapabilities},
-	//{ "GetSystemUpdateID", GetSystemUpdateID},
+	{ "GetSortCapabilities", GetSortCapabilities},
+	{ "GetSystemUpdateID", GetSystemUpdateID},
 	//{ "GetCurrentConnectionIDs", GetCurrentConnectionIDs},
 	//{ "GetCurrentConnectionInfo", GetCurrentConnectionInfo},
 	//{ "X_GetFeatureList", SamsungGetFeatureList},

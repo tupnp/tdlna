@@ -7,36 +7,42 @@ C_SRCS += \
 ../src/clients.c \
 ../src/main-app.c \
 ../src/main.c \
+../src/minixml.c \
 ../src/proxy-client.c \
 ../src/tdlnamain.c \
 ../src/unpnssdp.c \
 ../src/upnpevents.c \
 ../src/upnpglobalvars.c \
 ../src/upnphttp.c \
+../src/upnpreplyparse.c \
 ../src/upnpsoap.c 
 
 OBJS += \
 ./src/clients.o \
 ./src/main-app.o \
 ./src/main.o \
+./src/minixml.o \
 ./src/proxy-client.o \
 ./src/tdlnamain.o \
 ./src/unpnssdp.o \
 ./src/upnpevents.o \
 ./src/upnpglobalvars.o \
 ./src/upnphttp.o \
+./src/upnpreplyparse.o \
 ./src/upnpsoap.o 
 
 C_DEPS += \
 ./src/clients.d \
 ./src/main-app.d \
 ./src/main.d \
+./src/minixml.d \
 ./src/proxy-client.d \
 ./src/tdlnamain.d \
 ./src/unpnssdp.d \
 ./src/upnpevents.d \
 ./src/upnpglobalvars.d \
 ./src/upnphttp.d \
+./src/upnpreplyparse.d \
 ./src/upnpsoap.d 
 
 

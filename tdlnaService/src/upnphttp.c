@@ -630,7 +630,7 @@ static void ProcessHttpQuery_upnphttp(struct upnphttp * h)
 			else
 			{
 				SendResp_dlnafile(h, HttpUrl); //파일요청 처리
-				dlog_print(DLOG_DEBUG, "tdlna", "파일 요청 %s", HttpUrl);
+				dlog_print(DLOG_DEBUG, "tdlna_file", "파일 요청 %s (%s)", HttpUrl, inet_ntoa(h->clientaddr));
 			}
 		}
 		else if(strcmp("SUBSCRIBE", HttpCommand) == 0)  //SUBSCRIBE 요청이 오면 ssid가 포함된 헤더를 보내준다.
@@ -1074,7 +1074,7 @@ sendXMLdesc(struct upnphttp * h)
 
 	//rootDesc.xml 빌드
 	desc = malloc(len);
-	len = sprintf(desc, ROOT_DESC_XML, uuidvalue, lan_addr[0].str , runtime_vars.port );
+	len = sprintf(desc, ROOT_DESC_XML, modelname, uuidvalue, lan_addr[0].str , runtime_vars.port );
 
 	if(desc < 1)
 	{
