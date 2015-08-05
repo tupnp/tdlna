@@ -1201,10 +1201,12 @@ BrowseContentDirectory(struct upnphttp * h, const char * action)
 	args.filter = set_filter_flags(Filter, h);
 	if( args.filter & FILTER_DLNA_NAMESPACE )
 		ret = strcatf(&str, DLNA_NAMESPACE);
-	if( args.filter & FILTER_PV_SUBTITLE )
+	if( args.filter & FILTER_PV_SUBTITLE ){
+		dlog_print(DLOG_DEBUG, "tdlna", "PV NameSpase 찍음 ㅇㅇㅇㅇ 삼성!!");
 		ret = strcatf(&str, PV_NAMESPACE);
+	}
 
-	strcatf(&str, "&gt;\n"); //>
+	//strcatf(&str, "&gt;\n"); //>
 
 	args.returned = 0;
 	args.requested = RequestedCount;
@@ -1221,31 +1223,7 @@ BrowseContentDirectory(struct upnphttp * h, const char * action)
 
 	//=========================================== 여기까지는 정상작동할것으로 봄 ==================================
 
-	if( strcmp(ObjectID, "0") == 0 ){
-
-		char* BrowseRoot;
-		BrowseRoot = malloc(1024);
-
-		sprintf(BrowseRoot, BROWSE_ROOT_RESULT, 0,0,1); //ImageNum, AudioNum, VideoNum
-
-		//strcatf(&str, BROWSE_ROOT_RESULT, 0,0,1);
-		str.off = sprintf(str.data, "%s%s"
-						"&lt;/DIDL-Lite&gt;</Result>\n"
-	                    "<NumberReturned>%u</NumberReturned>\n"
-	                    "<TotalMatches>%u</TotalMatches>\n"
-	                    "<UpdateID>%u</UpdateID>"
-	                    "</u:BrowseResponse>", resp0, BrowseRoot, 3, 3, updateID);
-
-		//dlog_print(DLOG_DEBUG, "tdlna", "%s", BrowseRoot);
-		dlog_print(DLOG_DEBUG, "tdlna", "브라우저루트 복사");
-
-		free(BrowseRoot);
-
-		//image audio video 3가지 항목
-		args.returned = 3;
-		totalMatches = 3;
-	}
-	else if(strcmp(ObjectID, "0/video") == 0){ //비디오!!!!!!!!!!!!!!!!!!!!!!!!!!!
+	if(strcmp(ObjectID, "2$8") == 0){ //비디오!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
 		dlog_print(DLOG_DEBUG, "tdlna", "잘나오나 http://%s:%d", lan_addr[0].str, runtime_vars.port);
 
@@ -1257,7 +1235,7 @@ BrowseContentDirectory(struct upnphttp * h, const char * action)
 		dlog_print(DLOG_DEBUG, "tdlna", "잘나오나 http://%s:%d", lan_addr[0].str, runtime_vars.port);
 
 		//strcatf(&str, BROWSE_ROOT_RESULT, 0,0,1);
-		str.off = sprintf(str.data, "%s%s"
+		str.off = sprintf(str.data, "%s&gt;\n%s"
 				"&lt;/DIDL-Lite&gt;</Result>\n"
 				"<NumberReturned>%u</NumberReturned>\n"
 				"<TotalMatches>%u</TotalMatches>\n"
@@ -1269,6 +1247,51 @@ BrowseContentDirectory(struct upnphttp * h, const char * action)
 		free(BrowseVideo);
 
 		//image audio video 3가지 항목
+	}
+	else if(strcmp(ObjectID, "2") == 0){
+
+		char* BrowseRoot;
+		BrowseRoot = malloc(2048);
+
+		sprintf(BrowseRoot, SAMSUNG_BROWSE_VIDEO);
+
+		str.off = sprintf(str.data, "%s&gt;\n%s"
+				"&lt;/DIDL-Lite&gt;</Result>\n"
+				"<NumberReturned>%u</NumberReturned>\n"
+				"<TotalMatches>%u</TotalMatches>\n"
+				"<UpdateID>%u</UpdateID>"
+				"</u:BrowseResponse>", resp0, BrowseRoot, 2, 2, updateID);
+
+		//dlog_print(DLOG_DEBUG, "tdlna", "%s", BrowseRoot);
+		dlog_print(DLOG_DEBUG, "tdlna", "삼성용 루트 복사");
+
+		free(BrowseRoot);
+
+	}
+	else
+	{
+
+		char* BrowseRoot;
+				BrowseRoot = malloc(1024);
+
+				sprintf(BrowseRoot, BROWSE_ROOT_RESULT, 1,1,1); //ImageNum, AudioNum, VideoNum
+
+				//strcatf(&str, BROWSE_ROOT_RESULT, 0,0,1);
+				str.off = sprintf(str.data, "%s&gt;\n%s"
+								"&lt;/DIDL-Lite&gt;</Result>\n"
+			                    "<NumberReturned>%u</NumberReturned>\n"
+			                    "<TotalMatches>%u</TotalMatches>\n"
+			                    "<UpdateID>%u</UpdateID>"
+			                    "</u:BrowseResponse>", resp0, BrowseRoot, 3, 3, updateID);
+
+				//dlog_print(DLOG_DEBUG, "tdlna", "%s", BrowseRoot);
+				dlog_print(DLOG_DEBUG, "tdlna", "브라우저루트 복사");
+
+				free(BrowseRoot);
+
+				//image audio video 3가지 항목
+				args.returned = 3;
+				totalMatches = 3;
 	}
 
 	/*
@@ -1888,7 +1911,7 @@ QueryStateVariable(struct upnphttp * h, const char * action)
 
 	ClearNameValueList(&data);	
 }
-*/ /*
+*/
 static void
 SamsungGetFeatureList(struct upnphttp * h, const char * action)
 {
@@ -1900,9 +1923,9 @@ SamsungGetFeatureList(struct upnphttp * h, const char * action)
 		" xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\""
 		" xsi:schemaLocation=\"urn:schemas-upnp-org:av:avs http://www.upnp.org/schemas/av/avs.xsd\"&gt;"
 		"&lt;Feature name=\"samsung.com_BASICVIEW\" version=\"1\"&gt;"
-		 "&lt;container id=\"" MUSIC_ID "\" type=\"object.item.audioItem\"/&gt;"
-		 "&lt;container id=\"" VIDEO_ID "\" type=\"object.item.videoItem\"/&gt;"
-		 "&lt;container id=\"" IMAGE_ID "\" type=\"object.item.imageItem\"/&gt;"
+		 "&lt;container id=\"1\" type=\"object.item.audioItem\"/&gt;"
+		 "&lt;container id=\"2\" type=\"object.item.videoItem\"/&gt;"
+		 "&lt;container id=\"3\" type=\"object.item.imageItem\"/&gt;"
 		"&lt;/Feature&gt;"
 		"&lt;/Features&gt;"
 		"</FeatureList></u:X_GetFeatureListResponse>";
@@ -1912,7 +1935,7 @@ SamsungGetFeatureList(struct upnphttp * h, const char * action)
 
 	BuildSendAndCloseSoapResp(h, resp, sizeof(resp)-1);
 }
-
+/*
 static void
 SamsungSetBookmark(struct upnphttp * h, const char * action)
 {
@@ -1964,7 +1987,7 @@ soapMethods[] =
 	{ "GetSystemUpdateID", GetSystemUpdateID},
 	{ "GetCurrentConnectionIDs", GetCurrentConnectionIDs},
 	//{ "GetCurrentConnectionInfo", GetCurrentConnectionInfo},
-	//{ "X_GetFeatureList", SamsungGetFeatureList},
+	{ "X_GetFeatureList", SamsungGetFeatureList},
 	//{ "X_SetBookmark", SamsungSetBookmark},
 	{ 0, 0 }
 };
