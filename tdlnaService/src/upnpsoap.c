@@ -100,6 +100,7 @@ static void BuildSendAndCloseSoapResp(struct upnphttp * h, const char * body, in
 	memcpy(h->res_buf + h->res_buflen, afterbody, sizeof(afterbody) - 1);
 	h->res_buflen += sizeof(afterbody) - 1;
 
+	//dlog_print(DLOG_DEBUG, "tdlna", "★SOAP RESPONSE: %s", h->res_buf);
 	SendResp_upnphttp(h);
 	CloseSocket_upnphttp(h);
 }
@@ -172,10 +173,11 @@ RegisterDevice(struct upnphttp * h, const char * action)
 		uuidvalue, action);
 	BuildSendAndCloseSoapResp(h, body, bodylen);
 }
-
+/*
 static void
 GetProtocolInfo(struct upnphttp * h, const char * action)
 {
+
 	static const char resp[] =
 		"<u:%sResponse "
 		"xmlns:u=\"%s\">"
@@ -194,9 +196,10 @@ GetProtocolInfo(struct upnphttp * h, const char * action)
 	bodylen = sprintf(body, resp, action, "urn:schemas-upnp-org:service:ConnectionManager:1", action);
 	BuildSendAndCloseSoapResp(h, body, bodylen);
 
+	dlog_print(DLOG_DEBUG,"tdlna", "겟프로토콜 %s", body);
 	free(body);
 }
-
+*/
 static void
 GetSortCapabilities(struct upnphttp * h, const char * action)
 {
@@ -249,7 +252,7 @@ GetSearchCapabilities(struct upnphttp * h, const char * action)
 		action);	
 	BuildSendAndCloseSoapResp(h, body, bodylen);
 }
-*//*
+*/
 static void
 GetCurrentConnectionIDs(struct upnphttp * h, const char * action)
 {
@@ -268,7 +271,7 @@ GetCurrentConnectionIDs(struct upnphttp * h, const char * action)
 		action);	
 	BuildSendAndCloseSoapResp(h, body, bodylen);
 }
-*/ /*
+ /*
 static void
 GetCurrentConnectionInfo(struct upnphttp * h, const char * action)
 {
@@ -1128,6 +1131,8 @@ BrowseContentDirectory(struct upnphttp * h, const char * action)
 			"<Result>"
 			"&lt;DIDL-Lite"
 			CONTENT_DIRECTORY_SCHEMAS;
+
+
 	struct magic_container_s *magic;
 	char *zErrMsg = NULL;
 	char* ptr;//char *sql, *ptr
@@ -1199,25 +1204,13 @@ BrowseContentDirectory(struct upnphttp * h, const char * action)
 	if( args.filter & FILTER_PV_SUBTITLE )
 		ret = strcatf(&str, PV_NAMESPACE);
 
-	strcatf(&str, "&gt;\n");
+	strcatf(&str, "&gt;\n"); //>
 
 	args.returned = 0;
 	args.requested = RequestedCount;
 	args.client = h->req_client ? h->req_client->type->type : 0;
 	args.flags = h->req_client ? h->req_client->type->flags : 0;
 	args.str = &str;
-
-	/*
-	printf("Browsing ContentDirectory:\n"
-	                         " * ObjectID: %s\n"
-	                         " * Count: %d\n"
-	                         " * StartingIndex: %d\n"
-	                         " * BrowseFlag: %s\n"
-	                         " * Filter: %s\n"
-	                         " * SortCriteria: %s\n",
-				ObjectID, RequestedCount, StartingIndex,
-	                        BrowseFlag, Filter, SortCriteria);
-	 */
 
 	dlog_print(DLOG_WARN,"tdlna", " ObjectID: %s", ObjectID);
 	dlog_print(DLOG_WARN,"tdlna", " RequestedCount: %d", RequestedCount);
@@ -1228,8 +1221,58 @@ BrowseContentDirectory(struct upnphttp * h, const char * action)
 
 	//=========================================== 여기까지는 정상작동할것으로 봄 ==================================
 
+	if( strcmp(ObjectID, "0") == 0 ){
+
+		char* BrowseRoot;
+		BrowseRoot = malloc(1024);
+
+		sprintf(BrowseRoot, BROWSE_ROOT_RESULT, 0,0,1); //ImageNum, AudioNum, VideoNum
+
+		//strcatf(&str, BROWSE_ROOT_RESULT, 0,0,1);
+		str.off = sprintf(str.data, "%s%s"
+						"&lt;/DIDL-Lite&gt;</Result>\n"
+	                    "<NumberReturned>%u</NumberReturned>\n"
+	                    "<TotalMatches>%u</TotalMatches>\n"
+	                    "<UpdateID>%u</UpdateID>"
+	                    "</u:BrowseResponse>", resp0, BrowseRoot, 3, 3, updateID);
+
+		//dlog_print(DLOG_DEBUG, "tdlna", "%s", BrowseRoot);
+		dlog_print(DLOG_DEBUG, "tdlna", "브라우저루트 복사");
+
+		free(BrowseRoot);
+
+		//image audio video 3가지 항목
+		args.returned = 3;
+		totalMatches = 3;
+	}
+	else if(strcmp(ObjectID, "0/video") == 0){ //비디오!!!!!!!!!!!!!!!!!!!!!!!!!!!
+
+		dlog_print(DLOG_DEBUG, "tdlna", "잘나오나 http://%s:%d", lan_addr[0].str, runtime_vars.port);
+
+
+		char* BrowseVideo;
+		BrowseVideo = malloc(2048);
+		sprintf(BrowseVideo, BROWSE_VIDEO_ITEM, lan_addr[0].str, runtime_vars.port);
+
+		dlog_print(DLOG_DEBUG, "tdlna", "잘나오나 http://%s:%d", lan_addr[0].str, runtime_vars.port);
+
+		//strcatf(&str, BROWSE_ROOT_RESULT, 0,0,1);
+		str.off = sprintf(str.data, "%s%s"
+				"&lt;/DIDL-Lite&gt;</Result>\n"
+				"<NumberReturned>%u</NumberReturned>\n"
+				"<TotalMatches>%u</TotalMatches>\n"
+				"<UpdateID>%u</UpdateID>"
+				"</u:BrowseResponse>", resp0, BrowseVideo, 1, 1, updateID);
+
+		dlog_print(DLOG_DEBUG, "tdlna", "비디오: %s", str.data);
+
+		free(BrowseVideo);
+
+		//image audio video 3가지 항목
+	}
 
 	/*
+	//--------------------------
 	 //BrowseDirectChildren or BrowseMetadata
 	if( strcmp(BrowseFlag+6, "Metadata") == 0 )
 	{
@@ -1344,17 +1387,18 @@ BrowseContentDirectory(struct upnphttp * h, const char * action)
 			goto browse_error;
 		}
 	}
-	*/
 
+	//-------------------------- */
+/*
 	ret = strcatf(&str, "&lt;/DIDL-Lite&gt;</Result>\n"
 	                    "<NumberReturned>%u</NumberReturned>\n"
 	                    "<TotalMatches>%u</TotalMatches>\n"
 	                    "<UpdateID>%u</UpdateID>"
 	                    "</u:BrowseResponse>",
 	                    args.returned, totalMatches, updateID);
+*/
 
-
-
+	dlog_print(DLOG_DEBUG, "tdlna", "%s", str);
 	BuildSendAndCloseSoapResp(h, str.data, str.off);
 browse_error:
 	ClearNameValueList(&data);
@@ -1908,17 +1952,17 @@ static const struct
 //Soap 메소드들의 처리를 담당하는 함수포인터
 soapMethods[] =
 {
-		{ "IsAuthorized", IsAuthorizedValidated},
-		{ "IsValidated", IsAuthorizedValidated},
-		{ "RegisterDevice", RegisterDevice},
-		{ "Browse", BrowseContentDirectory},
+	{ "IsAuthorized", IsAuthorizedValidated},
+	{ "IsValidated", IsAuthorizedValidated},
+	{ "RegisterDevice", RegisterDevice},
+	{ "Browse", BrowseContentDirectory},
 	//{ "GetProtocolInfo", GetProtocolInfo}, // 현재 프로그램이 멈추는 문제가 있음
 	//{ "QueryStateVariable", QueryStateVariable},
 	//{ "Search", SearchContentDirectory},
 	//{ "GetSearchCapabilities", GetSearchCapabilities},
 	{ "GetSortCapabilities", GetSortCapabilities},
 	{ "GetSystemUpdateID", GetSystemUpdateID},
-	//{ "GetCurrentConnectionIDs", GetCurrentConnectionIDs},
+	{ "GetCurrentConnectionIDs", GetCurrentConnectionIDs},
 	//{ "GetCurrentConnectionInfo", GetCurrentConnectionInfo},
 	//{ "X_GetFeatureList", SamsungGetFeatureList},
 	//{ "X_SetBookmark", SamsungSetBookmark},

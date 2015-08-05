@@ -63,7 +63,7 @@ void* ssdpAlive(void* data){
 	app_data *ad = data;
 
 	while(ad->run_tdlna){
-		dlog_print(DLOG_INFO, "tdlna", "SSDP Alive (run:%d)", ad->run_tdlna);
+		//dlog_print(DLOG_INFO, "tdlna", "SSDP Alive (run:%d)", ad->run_tdlna);
 		SendSSDPNotifies(lan_addr[0].snotify, lan_addr[0].str, runtime_vars.port, runtime_vars.notify_interval);
 		//sleep(runtime_vars.notify_interval - 10 ); // 딜레이를 기존보다 10초 정도 적게 보냄
 		sleep(1); //테스트 3초

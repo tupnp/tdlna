@@ -982,6 +982,8 @@ next_header:
 static void
 Send400(struct upnphttp * h)
 {
+	dlog_print(DLOG_ERROR,"tdlna","HTTP 400 ");
+
 	static const char body400[] =
 		"<HTML><HEAD><TITLE>400 Bad Request</TITLE></HEAD>"
 		"<BODY><H1>Bad Request</H1>The request is invalid"
@@ -996,6 +998,8 @@ Send400(struct upnphttp * h)
 static void
 Send404(struct upnphttp * h)
 {
+	dlog_print(DLOG_ERROR,"tdlna","HTTP 404 ");
+
 	static const char body404[] =
 		"<HTML><HEAD><TITLE>404 Not Found</TITLE></HEAD>"
 		"<BODY><H1>Not Found</H1>The requested URL was not found"
@@ -1010,6 +1014,8 @@ Send404(struct upnphttp * h)
 static void
 Send406(struct upnphttp * h)
 {
+	dlog_print(DLOG_ERROR,"tdlna","HTTP 406 ");
+
 	static const char body406[] =
 		"<HTML><HEAD><TITLE>406 Not Acceptable</TITLE></HEAD>"
 		"<BODY><H1>Not Acceptable</H1>An unsupported operation"
@@ -1024,6 +1030,8 @@ Send406(struct upnphttp * h)
 static void
 Send416(struct upnphttp * h)
 {
+	dlog_print(DLOG_ERROR,"tdlna","HTTP 416 ");
+
 	static const char body416[] =
 		"<HTML><HEAD><TITLE>416 Requested Range Not Satisfiable</TITLE></HEAD>"
 		"<BODY><H1>Requested Range Not Satisfiable</H1>The requested range"
@@ -1039,6 +1047,8 @@ Send416(struct upnphttp * h)
 void
 Send500(struct upnphttp * h)
 {
+	dlog_print(DLOG_ERROR,"tdlna","HTTP 500 ");
+
 	static const char body500[] =
 		"<HTML><HEAD><TITLE>500 Internal Server Error</TITLE></HEAD>"
 		"<BODY><H1>Internal Server Error</H1>Server encountered "
@@ -1054,6 +1064,8 @@ Send500(struct upnphttp * h)
 void
 Send501(struct upnphttp * h)
 {
+	dlog_print(DLOG_ERROR,"tdlna","HTTP 501 ");
+
 	static const char body501[] = 
 		"<HTML><HEAD><TITLE>501 Not Implemented</TITLE></HEAD>"
 		"<BODY><H1>Not Implemented</H1>The HTTP Method "
