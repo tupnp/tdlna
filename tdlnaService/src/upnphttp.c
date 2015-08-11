@@ -24,8 +24,6 @@
 #include "upnpsoap.h"
 #include "upnpevents.h"
 
-#define HOME_DIR "/opt/usr/media/DCIM/Camera" //HTTP 파일 홈 디렉터리
-
 #define MAX_BUFFER_SIZE 2147483647
 #define MIN_BUFFER_SIZE 65536
 
@@ -417,6 +415,7 @@ static void ProcessHttpQuery_upnphttp(struct upnphttp * h)
 {
 	char HttpCommand[16];
 	char HttpUrl[512];
+	char filePath[512];
 	char * HttpVer;
 	char * p;
 	int i;
@@ -600,12 +599,15 @@ static void ProcessHttpQuery_upnphttp(struct upnphttp * h)
 			else if(strncmp(HttpUrl, "/Resized/", 9) == 0)		//크기 조정
 			{
 			//	SendResp_resizedimg(h, HttpUrl+9);
-			}
+			}*/
 			else if(strncmp(HttpUrl, "/icons/", 7) == 0)			//아이콘
 			{
-			//	SendResp_icon(h, HttpUrl+7);
+				strcpy(filePath, HOME_DIR);
+				strcat(filePath, "/icons/lrg.png");
+				SendResp_dlnafile(h, filePath); //파일요청 처리
+				dlog_print(DLOG_DEBUG, "tdlna", "아이콘 파일 요청처리 (%s)", HttpUrl, inet_ntoa(h->clientaddr));
 			}
-			else if(strncmp(HttpUrl, "/Captions/", 10) == 0)		//캡션
+			/*else if(strncmp(HttpUrl, "/Captions/", 10) == 0)		//캡션
 			{
 			//	SendResp_caption(h, HttpUrl+10);
 			}
@@ -629,7 +631,9 @@ static void ProcessHttpQuery_upnphttp(struct upnphttp * h)
 			}*/
 			else
 			{
-				SendResp_dlnafile(h, HttpUrl); //파일요청 처리
+				strcpy(filePath, HOME_DIR);
+				strcat(filePath, HttpUrl);
+				SendResp_dlnafile(h, filePath); //파일요청 처리
 				dlog_print(DLOG_DEBUG, "tdlna_file", "파일 요청 %s (%s)", HttpUrl, inet_ntoa(h->clientaddr));
 			}
 		}
@@ -1187,21 +1191,77 @@ void BuildHeader_upnphttp(struct upnphttp * h, int respcode,
 	}
 }
 
+//확장자 대문자->소문자
+void strLwr(char* str){
+	int i;
+	for(i=0; str[i] != '\0' && i<20; i++){
+		if('A' <= str[i] && str[i]<= 'Z'){
+			str[i] = str[i] + ('a'-'A');
+		}
+	}
+}
+
+void simpleGetMimeStr(char* mimeStr, char* path){
+
+	int i, path_len;
+	char* ext;
+	char lExt[10];
+
+	path_len = strlen(path); //주어진 파일명 길이
+
+	//확장자 구하기
+	for(i = path_len-1; 0<i; i--){
+		if(path[i] == '.'){
+			ext = &path[i];
+			break;
+		}
+	}
+
+	if(strlen(ext) < 2){
+		strcpy(mimeStr,"text/html"); //http 기본값
+	}
+	else{
+		strcpy(lExt, ext); //원본 유지를 위해 복사해서 비교함 걍
+		strLwr(lExt); //확장자 소문자로 변환
+		ext = lExt;
+
+		if(!strcmp(ext, ".xml")){
+			strcpy(mimeStr,"application/xml");
+		}
+		else if(!strcmp(ext, "mp4")){
+			strcpy(mimeStr, "video/mp4");
+		}
+		else if(!strcmp(ext, "png")){
+					strcpy(mimeStr, "image/png");
+		}
+		else if(!strcmp(ext, "jpg") || !strcmp(ext, "jpeg")){
+					strcpy(mimeStr, "image/jpeg");
+		}
+		else if(!strcmp(ext, "mp3")){
+							strcpy(mimeStr, "audio/mp3");
+		}
+		else
+		{
+			strcpy(mimeStr,"text/html"); //http 기본값
+		}
+	}
+}
+
 //파일 요청에 대해 해당하는 경로(object로 넘어옴)의 파일을 가져와 네트워크 스트림으로 전송한다.
 static void SendResp_dlnafile(struct upnphttp *h, char *object)
 {
 	char header[1024];
 	struct string_s str;
-	char buf[128];
-	char **result;
-	int rows, ret;
+//	char buf[128];
+//	char **result;
+//	int rows, ret;
 	off_t total, offset, size;
-	int64_t id;
+//	int64_t id;
 	int sendfh;
 	uint32_t dlna_flags = DLNA_FLAG_DLNA_V1_5|DLNA_FLAG_HTTP_STALLING|DLNA_FLAG_TM_B;
-	uint32_t cflags = h->req_client ? h->req_client->type->flags : 0;
+//	uint32_t cflags = h->req_client ? h->req_client->type->flags : 0;
 	const char *tmode;
-	enum client_types ctype = h->req_client ? h->req_client->type->type : 0;
+//	enum client_types ctype = h->req_client ? h->req_client->type->type : 0;
 	static struct { int64_t id;
 	                enum client_types client;
 	                char path[PATH_MAX];
@@ -1227,23 +1287,14 @@ static void SendResp_dlnafile(struct upnphttp *h, char *object)
 
 	offset = h->req_RangeStart; //range 요청시 시작 바이트만큼 offset 이동
 	
-	strcat(last_file.path, HOME_DIR);
+	//strcat(last_file.path, HOME_DIR);
 	strcat(last_file.path, object);
 
 	sendfh = open(last_file.path, O_RDONLY); //로컬 파일을 여는부분
 	
-	//간단하게 mime type를 판별하여 지정해줌
-	if(strstr(object, ".xml") != NULL)
-		strcpy(last_file.mime,"application/xml");
-	else if(strstr(object, ".mp4") != NULL)
-		strcpy(last_file.mime,"video/mp4");
-	else if(strstr(object, ".png") != NULL)
-		strcpy(last_file.mime,"image/png");
-	else if(strstr(object, ".jpg") != NULL || strstr(object, ".jpeg") != NULL)
-		strcpy(last_file.mime,"image/jpeg");
-	else
-		strcpy(last_file.mime,"text/html"); //default
+	simpleGetMimeStr(last_file.mime, object); //mimetype구하기
 
+	dlog_print(DLOG_DEBUG, "tdlna", "HTTP MIME = %s", last_file.mime);
 	//strcpy(last_file.dlna,"DLNA.ORG_PN=AVC_MP4_HP_HD_AAC;");
 
 	if( sendfh < 0 ) {

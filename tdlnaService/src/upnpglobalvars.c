@@ -13,8 +13,10 @@
 struct runtime_vars_s runtime_vars;
 uint32_t runtime_flags = INOTIFY_MASK;
 
-char uuidvalue[] = "uuid:12345678-0000-0000-0000-00001234abcd";
-char modelname[MODELNAME_MAX_LEN] = "Z1 Test";
+char HOME_DIR[512] = "/opt/usr/media/DCIM/Camera";
+
+char uuidvalue[50] = "uuid:12345678-0000-0000-0000-00001234eeee";
+char modelname[MODELNAME_MAX_LEN] = "TizenDevice";
 char modelnumber[MODELNUMBER_MAX_LEN] = MINIDLNA_VERSION;
 char serialnumber[SERIALNUMBER_MAX_LEN] = "12345678";
 #if PNPX

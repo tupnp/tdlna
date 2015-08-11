@@ -59,6 +59,18 @@ int serviceOff(void* data){
 	return 1;
 }
 
+void setDeviceProperty(void* data, char* dName){
+	app_data *ad = data;
+	if(ad->run_tdlna == true){
+		serviceOff(data);
+	}
+
+	sprintf(modelname, "%s", dName);
+
+	sleep(4);
+	serviceOn(data);
+}
+
 void* ssdpAlive(void* data){
 	app_data *ad = data;
 
@@ -66,7 +78,7 @@ void* ssdpAlive(void* data){
 		//dlog_print(DLOG_INFO, "tdlna", "SSDP Alive (run:%d)", ad->run_tdlna);
 		SendSSDPNotifies(lan_addr[0].snotify, lan_addr[0].str, runtime_vars.port, runtime_vars.notify_interval);
 		//sleep(runtime_vars.notify_interval - 10 ); // 딜레이를 기존보다 10초 정도 적게 보냄
-		sleep(1); //테스트 3초
+		sleep(3); //테스트 3초
 	}
 
 	dlog_print(DLOG_INFO, "tdlna", "♠♠♠ GoodBye~ (ssdp)♠♠♠ %d", ad->run_tdlna);

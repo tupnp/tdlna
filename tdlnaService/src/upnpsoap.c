@@ -13,6 +13,7 @@
 #include <sys/param.h>
 #include <stdarg.h>
 #include <dlog.h>
+#include <dirent.h> //opendir
 
 #include "upnpglobalvars.h"
 #include "upnpreplyparse.h"
@@ -1120,6 +1121,42 @@ callback(void *args, int argc, char **argv, char **azColName)
 
 	*/
 
+//파일 확장명 비교
+int file_ext_same (char *filename, char *ext)
+{
+
+	int i, ext_len, filename_len, cnt=0;
+
+	ext_len = strlen(ext); //확장자 길이
+	filename_len = strlen(filename); //주어진 파일명 길이
+
+	//확장명이 파일명보다 길 경우 리턴
+	if(ext_len > filename_len)
+		return 0;
+
+	//파일명 끝에서 부터 확장명과 비교
+	for(i = ext_len-1; i > 0; i--){
+		if(ext[i] == filename[--filename_len])
+		cnt++;
+	}
+
+	if(cnt == ext_len-1)
+		return 1;
+	else
+		return 0;
+}
+
+void mstrcat(char* str1, char* str2){
+	int i=0, j=0;
+	while(str1[i] != '\0') i++;
+
+	while(str2[j] != '\0'){
+		str1[i++] = str2[j++];
+	}
+
+	dlog_print(DLOG_DEBUG, "tdlna", "mstrcat i=%d j=%d", i, j);
+	str1[i] = '\0';
+}
 
 static void
 BrowseContentDirectory(struct upnphttp * h, const char * action)
@@ -1133,23 +1170,34 @@ BrowseContentDirectory(struct upnphttp * h, const char * action)
 			CONTENT_DIRECTORY_SCHEMAS;
 
 
-	struct magic_container_s *magic;
-	char *zErrMsg = NULL;
+	//struct magic_container_s *magic;
+	//char *zErrMsg = NULL;
 	char* ptr;//char *sql, *ptr
+	char temp[4096];
+
 	struct Response args;
 	struct string_s str;
 	int totalMatches = 0;
 	int ret;
 	const char *ObjectID, *BrowseFlag;
 	char *Filter, *SortCriteria;
-	const char *objectid_sql = "o.OBJECT_ID";
-	const char *parentid_sql = "o.PARENT_ID";
-	const char *refid_sql = "o.REF_ID";
-	char where[256] = "";
-	char *orderBy = NULL;
+	//const char *objectid_sql = "o.OBJECT_ID";
+	//const char *parentid_sql = "o.PARENT_ID";
+	//const char *refid_sql = "o.REF_ID";
+	//char where[256] = "";
+	//char *orderBy = NULL;
+
 	struct NameValueParserData data;
 	int RequestedCount = 0;
 	int StartingIndex = 0;
+
+	//--- dirent -----
+	struct dirent* dp;
+	DIR* dirp;
+	FILE* fp;
+	long fileSize = 0;
+	char fileFullPath[512];
+	//----------------
 
 	dlog_print(DLOG_INFO,"tdlna", "★★★  Browse 액션 처리중 ★★★");
 
@@ -1192,17 +1240,20 @@ BrowseContentDirectory(struct upnphttp * h, const char * action)
 	}
 
 	str.data = malloc(DEFAULT_RESP_SIZE);
+	//memset(str.data, '\0', DEFAULT_RESP_SIZE);
+
+	if(str.data == NULL) goto browse_error;
 	str.size = DEFAULT_RESP_SIZE;
 	str.off = sprintf(str.data, "%s", resp0);
+
 	// See if we need to include DLNA namespace reference 
 	args.iface = h->iface;
-
 
 	args.filter = set_filter_flags(Filter, h);
 	if( args.filter & FILTER_DLNA_NAMESPACE )
 		ret = strcatf(&str, DLNA_NAMESPACE);
 	if( args.filter & FILTER_PV_SUBTITLE ){
-		dlog_print(DLOG_DEBUG, "tdlna", "PV NameSpase 찍음 ㅇㅇㅇㅇ 삼성!!");
+		dlog_print(DLOG_DEBUG, "tdlna", "삼성!!기기 연결! PV NameSpase 찍음");
 		ret = strcatf(&str, PV_NAMESPACE);
 	}
 
@@ -1225,31 +1276,55 @@ BrowseContentDirectory(struct upnphttp * h, const char * action)
 
 	if(strcmp(ObjectID, "2$8") == 0){ //비디오!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
+		strcat(str.data, "&gt;");
 		dlog_print(DLOG_DEBUG, "tdlna", "잘나오나 http://%s:%d", lan_addr[0].str, runtime_vars.port);
 
+		int itemCount = 0;
 
-		char* BrowseVideo;
-		BrowseVideo = malloc(2048);
-		sprintf(BrowseVideo, BROWSE_VIDEO_ITEM, lan_addr[0].str, runtime_vars.port);
+		//홈 디렉토리의 파일목록을 구해 확장자가 mp4인것만 추출
+		dirp = opendir(HOME_DIR);
+		while((dp = readdir(dirp)) != NULL) //디렉토리 안의 내용을 하나씩 가져와 확장자 비교
+		{
+			//if(itemCount == 1) break;
+			if(file_ext_same(dp->d_name, "mp4")){
+				sprintf(fileFullPath, "%s/%s", HOME_DIR, dp->d_name); //전체 파일경로
 
-		dlog_print(DLOG_DEBUG, "tdlna", "잘나오나 http://%s:%d", lan_addr[0].str, runtime_vars.port);
+				dlog_print(DLOG_DEBUG, "tdlna", "해당파일 경로: %s", fileFullPath);
 
-		//strcatf(&str, BROWSE_ROOT_RESULT, 0,0,1);
-		str.off = sprintf(str.data, "%s&gt;\n%s"
-				"&lt;/DIDL-Lite&gt;</Result>\n"
+				//파일 사이즈 구하기
+				if((fp=fopen(fileFullPath, "rb"))==NULL)
+					goto browse_error;
+				fseek(fp, 0L, SEEK_END);
+				fileSize = ftell(fp);
+				fclose(fp);
+
+				dlog_print(DLOG_DEBUG, "tdlna", "해당파일 크기: %ld", fileSize);
+
+				sprintf(temp, BROWSE_VIDEO_ITEM, itemCount++, dp->d_name, fileSize, lan_addr[0].str, runtime_vars.port, dp->d_name);
+				dlog_print(DLOG_DEBUG, "tdlna", "temp길이: %d", strlen(temp));
+
+				strcat(str.data, temp); //각 파일에 대한 xml코드 이어붙임
+
+				dlog_print(DLOG_ERROR, "tdlna", "템프%d: %s", itemCount, temp);
+				dlog_print(DLOG_ERROR, "tdlna", "데이타: %s",  str.data);
+
+			}
+		}
+
+		sprintf(temp, "&lt;/DIDL-Lite&gt;</Result>\n"
 				"<NumberReturned>%u</NumberReturned>\n"
 				"<TotalMatches>%u</TotalMatches>\n"
 				"<UpdateID>%u</UpdateID>"
-				"</u:BrowseResponse>", resp0, BrowseVideo, 1, 1, updateID);
+				"</u:BrowseResponse>", itemCount, itemCount, updateID);
 
-		dlog_print(DLOG_DEBUG, "tdlna", "비디오: %s", str.data);
+		strcat(str.data, temp); //각 파일에 대한 xml코드 이어붙임
 
-		free(BrowseVideo);
+		dlog_print(DLOG_ERROR, "tdlna", "데이타 길이 %d", strlen(str.data));
 
-		//image audio video 3가지 항목
 	}
 	else if(strcmp(ObjectID, "2") == 0){
 
+		//비디오의 폴더목록
 		char* BrowseRoot;
 		BrowseRoot = malloc(2048);
 
@@ -1270,6 +1345,7 @@ BrowseContentDirectory(struct upnphttp * h, const char * action)
 	}
 	else
 	{
+		//Root 목록 (동영상/음악/사진)
 
 		char* BrowseRoot;
 				BrowseRoot = malloc(1024);
@@ -1285,7 +1361,7 @@ BrowseContentDirectory(struct upnphttp * h, const char * action)
 			                    "</u:BrowseResponse>", resp0, BrowseRoot, 3, 3, updateID);
 
 				//dlog_print(DLOG_DEBUG, "tdlna", "%s", BrowseRoot);
-				dlog_print(DLOG_DEBUG, "tdlna", "브라우저루트 복사");
+				dlog_print(DLOG_DEBUG, "tdlna", "브라우즈루트 복사");
 
 				free(BrowseRoot);
 
@@ -1421,11 +1497,23 @@ BrowseContentDirectory(struct upnphttp * h, const char * action)
 	                    args.returned, totalMatches, updateID);
 */
 
-	dlog_print(DLOG_DEBUG, "tdlna", "%s", str);
+	str.off = strlen(str.data);
+	dlog_print(DLOG_DEBUG, "tdlna", "----- 최종 Borwse 응답\n%s\n---------------------------------", str.data);
+	dlog_print(DLOG_ERROR, "tdlna", "1300데이타: %s",  str.data + 1000);
+
+	FILE* dfp;
+	dfp = fopen("/opt/usr/media/tdlnaDbg.txt", "w+");
+	if(dfp == NULL){
+		dlog_print(DLOG_ERROR, "tdlna", "디버그파일 실패");
+		goto browse_error;
+	}
+	fprintf(dfp, "%s", str.data);
+	fclose(dfp);
+
 	BuildSendAndCloseSoapResp(h, str.data, str.off);
 browse_error:
 	ClearNameValueList(&data);
-	free(orderBy);
+	//free(orderBy);
 	free(str.data);
 }
 /*
@@ -1923,9 +2011,9 @@ SamsungGetFeatureList(struct upnphttp * h, const char * action)
 		" xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\""
 		" xsi:schemaLocation=\"urn:schemas-upnp-org:av:avs http://www.upnp.org/schemas/av/avs.xsd\"&gt;"
 		"&lt;Feature name=\"samsung.com_BASICVIEW\" version=\"1\"&gt;"
-		 "&lt;container id=\"1\" type=\"object.item.audioItem\"/&gt;"
-		 "&lt;container id=\"2\" type=\"object.item.videoItem\"/&gt;"
-		 "&lt;container id=\"3\" type=\"object.item.imageItem\"/&gt;"
+		 "&lt;container id=\"1\" type=\"object.item.audioItem\"/&gt;" //Audio 1
+		 "&lt;container id=\"2\" type=\"object.item.videoItem\"/&gt;" //Video 2
+		 "&lt;container id=\"3\" type=\"object.item.imageItem\"/&gt;" //Image 3
 		"&lt;/Feature&gt;"
 		"&lt;/Features&gt;"
 		"</FeatureList></u:X_GetFeatureListResponse>";

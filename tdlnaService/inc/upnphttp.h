@@ -80,6 +80,7 @@ struct upnphttp {
 #define MSG_MORE 0
 #endif
 
+
 #define ROOT_DESC_XML "<?xml version=\"1.0\"?>" \
 "<root xmlns=\"urn:schemas-upnp-org:device-1-0\">" \
 "    <specVersion>" \
@@ -105,7 +106,7 @@ struct upnphttp {
 "                <width>120</width>" \
 "                <height>120</height>" \
 "                <depth>24</depth>" \
-"                <url>/icons/lrg.png</url>" \
+"                <url>/icons/icon.png</url>" \
 "            </icon>" \
 "        </iconList>" \
 "        <serviceList>" \
