@@ -7,6 +7,7 @@ void reload_ifaces(int force_notify);
 
 int serviceOn(void* data);
 int serviceOff(void* data);
+void setDeviceProperty(void* data, char* dName);
 void* tdlnamain(void* data);
 void* ssdpAlive(void* data);
 

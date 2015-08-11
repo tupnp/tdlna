@@ -1228,16 +1228,16 @@ void simpleGetMimeStr(char* mimeStr, char* path){
 		if(!strcmp(ext, ".xml")){
 			strcpy(mimeStr,"application/xml");
 		}
-		else if(!strcmp(ext, "mp4")){
+		else if(!strcmp(ext, ".mp4")){
 			strcpy(mimeStr, "video/mp4");
 		}
-		else if(!strcmp(ext, "png")){
+		else if(!strcmp(ext, ".png")){
 					strcpy(mimeStr, "image/png");
 		}
-		else if(!strcmp(ext, "jpg") || !strcmp(ext, "jpeg")){
+		else if(!strcmp(ext, ".jpg") || !strcmp(ext, ".jpeg")){
 					strcpy(mimeStr, "image/jpeg");
 		}
-		else if(!strcmp(ext, "mp3")){
+		else if(!strcmp(ext, ".mp3")){
 							strcpy(mimeStr, "audio/mp3");
 		}
 		else

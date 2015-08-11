@@ -52,23 +52,29 @@ int serviceOff(void* data){
 	int r;
 	ad->run_tdlna = false;
 
-	r = pthread_join(&(ad->tdlna_td), NULL);
+//	r = pthread_join(&(ad->tdlna_td), NULL);
 	ad->tdlna_td = NULL;
-	dlog_print(DLOG_INFO,"tdlna","◆ 서비스 스레드 종료: %d", r);
+//	dlog_print(DLOG_INFO,"tdlna","◆ 서비스 스레드 종료: %d", r);
 
 	return 1;
 }
 
 void setDeviceProperty(void* data, char* dName){
+
 	app_data *ad = data;
+	bool saveState = ad->run_tdlna;
+
+	if(!strcmp(modelname, dName)) return;
+
 	if(ad->run_tdlna == true){
 		serviceOff(data);
 	}
 
 	sprintf(modelname, "%s", dName);
-
-	sleep(4);
-	serviceOn(data);
+	if(saveState == true){
+		sleep(3);
+		serviceOn(data);
+	}
 }
 
 void* ssdpAlive(void* data){

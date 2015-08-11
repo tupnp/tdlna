@@ -20,12 +20,15 @@
 #include "logger.h"
 #include "proxy-client.h"
 #include "tdlnamain.h"
+#include "metadata.h"
 
 #include <service_app.h>
 #include <stdlib.h>
 #include <dlog.h>
 
+#include <system_settings.h>
 #include <metadata_extractor.h>
+#include <media_content.h>
 
 // app event callbacks
 static bool _on_create_cb(void *user_data);
@@ -37,8 +40,13 @@ static int _app_send_response(app_data *app, bundle *const msg);
 static int _app_execute_operation(app_data *appdata, req_operation operation_type);
 static int _app_process_received_message(bundle *rec_msg, bundle *resp_msg, req_operation *req_oper);
 static int _on_proxy_client_msg_received_cb(void *data, bundle *const rec_msg);
+static void _media_search(app_data* data);
+static void _media_search_completed_cb(media_content_error_e error,void* user_data);
+static void get_DeviceID();
 
 static bool _vedioMetadataGet(app_data* data);//meta정보 get
+
+char deviceName[33];
 
 app_data *app_create()
 {
@@ -170,6 +178,7 @@ static int _app_init(app_data *app)
     //tldna 서비스 appdata초기화
     app->run_tdlna = false;
     app->tdlna_td = NULL;
+    get_DeviceID();//기본 기기 아이디값 가져오기
 
     return SVC_RES_OK;
 }
@@ -186,8 +195,13 @@ static int _app_process_received_message(bundle *rec_msg,
     char *rec_key_val = NULL;
     int res = bundle_get_str(rec_msg, "command", &rec_key_val);
     RETVM_IF(res != BUNDLE_ERROR_NONE, SVC_RES_FAIL, "Failed to get string from bundle");
-
-    if (strcmp(rec_key_val,"meta") == 0)
+    dlog_print(DLOG_INFO,"tdlna","웹앱으로 부터 서비스 수신:%s",rec_key_val);
+	if (strcmp(rec_key_val, "server state") == 0) {//현재 상태 확인 요청
+		dlog_print(DLOG_INFO ,"tdlna", "서비스 상태확인요청");
+		resp_key_val = "(state) 수신";
+		*req_oper = REQ_OPER_STATE;
+	}
+    else if (strcmp(rec_key_val,"meta") == 0)
     {
         resp_key_val = "metaget";
         *req_oper = REQ_OPER_META_GET_APP;
@@ -206,6 +220,18 @@ static int _app_process_received_message(bundle *rec_msg,
         *req_oper = REQ_OPER_DLNA_APP_OFF;
         //*req_oper = REQ_OPER_EXIT_APP;
     }
+    else if (strstr(rec_key_val, "getDeviceId") != NULL) {
+		dlog_print(DLOG_INFO, "tdlna","디바이스ID 요청 app_process_received_message");
+		char *str = strtok(rec_key_val, "|");
+		dlog_print(DLOG_INFO, "tdlna","strtok: %s",str);
+		str = strtok(NULL, "|");
+		dlog_print(DLOG_INFO, "tdlna","strtok: %s",str);
+		if (str != NULL) {//새로운 name을 저장
+			strcpy(deviceName,str);
+		}
+		resp_key_val = "(getDeviceId)수신";
+		*req_oper = REQ_OPER_DEVICE_ID;
+	}
     else
     {
         resp_key_val = "unsupported";
@@ -226,17 +252,35 @@ static int _app_execute_operation(app_data *appdata, req_operation operation_typ
 
     char *resp_key_val = NULL;
 
+	char respStr[50];
     switch (operation_type)
     {
+		case REQ_OPER_STATE:
+			dlog_print(DLOG_INFO, "tdlna", "현재 상태 얻기");
+			if ((appdata->run_tdlna) == NULL) {
+				// 서비스가 꺼져있는 상태라면
+				dlog_print(DLOG_INFO, "tdlna", "서비스 상태 조회 %d", appdata->run_tdlna);
+				resp_key_val = "STATE:OFF";
+			} else {
+				resp_key_val = "STATE:ON";
+				dlog_print(DLOG_INFO, "tdlna", "서비스 상태 조회 %d", appdata->run_tdlna);
+			}
+			break;
+
         case REQ_OPER_META_GET_APP:
         	dlog_print(DLOG_INFO,"tdlna","메타정보 가져오기 실행 ");
-        	_vedioMetadataGet(appdata);
+//테스트중        	_vedioMetadataGet(appdata);
+ //       	_media_search(appdata);
+        	Meta_Get();
         	break;
         case REQ_OPER_DLNA_APP://실행 요청시
         	dlog_print(DLOG_INFO,"tdlna","dlna on 처리");
-
         	if(!(appdata->run_tdlna)){
         		// 서비스가 꺼져있는 상태라면
+        		if(appdata->tdlna_td != NULL){
+        				dlog_print(DLOG_ERROR,"tdlna", "이전 실행된 서비스가 정상적으로 종료되지 않았습니다.");
+        				return 0;
+        			}
         		if(serviceOn(appdata)){
             		dlog_print(DLOG_INFO,"tdlna","★ 서비스 ON ★ %d", appdata->run_tdlna);
             		resp_key_val = "실행 성공!";
@@ -252,14 +296,23 @@ static int _app_execute_operation(app_data *appdata, req_operation operation_typ
         	break;
 
         case REQ_OPER_DLNA_APP_OFF://종료 요청시
-		if (!(appdata->run_tdlna)) {// 서비스가 꺼져있는 상태라면
-			resp_key_val = "종료 되어있음!";
-			dlog_print(DLOG_INFO, "tdlna", "★ 이미 종료상태★ %d",appdata->run_tdlna);
-		} else {
-			serviceOff(appdata);
-			resp_key_val = "종료 성공!";
-			dlog_print(DLOG_INFO, "tdlna", "★ 서비스 OFF ★ %d",appdata->run_tdlna);
-		}
+			if (!(appdata->run_tdlna)) {// 서비스가 꺼져있는 상태라면
+				resp_key_val = "종료 되어있음!";
+				dlog_print(DLOG_INFO, "tdlna", "★ 이미 종료상태★ %d",appdata->run_tdlna);
+			} else {
+				serviceOff(appdata);
+				resp_key_val = "종료 성공!";
+				dlog_print(DLOG_INFO, "tdlna", "★ 서비스 OFF ★ %d",appdata->run_tdlna);
+			}
+			break;
+        case REQ_OPER_DEVICE_ID://tDlnaName 주기
+        	setDeviceProperty(appdata, deviceName);
+			if(deviceName){
+				sprintf(respStr,"%s%s","tDlnaName/",deviceName);
+			}else
+				sprintf(respStr,"%s%s","tDlnaName/","nameError!");
+			resp_key_val = respStr;
+			dlog_print(DLOG_INFO, "tdlna", "resp_key_val값 가져오기 %s",resp_key_val);
 			break;
         default:
             DBG("Unknown request id");
@@ -272,6 +325,24 @@ static int _app_execute_operation(app_data *appdata, req_operation operation_typ
     return SVC_RES_OK;
 }
 
+static void get_DeviceID()
+{
+   char *string_ret[5];
+   int ret;
+   ret = system_settings_get_value_string((system_settings_key_e)SYSTEM_SETTINGS_KEY_DEVICE_NAME, &string_ret);
+   dlog_print(DLOG_INFO, "tdlna","%d", ret);
+   dlog_print(DLOG_INFO, "tdlna","%s", string_ret[0]);
+   strcpy(deviceName,string_ret[0]);//디바이스 ID
+}
+
+static void _media_search(app_data* data){
+	dlog_print(DLOG_INFO, "tdlna", "@@@@@_media_search");
+	 const char* path = "/opt/usr/media/DCIM/Camera/";
+	media_content_scan_folder(path,true,_media_search_completed_cb,data);
+}
+static void _media_search_completed_cb(media_content_error_e error,void* user_data){
+	dlog_print(DLOG_INFO, "tdlna", "@@@@@_media_search_completed_cb error:%d",error);
+}
 static bool _vedioMetadataGet(app_data* data){
    dlog_print(DLOG_INFO,"tdlna","_vedioMetadataGet() 실행 ");
 
@@ -279,7 +350,7 @@ static bool _vedioMetadataGet(app_data* data){
 
    int ret = metadata_extractor_create(&g_metadata_h);
    dlog_print(DLOG_INFO,"tdlna","metadata_extractor_create %d",ret);
-   ret = metadata_extractor_set_path(g_metadata_h, "/opt/usr/media/DCIM/Camera/test.mp4");
+   ret = metadata_extractor_set_path(g_metadata_h, "/opt/usr/media/DCIM/Camera/20150716.mp4");
    dlog_print(DLOG_INFO,"tdlna","metadata_extractor_set_path %d",ret);
 
    char *value = NULL;
@@ -287,7 +358,13 @@ static bool _vedioMetadataGet(app_data* data){
 //   ======================================================================================================
    ret = metadata_extractor_get_metadata(g_metadata_h, METADATA_DURATION, &value);
    dlog_print(DLOG_INFO,"tdlna","metadata_extractor_get_metadata %d",ret);
-   dlog_print(DLOG_DEBUG, "tdlna", "METADATA_DURATION: %s\n", value);
+   int duration = 0,min = 0,sec=0;
+   duration = atoi(value);
+   duration/= 1000;//단위 변경 밀리세컨드 -> 초
+   min = duration/60;//분
+   sec = duration%60;//초
+   dlog_print(DLOG_DEBUG, "tdlna", "METADATA_DURATION: %d분 %d초\n", min,sec);
+
    if (value != NULL)
    {
       free(value);

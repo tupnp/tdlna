@@ -7,6 +7,7 @@ C_SRCS += \
 ../src/clients.c \
 ../src/main-app.c \
 ../src/main.c \
+../src/metadata.c \
 ../src/minixml.c \
 ../src/proxy-client.c \
 ../src/tdlnamain.c \
@@ -21,6 +22,7 @@ OBJS += \
 ./src/clients.o \
 ./src/main-app.o \
 ./src/main.o \
+./src/metadata.o \
 ./src/minixml.o \
 ./src/proxy-client.o \
 ./src/tdlnamain.o \
@@ -35,6 +37,7 @@ C_DEPS += \
 ./src/clients.d \
 ./src/main-app.d \
 ./src/main.d \
+./src/metadata.d \
 ./src/minixml.d \
 ./src/proxy-client.d \
 ./src/tdlnamain.d \
