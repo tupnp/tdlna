@@ -620,7 +620,7 @@ static void ProcessHttpQuery_upnphttp(struct upnphttp * h)
 			else if(strncmp(HttpUrl, "/icons/", 7) == 0)			//아이콘
 			{
 				strcpy(filePath, HOME_DIR);
-				strcat(filePath, "/icons/lrg.png");
+				strcat(filePath, HttpUrl);
 				SendResp_dlnafile(h, filePath); //파일요청 처리
 				dlog_print(DLOG_DEBUG, "tdlna", "아이콘 파일 요청처리 (%s)", HttpUrl, inet_ntoa(h->clientaddr));
 			}
@@ -1264,6 +1264,8 @@ void simpleGetMimeStr(char* mimeStr, char* path){
 			strcpy(mimeStr,"text/html"); //http 기본값
 		}
 	}
+
+	dlog_print(DLOG_ERROR, "tdlna", "마임타입 %s", mimeStr);
 }
 
 //파일 요청에 대해 해당하는 경로(object로 넘어옴)의 파일을 가져와 네트워크 스트림으로 전송한다.

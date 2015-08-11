@@ -103,11 +103,18 @@ struct upnphttp {
 "        <iconList>" \
 "            <icon>" \
 "                <mimetype>image/png</mimetype>" \
-"                <width>120</width>" \
-"                <height>120</height>" \
+"                <width>48</width>" \
+"                <height>48</height>" \
 "                <depth>24</depth>" \
 "                <url>/icons/icon.png</url>" \
 "            </icon>" \
+"            <icon>"\
+"                <mimetype>image/jpeg</mimetype>" \
+"                <width>48</width>" \
+"                <height>48</height>" \
+"                <depth>24</depth>" \
+"                <url>/icons/icon.jpg</url>" \
+"           </icon>" \
 "        </iconList>" \
 "        <serviceList>" \
 "            <service>" \

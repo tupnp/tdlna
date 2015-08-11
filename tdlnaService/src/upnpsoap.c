@@ -1174,16 +1174,23 @@ int file_ext_same (char *filename, char *ext)
 		return 0;
 }
 
-void mstrcat(char* str1, char* str2){
+void processSpecialCharacter(char* str1){
 	int i=0, j=0;
-	while(str1[i] != '\0') i++;
+	char str2[600]= {'\0',};
 
-	while(str2[j] != '\0'){
-		str1[i++] = str2[j++];
+	while(str1[i] != '\0'){
+
+		// XML에 허용되지 않는 문자열 예외처리
+		if(str1[i] == '&'){
+			strcat(&str2[i], "&amp;amp;");
+			j += 9;
+			i++;
+		}
+
+		str2[j++] = str1[i++];
 	}
-
-	dlog_print(DLOG_DEBUG, "tdlna", "mstrcat i=%d j=%d", i, j);
-	str1[i] = '\0';
+	str2[j] = '\0';
+	strcpy(str1, str2);
 }
 
 static void
@@ -1306,7 +1313,6 @@ BrowseContentDirectory(struct upnphttp * h, const char * action)
 	if(strcmp(ObjectID, "2$8") == 0){ //비디오!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
 		strcat(str.data, "&gt;");
-
 		int itemCount = 0;
 
 		//홈 디렉토리의 파일목록을 구해 확장자가 mp4인것만 추출
@@ -1330,6 +1336,9 @@ BrowseContentDirectory(struct upnphttp * h, const char * action)
 
 				dlog_print(DLOG_DEBUG, "tdlna", "해당파일 크기: %ld", fileSize);
 
+				processSpecialCharacter(dp->d_name);
+				dlog_print(DLOG_ERROR, "tdlna" , "변환된파일명: %s",dp->d_name);
+				//--- temp문자열에 각 파일의 xml요소 제작 -----
 				sprintf(temp, BROWSE_VIDEO_ITEM, itemCount++, dp->d_name, fileSize, lan_addr[0].str, runtime_vars.port, encodedFileName);
 				dlog_print(DLOG_DEBUG, "tdlna", "temp길이: %d", strlen(temp));
 
@@ -1337,7 +1346,6 @@ BrowseContentDirectory(struct upnphttp * h, const char * action)
 
 				dlog_print(DLOG_ERROR, "tdlna", "템프%d: %s", itemCount, temp);
 				dlog_print(DLOG_ERROR, "tdlna", "데이타: %s",  str.data);
-
 			}
 		}
 
@@ -1350,6 +1358,16 @@ BrowseContentDirectory(struct upnphttp * h, const char * action)
 		strcat(str.data, temp); //각 파일에 대한 xml코드 이어붙임
 
 		dlog_print(DLOG_ERROR, "tdlna", "데이타 길이 %d", strlen(str.data));
+
+		//파일디버깅!!!
+		FILE* dfp;
+		dfp = fopen("/opt/usr/media/tdlnaDbg.txt", "w+");
+		if(dfp == NULL){
+			dlog_print(DLOG_ERROR, "tdlna", "디버그파일 실패");
+			goto browse_error;
+		}
+		fprintf(dfp, "%s", str.data);
+		fclose(dfp);
 
 	}
 	else if(strcmp(ObjectID, "2") == 0){
@@ -1529,16 +1547,6 @@ BrowseContentDirectory(struct upnphttp * h, const char * action)
 
 	str.off = strlen(str.data);
 	dlog_print(DLOG_DEBUG, "tdlna", "----- 최종 Borwse 응답\n%s\n---------------------------------", str.data);
-	dlog_print(DLOG_ERROR, "tdlna", "1300데이타: %s",  str.data + 1000);
-
-	FILE* dfp;
-	dfp = fopen("/opt/usr/media/tdlnaDbg.txt", "w+");
-	if(dfp == NULL){
-		dlog_print(DLOG_ERROR, "tdlna", "디버그파일 실패");
-		goto browse_error;
-	}
-	fprintf(dfp, "%s", str.data);
-	fclose(dfp);
 
 	BuildSendAndCloseSoapResp(h, str.data, str.off);
 browse_error:
