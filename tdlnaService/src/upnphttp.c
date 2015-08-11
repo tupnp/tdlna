@@ -113,6 +113,23 @@ char* strstrc(const char *s, const char *p, const char t)
 	return NULL;
 }
 
+//URL 한글 특수 문자열 디코딩
+void urldecode(char *src, char *last, char *dest) {
+	for(;src<=last;src++,dest++){
+		if(*src=='%'){
+			int code;
+			if(sscanf(src+1, "%2x", &code)!=1) code='?';// 특수문자(한글)인 경우
+			*dest = code;
+			src+=2;
+		}else if(*src=='+') {//공백문자인 경우
+			*dest = ' ';
+		}else {
+			*dest = *src; //영문자인 경우
+		}
+	}
+	*(++dest) = '\0';
+}
+
 void Process_upnphttp(struct upnphttp * h)
 {
 	char buf[2048];
@@ -633,6 +650,8 @@ static void ProcessHttpQuery_upnphttp(struct upnphttp * h)
 			{
 				strcpy(filePath, HOME_DIR);
 				strcat(filePath, HttpUrl);
+				urldecode(filePath, filePath+strlen(filePath), filePath);
+
 				SendResp_dlnafile(h, filePath); //파일요청 처리
 				dlog_print(DLOG_DEBUG, "tdlna_file", "파일 요청 %s (%s)", HttpUrl, inet_ntoa(h->clientaddr));
 			}

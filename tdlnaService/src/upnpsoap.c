@@ -70,6 +70,34 @@ static char* strstrc(const char *s, const char *p, const char t)
 	return NULL;
 }
 
+//URL 문자열 인코딩
+char *UrlEncode(char *str, char *encstr){
+	//char encstr[128],
+	char buf[2+1];
+	int i, j;
+	unsigned char c;
+	if(str == NULL) return NULL;
+	//if((encstr = (char *)malloc((strlen(str) * 3) + 1)) == NULL) return NULL;
+
+	for(i = j = 0; str[i]; i++){
+
+		c = (unsigned char)str[i];
+		if (c == ' ') encstr[j++] = '+';
+		else if ((c >= '0') && (c <= '9')) encstr[j++] = c;
+		else if ((c >= 'A') && (c <= 'Z')) encstr[j++] = c;
+		else if ((c >= 'a') && (c <= 'z')) encstr[j++] = c;
+		else if ((c == '@') || (c == '.')) encstr[j++] = c;
+		else {
+			sprintf(buf, "%02x", c);
+			encstr[j++] = '%';
+			encstr[j++] = buf[0];
+			encstr[j++] = buf[1];
+		}
+	}
+	encstr[j] = '\0';
+	return encstr;
+}
+
 //SOAP 처리 결과 전송
 static void BuildSendAndCloseSoapResp(struct upnphttp * h, const char * body, int bodylen)
 {
@@ -1197,6 +1225,7 @@ BrowseContentDirectory(struct upnphttp * h, const char * action)
 	FILE* fp;
 	long fileSize = 0;
 	char fileFullPath[512];
+	char encodedFileName[512];
 	//----------------
 
 	dlog_print(DLOG_INFO,"tdlna", "★★★  Browse 액션 처리중 ★★★");
@@ -1277,7 +1306,6 @@ BrowseContentDirectory(struct upnphttp * h, const char * action)
 	if(strcmp(ObjectID, "2$8") == 0){ //비디오!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
 		strcat(str.data, "&gt;");
-		dlog_print(DLOG_DEBUG, "tdlna", "잘나오나 http://%s:%d", lan_addr[0].str, runtime_vars.port);
 
 		int itemCount = 0;
 
@@ -1288,8 +1316,10 @@ BrowseContentDirectory(struct upnphttp * h, const char * action)
 			//if(itemCount == 1) break;
 			if(file_ext_same(dp->d_name, "mp4")){
 				sprintf(fileFullPath, "%s/%s", HOME_DIR, dp->d_name); //전체 파일경로
+				//strcpy(encodedFileName, dp->d_name);
+				UrlEncode(dp->d_name, encodedFileName);
 
-				dlog_print(DLOG_DEBUG, "tdlna", "해당파일 경로: %s", fileFullPath);
+				dlog_print(DLOG_DEBUG, "tdlna", "해당파일 경로: %s 인코딩 파일명 %s", fileFullPath, encodedFileName);
 
 				//파일 사이즈 구하기
 				if((fp=fopen(fileFullPath, "rb"))==NULL)
@@ -1300,7 +1330,7 @@ BrowseContentDirectory(struct upnphttp * h, const char * action)
 
 				dlog_print(DLOG_DEBUG, "tdlna", "해당파일 크기: %ld", fileSize);
 
-				sprintf(temp, BROWSE_VIDEO_ITEM, itemCount++, dp->d_name, fileSize, lan_addr[0].str, runtime_vars.port, dp->d_name);
+				sprintf(temp, BROWSE_VIDEO_ITEM, itemCount++, dp->d_name, fileSize, lan_addr[0].str, runtime_vars.port, encodedFileName);
 				dlog_print(DLOG_DEBUG, "tdlna", "temp길이: %d", strlen(temp));
 
 				strcat(str.data, temp); //각 파일에 대한 xml코드 이어붙임

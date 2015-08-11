@@ -42,6 +42,7 @@
     "&lt;dc:title&gt;%s&lt;/dc:title&gt;" \
     "&lt;dc:creator&gt;Unknown&lt;/dc:creator&gt;" \
     "&lt;upnp:genre&gt;Unknown&lt;/upnp:genre&gt;" \
+    "&lt;dc:date&gt;2015-08-11T18:16:02&lt;/dc:date&gt;" \
     "&lt;res protocolInfo=\"http-get:*:video/mp4:DLNA.ORG_OP=01;DLNA.ORG_CI=0;DLNA.ORG_FLAGS=01700000000000000000000000000000\" "\
     "size=\"%ld\"&gt;http://%s:%d/%s&lt;/res&gt;" \
     "&lt;upnp:class&gt;object.item.videoItem&lt;/upnp:class&gt;" \
