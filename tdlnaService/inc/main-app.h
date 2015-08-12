@@ -19,7 +19,7 @@
 
 #include <pthread.h>
 #include <stdbool.h>
-
+#include "metadata.h"
 // Forward declaration:
 struct _proxy_client;
 
@@ -34,7 +34,7 @@ typedef struct _app_data
     bool run_tdlna;
 //    pthread_mutex_t tdlna_mutex;
     pthread_t tdlna_td;
-    struct _meta_data *meta;//media metadata
+    _META *meta;//media metadata
 } app_data;
 
 

@@ -44,8 +44,6 @@ static void _media_search(app_data* data);
 static void _media_search_completed_cb(media_content_error_e error,void* user_data);
 static void get_DeviceID();
 
-static bool _vedioMetadataGet(app_data* data);//meta정보 get
-
 char deviceName[33];
 
 app_data *app_create()
@@ -271,10 +269,13 @@ static int _app_execute_operation(app_data *appdata, req_operation operation_typ
         	dlog_print(DLOG_INFO,"tdlna","메타정보 가져오기 실행 ");
 //테스트중        	_vedioMetadataGet(appdata);
  //       	_media_search(appdata);
-        	Meta_Get();
+//        	Meta_Get(appdata);
+        	int vedioC = 0,imageC=0,musicC = 0 ;
+        	media_Count(vedioC,imageC,musicC);
         	break;
         case REQ_OPER_DLNA_APP://실행 요청시
         	dlog_print(DLOG_INFO,"tdlna","dlna on 처리");
+
         	if(!(appdata->run_tdlna)){
         		// 서비스가 꺼져있는 상태라면
         		if(appdata->tdlna_td != NULL){
@@ -306,7 +307,6 @@ static int _app_execute_operation(app_data *appdata, req_operation operation_typ
 			}
 			break;
         case REQ_OPER_DEVICE_ID://tDlnaName 주기
-        	setDeviceProperty(appdata, deviceName);
 			if(deviceName){
 				sprintf(respStr,"%s%s","tDlnaName/",deviceName);
 			}else
@@ -342,95 +342,6 @@ static void _media_search(app_data* data){
 }
 static void _media_search_completed_cb(media_content_error_e error,void* user_data){
 	dlog_print(DLOG_INFO, "tdlna", "@@@@@_media_search_completed_cb error:%d",error);
-}
-static bool _vedioMetadataGet(app_data* data){
-   dlog_print(DLOG_INFO,"tdlna","_vedioMetadataGet() 실행 ");
-
-   metadata_extractor_h g_metadata_h;
-
-   int ret = metadata_extractor_create(&g_metadata_h);
-   dlog_print(DLOG_INFO,"tdlna","metadata_extractor_create %d",ret);
-   ret = metadata_extractor_set_path(g_metadata_h, "/opt/usr/media/DCIM/Camera/20150716.mp4");
-   dlog_print(DLOG_INFO,"tdlna","metadata_extractor_set_path %d",ret);
-
-   char *value = NULL;
-
-//   ======================================================================================================
-   ret = metadata_extractor_get_metadata(g_metadata_h, METADATA_DURATION, &value);
-   dlog_print(DLOG_INFO,"tdlna","metadata_extractor_get_metadata %d",ret);
-   int duration = 0,min = 0,sec=0;
-   duration = atoi(value);
-   duration/= 1000;//단위 변경 밀리세컨드 -> 초
-   min = duration/60;//분
-   sec = duration%60;//초
-   dlog_print(DLOG_DEBUG, "tdlna", "METADATA_DURATION: %d분 %d초\n", min,sec);
-
-   if (value != NULL)
-   {
-      free(value);
-      value = NULL;
-   }
-
-//   ======================================================================================================
-   int artwork_size = 0;
-   void *artwork = NULL;
-   char *artwork_mime = NULL;
-
-   ret = metadata_extractor_get_artwork(g_metadata_h, &artwork, &artwork_size, &artwork_mime);
-   dlog_print(DLOG_INFO,"tdlna","metadata_extractor_get_artwork %d",ret);
-   dlog_print(DLOG_DEBUG, "tdlna", "Artwork: size: %d, mime type: %s\n", artwork_size, artwork_mime);
-   if (artwork != NULL)
-   {
-      free(artwork);
-      artwork = NULL;
-   }
-
-   if (artwork_mime != NULL)
-   {
-      free(artwork_mime);
-      artwork_mime = NULL;
-   }
-//   ======================================================================================================
-   unsigned long time_info = 0;
-   char *lyrics = NULL;
-
-   ret = metadata_extractor_get_synclyrics(g_metadata_h, 1, &time_info, &lyrics);
-   dlog_print(DLOG_INFO,"tdlna","metadata_extractor_get_synclyrics %d",ret);
-   if (lyrics != NULL)
-   {
-      dlog_print(DLOG_DEBUG, "tdlna", "Synclyrics: time_info: %d, lyrics: %s\n", time_info, lyrics);
-      free(lyrics);
-      lyrics = NULL;
-   }
-//   ======================================================================================================
-   // Use metadata_extractor_get_frame()
-   int frame_size = 0;
-   void *frame = NULL;
-
-   ret = metadata_extractor_get_frame(g_metadata_h, &frame, &frame_size);
-   dlog_print(DLOG_INFO,"tdlna","metadata_extractor_get_frame %d",ret);
-   dlog_print(DLOG_DEBUG, "tdlna", "Frame: size: %d\n", frame_size);
-   if (frame != NULL)
-   {
-      free(frame);
-      frame = NULL;
-   }
-
-   // Use metadata_extractor_get_frame_at_time()
-   unsigned long timestamp = 500;
-
-   ret = metadata_extractor_get_frame_at_time(g_metadata_h, timestamp, true, &frame, &frame_size);
-   dlog_print(DLOG_INFO,"tdlna","metadata_extractor_get_frame_at_time %d",ret);
-   dlog_print(DLOG_DEBUG, "tdlna", "Frame at %d: size: %d\n", timestamp, frame_size);
-   if (frame != NULL)
-   {
-      free(frame);
-      frame = NULL;
-   }
-//   ======================================================================================================
-   metadata_extractor_destroy(g_metadata_h);
-
-   return 1;
 }
 
 static int _app_send_response(app_data *app, bundle *const msg)
