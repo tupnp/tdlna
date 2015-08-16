@@ -18,7 +18,7 @@ typedef struct meta_struct{
 
 _META* meta_create();
 
-void media_Count(int *videoCount,int *imageCount,int *musicCount);
+void media_Count(int *videoCount,int *imageCount,int *musicCount,char *path);
 void check_returnValue(int ret);
 void Meta_Get();
 void Meta_Get_Video(char *path, _META *meta);

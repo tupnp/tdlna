@@ -271,7 +271,7 @@ static int _app_execute_operation(app_data *appdata, req_operation operation_typ
  //       	_media_search(appdata);
 //        	Meta_Get(appdata);
         	int vedioC = 0,imageC=0,musicC = 0 ;
-        	media_Count(vedioC,imageC,musicC);
+        	media_Count(vedioC,imageC,musicC,"/opt/usr/media/DCIM/Camera/%");//
         	break;
         case REQ_OPER_DLNA_APP://실행 요청시
         	dlog_print(DLOG_INFO,"tdlna","dlna on 처리");
