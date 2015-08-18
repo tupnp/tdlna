@@ -41,6 +41,18 @@ function changeSwitch(state){
 	}
 }
 
+function addFolder(folder_path){
+	//미디어 경로를 화면에 추가한다
+	'use strict';
+	
+//	var str = '<div style="font-size: 15pt; color: #000000; margin: -10px; padding: 5px;">' + folder_path +'</div>';
+//	$('#folder_list').append(str).listview('refresh');
+	var str = '<li style="overflow: hidden; font-size: 10pt;"><a>' + folder_path +'</a></li>';
+	$('#listParent').append(str).listview('refresh');
+//	$('#list-divider').style.height = "1000px";잘안되는군... 크기를 바꿔야 스크롤이 되는건가..
+//	$('#list-divider').style.width = window.innerWidth;
+}
+
 function writeToScreen(message) {
     'use strict';
     var today = new Date(),
@@ -73,28 +85,32 @@ function onReceive(data) {
     for (i in data) {
 //    	alert('receved:' + data[i].value);
         if (data.hasOwnProperty(i) && data[i].key === 'server') {
-            message = data[i].value;
-            if(data[i].value.indexOf('dlna') >= 0 ){
-//            	alert('receved:' + data[i].value);
-            }
-        }
-        else if(data[i].value === 'STATE:OFF'){//DLNA : OFF상태
-			console.log('DLNA OFF 상태');
-			state = 'OFF';
-			changeSwitch(state);
+			message = data[i].value;
+			
+			if (data[i].value.indexOf('dlna') >= 0) {
+				// alert('receved:' + data[i].value);
+			} else if (data[i].value === 'STATE:OFF') {// DLNA : OFF상태
+				console.log('DLNA OFF 상태');
+				state = 'OFF';
+				changeSwitch(state);
+			} else if (data[i].value === 'STATE:ON') {// DLNA : OFF상태
+				console.log('DLNA ON 상태');
+				state = 'ON';
+				changeSwitch(state);
+			} else if (data[i].value.indexOf('tDlnaName/') >= 0) {
+				// alert('DLNA NAME:'+data[i].value);
+				var name = data[i].value.split('/');
+				// 이름 바꾸기
+				$('#diviceName').text(name[1]);
+			}
 		}
-        else if(data[i].value === 'STATE:ON'){//DLNA : OFF상태
-			console.log('DLNA ON 상태');
-			state = 'ON';
-			changeSwitch(state);
+		if (data.hasOwnProperty(i) && data[i].key === 'folder_path') {
+			message = data[i].value;
+			if (data[i].value.indexOf('folder:') >= 0) {
+//				alert("폴더경로 수신!" + data[i].value);
+				addFolder(message);
+			}
 		}
-        else if(data[i].value.indexOf('tDlnaName/') >= 0 ){
-//			alert('DLNA NAME:'+data[i].value);
-			var name = data[i].value.split('/');
-			//이름 바꾸기
-			$('#diviceName').text(name[1]);
-		}
-		
     }
    
 }
@@ -185,6 +201,7 @@ function onGetAppsContextSuccess(contexts) {
     }
     checkState();//현재 on/off 상태 가져오기
     checkName();//디바이스 아이디 가져오기
+    checkFolder();//미디어 폴더 가져오기
 }
 
 function onGetAppsContextError(err) {
@@ -266,6 +283,10 @@ function checkName(name){
 		var str = 'getDeviceId|' + name;
 		sendCommand(str);
 	}
+}
+function checkFolder(){
+	console.log("미디어 폴더목록 조회");
+	sendCommand('media folder');
 }
 function btn_ok(){
 	//device이름 input 태그 표시
