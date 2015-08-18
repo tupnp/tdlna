@@ -78,22 +78,23 @@ function onReceive(data) {
 //            	alert('receved:' + data[i].value);
             }
         }
-		if(data[i].value === 'STATE:OFF'){//DLNA : OFF상태
+        else if(data[i].value === 'STATE:OFF'){//DLNA : OFF상태
 			console.log('DLNA OFF 상태');
 			state = 'OFF';
 			changeSwitch(state);
 		}
-		if(data[i].value === 'STATE:ON'){//DLNA : OFF상태
+        else if(data[i].value === 'STATE:ON'){//DLNA : OFF상태
 			console.log('DLNA ON 상태');
 			state = 'ON';
 			changeSwitch(state);
 		}
-		if(data[i].value.indexOf('tDlnaName/') >= 0 ){
+        else if(data[i].value.indexOf('tDlnaName/') >= 0 ){
 //			alert('DLNA NAME:'+data[i].value);
 			var name = data[i].value.split('/');
 			//이름 바꾸기
 			$('#diviceName').text(name[1]);
 		}
+		
     }
    
 }

@@ -72,6 +72,12 @@ function onReceive(data) {
             	changeSwitch(state);//OnOff 버튼 변경
             }
         }
+        else if(data.hasOwnProperty(i) && data[i].key === 'directory'){
+        	message = data[i].value;
+        	 if(data[i].value.indexOf('folder:') >= 0 ){
+             	alert("폴더경로 수신!"+data[i].value);
+             }
+        }
     }
    
     writeToScreen('Received : ' + message);
