@@ -199,6 +199,11 @@ static int _app_process_received_message(bundle *rec_msg,
 		resp_key_val = "(state) 수신";
 		*req_oper = REQ_OPER_STATE;
 	}
+    else if(strcmp(rec_key_val,"media folder") == 0){
+    	dlog_print(DLOG_INFO ,"tdlna", "서비스 상태확인요청");
+    	resp_key_val = "(media folder) 수신";
+    	*req_oper = REQ_OPER_FOLDER;
+    }
     else if (strcmp(rec_key_val,"meta") == 0)
     {
         resp_key_val = "metaget";
@@ -265,16 +270,21 @@ static int _app_execute_operation(app_data *appdata, req_operation operation_typ
 			}
 			break;
 
+		case REQ_OPER_FOLDER:
+			dlog_print(DLOG_INFO, "tdlna", "미디어 정보 얻기");
+			media_Directory(appdata);//미디어 폴더 경로를 sendFolder함수로 전달해줌
+			resp_key_val = "미디어 폴더 요청";
+
+		break;
+
         case REQ_OPER_META_GET_APP:
         	dlog_print(DLOG_INFO,"tdlna","메타정보 가져오기 실행 ");
 //테스트중        	_vedioMetadataGet(appdata);
  //       	_media_search(appdata);
-//        	Meta_Get(appdata);
+        	Meta_Get(appdata);
 
 //        	int vedioC = 0,imageC=0,musicC = 0 ;
 //        	media_Count(vedioC,imageC,musicC,"/opt/usr/media/DCIM/Camera/%");
-        	media_Directory(appdata);
-        	resp_key_val = "directory 전달";
         	break;
         case REQ_OPER_DLNA_APP://실행 요청시
         	dlog_print(DLOG_INFO,"tdlna","dlna on 처리");
@@ -329,6 +339,7 @@ static int _app_execute_operation(app_data *appdata, req_operation operation_typ
 }
 
 int sendFolder(void *data, char* dir){
+	//미디어 폴더(dir)를 웹앱으로 전달
 	app_data *appdata = data;
 	char sendingDirectory[275];
 
@@ -336,7 +347,7 @@ int sendFolder(void *data, char* dir){
 	dlog_print(DLOG_INFO, "tdlna", "sendFolder(폴더):%s", dir);
 	bundle *resp_dir = bundle_create();
 
-	RETVM_IF(bundle_add_str(resp_dir, "directory", sendingDirectory) != 0,
+	RETVM_IF(bundle_add_str(resp_dir, "folder_path", sendingDirectory) != 0,
 			SVC_RES_FAIL, "Failed to add data by key to bundle");
 	_app_send_response(appdata, resp_dir);
 	return SVC_RES_OK;

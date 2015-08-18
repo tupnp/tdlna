@@ -31,6 +31,7 @@ typedef enum
     REQ_OPER_DLNA_APP_OFF,
     REQ_OPER_META_GET_APP,
     REQ_OPER_STATE,
+    REQ_OPER_FOLDER,
     REQ_OPER_DEVICE_ID
 } req_operation;
 
