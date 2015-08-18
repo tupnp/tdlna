@@ -36,7 +36,7 @@ typedef struct _app_data
     pthread_t tdlna_td;
     _META *meta;//media metadata
 } app_data;
-
+int sendFolder(void *data, char* dir);
 
 /**
  * @brief Create application instance

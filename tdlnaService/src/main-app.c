@@ -270,8 +270,11 @@ static int _app_execute_operation(app_data *appdata, req_operation operation_typ
 //테스트중        	_vedioMetadataGet(appdata);
  //       	_media_search(appdata);
 //        	Meta_Get(appdata);
-        	int vedioC = 0,imageC=0,musicC = 0 ;
-        	media_Count(vedioC,imageC,musicC,"/opt/usr/media/DCIM/Camera/%");//
+
+//        	int vedioC = 0,imageC=0,musicC = 0 ;
+//        	media_Count(vedioC,imageC,musicC,"/opt/usr/media/DCIM/Camera/%");
+        	media_Directory(appdata);
+        	resp_key_val = "directory 전달";
         	break;
         case REQ_OPER_DLNA_APP://실행 요청시
         	dlog_print(DLOG_INFO,"tdlna","dlna on 처리");
@@ -323,6 +326,20 @@ static int _app_execute_operation(app_data *appdata, req_operation operation_typ
     _app_send_response(appdata, resp_msg);
     bundle_free(resp_msg);
     return SVC_RES_OK;
+}
+
+int sendFolder(void *data, char* dir){
+	app_data *appdata = data;
+	char sendingDirectory[275];
+
+	sprintf(sendingDirectory, "%s%s", "folder:", dir);
+	dlog_print(DLOG_INFO, "tdlna", "sendFolder(폴더):%s", dir);
+	bundle *resp_dir = bundle_create();
+
+	RETVM_IF(bundle_add_str(resp_dir, "directory", sendingDirectory) != 0,
+			SVC_RES_FAIL, "Failed to add data by key to bundle");
+	_app_send_response(appdata, resp_dir);
+	return SVC_RES_OK;
 }
 
 static void get_DeviceID()

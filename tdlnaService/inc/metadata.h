@@ -1,5 +1,7 @@
 #ifndef __METADATA_H__
 #define __METADATA_H__
+#include <media_content.h>
+#include <metadata_extractor.h>
 
 typedef struct meta_struct{
 	int 	type;			// 비디오(1), 오디오(2), 사진(3)
@@ -20,6 +22,9 @@ _META* meta_create();
 
 void media_Count(int *videoCount,int *imageCount,int *musicCount,char *path);
 void check_returnValue(int ret);
+void media_Directory(void *data);
+bool media_folder_db(media_folder_h folder);
+
 void Meta_Get();
 void Meta_Get_Video(char *path, _META *meta);
 void Meta_Get_Image(char *path, _META *meta);

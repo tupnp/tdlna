@@ -1,8 +1,6 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <media_content.h>
-#include <metadata_extractor.h>
 #include <glib.h>
 #include "main-app.h"
 #include "metadata.h"
@@ -51,6 +49,7 @@ void media_Count(int *videoCount,int *imageCount,int *musicCount, char *path){
 //	check_returnValue(ret);
 	dlog_print(DLOG_INFO, "tdlna", "음악 갯수: %d",musicCount);
 
+	media_content_disconnect();
 	media_filter_destroy(filter);
 
 }
@@ -58,20 +57,59 @@ void media_Count(int *videoCount,int *imageCount,int *musicCount, char *path){
 void check_returnValue(int ret){
 	switch(ret){
 	case MEDIA_CONTENT_ERROR_NONE:
-		dlog_print(DLOG_DEBUG,"tdlna","MEDIA_CONTENT_ERROR_NONE");
+		dlog_print(DLOG_INFO,"tdlna","MEDIA_CONTENT_ERROR_NONE");
 		break;
 	case MEDIA_CONTENT_ERROR_INVALID_PARAMETER:
-		dlog_print(DLOG_DEBUG,"tdlna","MEDIA_CONTENT_ERROR_INVALID_PARAMETER");
+		dlog_print(DLOG_INFO,"tdlna","MEDIA_CONTENT_ERROR_INVALID_PARAMETER");
 		break;
 	case MEDIA_CONTENT_ERROR_DB_FAILED:
-		dlog_print(DLOG_DEBUG,"tdlna","MEDIA_CONTENT_ERROR_DB_FAILED");
+		dlog_print(DLOG_INFO,"tdlna","MEDIA_CONTENT_ERROR_DB_FAILED");
 		break;
 	case MEDIA_CONTENT_ERROR_PERMISSION_DENIED:
-		dlog_print(DLOG_DEBUG,"tdlna","MEDIA_CONTENT_ERROR_PERMISSION_DENIED");
+		dlog_print(DLOG_INFO,"tdlna","MEDIA_CONTENT_ERROR_PERMISSION_DENIED");
 		break;
 	default:
-		dlog_print(DLOG_DEBUG,"tdlna","기타 에러");
+		dlog_print(DLOG_INFO,"tdlna","기타 에러");
 	}
+}
+bool _media_folder_db(media_folder_h folder,void *data){
+	dlog_print(DLOG_INFO, "tdlna", "_media_folder_db 실행");
+	char* folder_id;
+	char *_folder_path;
+	int ret = 0;
+	ret = media_folder_get_folder_id(folder, folder_id);
+	check_returnValue(ret);
+	dlog_print(DLOG_DEBUG,"tdlna","media_folder ID:%d",folder_id);
+	ret = media_folder_get_path(folder,&_folder_path);
+	check_returnValue(ret);
+	dlog_print(DLOG_DEBUG,"tdlna","media Folder_path:%s",_folder_path);
+
+
+	char* path = (char*)malloc(strlen(_folder_path)+1);
+	strcpy(path,_folder_path);
+	sendFolder(data,path);
+}
+
+void media_Directory(void* data){
+	//미디어 파일이 존재하는 폴더 검색
+	filter_h filter = NULL;
+	media_info_h _media_handle;
+	media_folder_h _media_folder;
+		int ret = 0 ;
+		char buf[BUFLEN] = { '\0' };
+		media_content_collation_e collate_type = MEDIA_CONTENT_COLLATE_NOCASE;
+		media_filter_create(&filter);
+		media_content_connect();
+
+		snprintf(buf, BUFLEN, "%s = %d OR %s = %d OR %s = %d", MEDIA_TYPE,
+						MEDIA_CONTENT_TYPE_IMAGE, MEDIA_TYPE, MEDIA_CONTENT_TYPE_VIDEO,MEDIA_TYPE,MEDIA_CONTENT_TYPE_MUSIC);
+		//이미지,비디오,음악 파일의 미디어만 검색
+		media_filter_set_condition(filter, buf, collate_type);
+
+		ret = media_folder_foreach_folder_from_db(filter,_media_folder_db,data);//DB 검색후 폴더 콜백 호출
+		check_returnValue(ret);
+		media_content_disconnect();
+		media_filter_destroy(filter);
 }
 
 void Meta_Get(app_data *appdata) {
@@ -219,7 +257,7 @@ void Meta_Get(app_data *appdata) {
 				free(artist);
 				free(album);
 				free(album_artist);
-
+				media_content_disconnect();
 				video_meta_destroy(video_handle);
 			} else if (media_type == MEDIA_CONTENT_TYPE_MUSIC) {
 //					metaData->type = 2;
