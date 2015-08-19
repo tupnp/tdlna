@@ -44,7 +44,7 @@ static void _media_search(app_data* data);
 static void _media_search_completed_cb(media_content_error_e error,void* user_data);
 static void get_DeviceID();
 
-char deviceName[33];
+char deviceName[33],shared_folder[512];
 
 app_data *app_create()
 {
@@ -190,57 +190,71 @@ static int _app_process_received_message(bundle *rec_msg,
     RETVM_IF(!resp_msg, SVC_RES_FAIL,"Response message is NULL");
 
     const char *resp_key_val = NULL;
-    char *rec_key_val = NULL;
-    int res = bundle_get_str(rec_msg, "command", &rec_key_val);
-    RETVM_IF(res != BUNDLE_ERROR_NONE, SVC_RES_FAIL, "Failed to get string from bundle");
-    dlog_print(DLOG_INFO,"tdlna","웹앱으로 부터 서비스 수신:%s",rec_key_val);
-	if (strcmp(rec_key_val, "server state") == 0) {//현재 상태 확인 요청
-		dlog_print(DLOG_INFO ,"tdlna", "서비스 상태확인요청");
-		resp_key_val = "(state) 수신";
-		*req_oper = REQ_OPER_STATE;
-	}
-    else if(strcmp(rec_key_val,"media folder") == 0){
-    	dlog_print(DLOG_INFO ,"tdlna", "서비스 상태확인요청");
-    	resp_key_val = "(media folder) 수신";
-    	*req_oper = REQ_OPER_FOLDER;
-    }
-    else if (strcmp(rec_key_val,"meta") == 0)
-    {
-        resp_key_val = "metaget";
-        *req_oper = REQ_OPER_META_GET_APP;
-    }
-    else if (strcmp(rec_key_val,"dlna on") == 0)//서비스 ON 요청
-    {
-    	dlog_print(DLOG_INFO ,"tdlna", "서비스 ON 요청 app_process_received_message");
-        resp_key_val = "(dlna 실행)수신..";
-        *req_oper = REQ_OPER_DLNA_APP;
-        //*req_oper = REQ_OPER_EXIT_APP;
-    }
-    else if (strcmp(rec_key_val,"dlna off") == 0)//서비스 ON 요청
-    {
-    	dlog_print(DLOG_INFO ,"tdlna", "서비스 OFF 요청 app_process_received_message");
-        resp_key_val = "(dlna 종료)수신..";
-        *req_oper = REQ_OPER_DLNA_APP_OFF;
-        //*req_oper = REQ_OPER_EXIT_APP;
-    }
-    else if (strstr(rec_key_val, "getDeviceId") != NULL) {
-		dlog_print(DLOG_INFO, "tdlna","디바이스ID 요청 app_process_received_message");
-		char *str = strtok(rec_key_val, "|");
-		dlog_print(DLOG_INFO, "tdlna","strtok: %s",str);
-		str = strtok(NULL, "|");
-		dlog_print(DLOG_INFO, "tdlna","strtok: %s",str);
-		if (str != NULL) {//새로운 name을 저장
-			strcpy(deviceName,str);
-		}
-		resp_key_val = "(getDeviceId)수신";
-		*req_oper = REQ_OPER_DEVICE_ID;
-	}
-    else
-    {
-        resp_key_val = "unsupported";
-        *req_oper = REQ_OPER_NONE;
-    }
+    char *rec_key_val = NULL,*rec_share_folder = NULL;
 
+    int res_shared = bundle_get_str(rec_msg, "shared", &rec_share_folder);
+    if (rec_share_folder != NULL) {//폴더수신
+    	RETVM_IF(res_shared != BUNDLE_ERROR_NONE, SVC_RES_FAIL, "Failed to get string from shared_bundle");
+		dlog_print(DLOG_INFO ,"tdlna", "공유폴더 수신: %s",rec_share_folder);
+		resp_key_val = "(공유폴더) 수신";
+		*req_oper = REQ_SHARED_FOLDER;
+		strcpy(shared_folder,rec_share_folder+7);
+		strcat(shared_folder,"\%");
+		dlog_print(DLOG_INFO ,"tdlna", "공유폴더 저장: %s",shared_folder);
+	}
+    else{
+		int res = bundle_get_str(rec_msg, "command", &rec_key_val);
+		RETVM_IF(res != BUNDLE_ERROR_NONE, SVC_RES_FAIL, "Failed to get string from bundle");
+		dlog_print(DLOG_INFO,"tdlna","웹앱으로 부터 서비스 수신:%s",rec_key_val);
+
+
+		if (strcmp(rec_key_val, "server state") == 0) {//현재 상태 확인 요청
+			dlog_print(DLOG_INFO ,"tdlna", "서비스 상태확인요청");
+			resp_key_val = "(state) 수신";
+			*req_oper = REQ_OPER_STATE;
+		}
+		else if(strcmp(rec_key_val,"media folder") == 0){
+			dlog_print(DLOG_INFO ,"tdlna", "서비스 상태확인요청");
+			resp_key_val = "(media folder) 수신";
+			*req_oper = REQ_OPER_FOLDER;
+		}
+		else if (strcmp(rec_key_val,"meta") == 0)
+		{
+			resp_key_val = "metaget";
+			*req_oper = REQ_OPER_META_GET_APP;
+		}
+		else if (strcmp(rec_key_val,"dlna on") == 0)//서비스 ON 요청
+		{
+			dlog_print(DLOG_INFO ,"tdlna", "서비스 ON 요청 app_process_received_message");
+			resp_key_val = "(dlna 실행)수신..";
+			*req_oper = REQ_OPER_DLNA_APP;
+			//*req_oper = REQ_OPER_EXIT_APP;
+		}
+		else if (strcmp(rec_key_val,"dlna off") == 0)//서비스 ON 요청
+		{
+			dlog_print(DLOG_INFO ,"tdlna", "서비스 OFF 요청 app_process_received_message");
+			resp_key_val = "(dlna 종료)수신..";
+			*req_oper = REQ_OPER_DLNA_APP_OFF;
+			//*req_oper = REQ_OPER_EXIT_APP;
+		}
+		else if (strstr(rec_key_val, "getDeviceId") != NULL) {
+			dlog_print(DLOG_INFO, "tdlna","디바이스ID 요청 app_process_received_message");
+			char *str = strtok(rec_key_val, "|");
+			dlog_print(DLOG_INFO, "tdlna","strtok: %s",str);
+			str = strtok(NULL, "|");
+			dlog_print(DLOG_INFO, "tdlna","strtok: %s",str);
+			if (str != NULL) {//새로운 name을 저장
+				strcpy(deviceName,str);
+			}
+			resp_key_val = "(getDeviceId)수신";
+			*req_oper = REQ_OPER_DEVICE_ID;
+		}
+		else
+		{
+			resp_key_val = "unsupported";
+			*req_oper = REQ_OPER_NONE;
+		}
+    }
     RETVM_IF(bundle_add_str(resp_msg, "server", resp_key_val) != 0, SVC_RES_FAIL, "Failed to add data by key to bundle");
 
     return SVC_RES_OK;
@@ -281,7 +295,9 @@ static int _app_execute_operation(app_data *appdata, req_operation operation_typ
         	dlog_print(DLOG_INFO,"tdlna","메타정보 가져오기 실행 ");
 //테스트중        	_vedioMetadataGet(appdata);
  //       	_media_search(appdata);
-        	Meta_Get(appdata);
+
+//        	Meta_Get(appdata);
+        	Meta_Get_from_path(appdata,"/opt/usr/media/DCIM/Camera/%");
 
 //        	int vedioC = 0,imageC=0,musicC = 0 ;
 //        	media_Count(vedioC,imageC,musicC,"/opt/usr/media/DCIM/Camera/%");
@@ -327,6 +343,11 @@ static int _app_execute_operation(app_data *appdata, req_operation operation_typ
 			resp_key_val = respStr;
 			dlog_print(DLOG_INFO, "tdlna", "resp_key_val값 가져오기 %s",resp_key_val);
 			break;
+        case REQ_SHARED_FOLDER:
+			resp_key_val = "공유폴더!";
+			dlog_print(DLOG_INFO, "tdlna", "%s 폴더 공유 실행",shared_folder);
+			Meta_Get_from_path(appdata,shared_folder);
+        	break;
         default:
             DBG("Unknown request id");
             return SVC_RES_FAIL;

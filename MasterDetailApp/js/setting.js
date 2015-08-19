@@ -47,7 +47,7 @@ function addFolder(folder_path){
 	
 //	var str = '<div style="font-size: 15pt; color: #000000; margin: -10px; padding: 5px;">' + folder_path +'</div>';
 //	$('#folder_list').append(str).listview('refresh');
-	var str = '<li style="overflow: hidden; font-size: 10pt;"><a>' + folder_path +'</a></li>';
+	var str = '<li style="overflow: hidden; font-size: 10pt;"><a onclick="sendShareFolder(this)">' + folder_path +'</a></li>';
 	$('#listParent').append(str).listview('refresh');
 //	$('#list-divider').style.height = "1000px";잘안되는군... 크기를 바꿔야 스크롤이 되는건가..
 //	$('#list-divider').style.width = window.innerWidth;
@@ -70,6 +70,13 @@ function writeToScreen(message) {
     document.getElementById('logs').scrollIntoView(false);
 }
 
+function sendShareFolder(shareFolder){
+	'use strict';
+//	alert(shareFolder.text);
+	var folder = shareFolder.text;
+	gRemoteMessagePort.sendMessage([{ key: 'shared', value: folder }],
+	        gLocalMessagePort);
+}
 
 function sendCommand(command) {
     'use strict';

@@ -26,6 +26,7 @@ void media_Directory(void *data);
 bool media_folder_db(media_folder_h folder);
 
 void Meta_Get();
+void Meta_Get_from_path(void *data,char *folder_path);
 void Meta_Get_Video(char *path, _META *meta);
 void Meta_Get_Image(char *path, _META *meta);
 void Meta_Get_Audio(char *path, _META *meta);

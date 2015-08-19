@@ -36,42 +36,41 @@
 		<div data-role="content">
 			<div>
 				<ul data-role="listview">
-					<div></div>
 					<!-- <a onclick="switchClick()" id="switch" data-role="button" data-icon="arrow-l" style="float:right; margin-top:0px;"></a> -->
-					<div data-role="list-divider" align="center" style="height: 592; width:360px;top:48px;bottom:0px; overflow-y:scroll;">
+					<div data-role="list-divider" align="center">
 						ON/OFF
-						<ul id="listParent" data-role="listview">
+						
+					</div>
+					<div  data-role="list-divider" align="center" >
+					<ul data-role="listview" style="background:#F1F1F1;">
 							<li>Server 스위치<span style="float: right;"> 
-							<select
-									id="serverSwitch" data-role="toggleswitch"
-									onchange="serverOn(this)">
+							<select	id="serverSwitch" data-role="toggleswitch"	onchange="serverOn(this)">
 										<option value="off"></option>
 										<option value="on"></option>
 								</select>
 							</span>
 							</li>
+						</ul>
+						<ul style="min-height: 520px; max-height: 420px; overflow-x:hidden; overflow: auto;" id="listParent" data-role="listview">
+								<li style="line-height: 15px;">
+									<div id="parent" style="margin: -10px;">
+										<div style="font-size: 10pt; color: #646464; padding: 5px;">내
+											디비이스 이름</div>
+										<div id="diviceName"
+											style="font-size: 25pt; color: black; padding: 5px;"
+											onclick="changeName()">name</div>
 
+									</div>
 
-							<li style="line-height: 15px;">
-								<div id="parent" style="margin: -10px;">
-									<div style="font-size: 10pt; color: #646464; padding: 5px;">내
-										디비이스 이름</div>
-									<div id="diviceName"
-										style="font-size: 25pt; color: black; padding: 5px;"
-										onclick="changeName()">name</div>
-
-								</div>
-
-							</li>
-							<li id="folder_list" style="line-height: 15px;">
+								</li>
+								<!-- style="min-height: 520px; max-height: 420px; max-width: 380px; overflow-y: auto;" -->
+								<li id="folder_list" style="line-height: 15px;">
 								<div
-									style="font-size: 15pt; color: #000000; margin: -10px; padding: 5px;">공유
-									폴더</div>
-									
+									style="font-size: 15pt; color: #000000; margin: -10px; padding: 5px;">공유폴더</div>
 							</li>
+								
 
-
-							<li><a href="setting.html">Section 2</a></li>
+								<li><a href="setting.html">Section 2</a></li>
 						</ul>
 					</div>
 					<!-- Server 스위치 listview -->
