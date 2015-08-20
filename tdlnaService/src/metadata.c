@@ -278,10 +278,10 @@ void Meta_Get(app_data *appdata) {
 	}
 }
 
-void Meta_Get_from_path(void *_data,char *folder_path) {
+int Meta_Get_from_path(void *_data, char *folder_path, _META** result) {
 
 	dlog_print(DLOG_INFO, "tdlna", "Meta_Get_from_path(%s)",folder_path);
-	app_data *appdata = _data;
+//	app_data *appdata = _data;
 
 	GList *all_item_list = NULL; // Include glib.h
 	media_content_type_e media_type;
@@ -291,6 +291,9 @@ void Meta_Get_from_path(void *_data,char *folder_path) {
 	char *media_path = NULL,*thumbnail_path=NULL;
 	char buf[BUFLEN] = { '\0' };
 	int ret = MEDIA_CONTENT_ERROR_NONE;
+	int media_count = 0;
+	unsigned long long media_size = 0;
+	_META* metaList = NULL;
 	filter_h filter = NULL;
 	media_content_collation_e collate_type = MEDIA_CONTENT_COLLATE_NOCASE;
 	media_content_order_e order_type = MEDIA_CONTENT_ORDER_DESC;
@@ -321,9 +324,12 @@ void Meta_Get_from_path(void *_data,char *folder_path) {
 	if (ret != MEDIA_CONTENT_ERROR_NONE) {
 		dlog_print(DLOG_INFO, "tdlna","media_info_foreach_media_from_db failed: %d", ret);
 		media_filter_destroy(filter);
-	} else {
+	} else {//-------------------------------------------------------------------------------------
 		int i;
-		for (i = 0; i < g_list_length(all_item_list); i++) {
+		media_count =g_list_length(all_item_list);
+
+		metaList = (_META*)malloc(sizeof(_META)*media_count);//tdlna로 전달하는 리스트
+		for (i = 0; i < media_count; i++) {
 			//-------------------------------------------미디어 검색
 			_META metaData;		// = meta_create();
 			media_handle = (media_info_h) g_list_nth_data(all_item_list, i);
@@ -332,13 +338,15 @@ void Meta_Get_from_path(void *_data,char *folder_path) {
 			media_info_get_display_name(media_handle, &media_name);
 			media_info_get_file_path(media_handle, &media_path);
 			media_info_get_thumbnail_path(media_handle,&thumbnail_path);
+			media_info_get_size(media_handle,&media_size);
 
 			strcpy(metaData.title,media_name);
 			strcpy(metaData.path,media_path);
+			metaData.file_size = media_size;
 
 			if (media_type == MEDIA_CONTENT_TYPE_IMAGE) {
 				dlog_print(DLOG_ERROR, "tdlna",	"MEDIA_CONTENT_TYPE_IMAGE~~~");
-				metaData.type = 3;		// 비디오(1), 오디오(2), 사진(3)
+				metaData.type = 3;		// 오디오(1), 비디오(2), 사진(3)
 				image_meta_h image_handle;
 				media_content_orientation_e orientation = 0;
 				int width = 0, height = 0;
@@ -361,39 +369,29 @@ void Meta_Get_from_path(void *_data,char *folder_path) {
 					image_meta_get_burst_id(image_handle, &burst_id);
 
 					dlog_print(DLOG_INFO, "tdlna", "----I M E A G E-----");
-					dlog_print(DLOG_INFO, "tdlna",
-							"Width : %d, Height : %d, Orientation : %d, Date taken : %s",
+					dlog_print(DLOG_INFO, "tdlna","Width : %d, Height : %d, Orientation : %d, Date taken : %s",
 							width, height, orientation, datetaken);
 					if (datetaken != NULL) {
 						char* date;
 						date = strtok(datetaken, ": ");
-						//dlog_print(DLOG_INFO, "tdlna", "date[%d]: %s", 0, date);
 						strcpy(metaData.date[0], date);
+						dlog_print(DLOG_INFO, "tdlna", "date[%d]: %s", 0, date);
 						int i = 1;
 						while ((date = strtok(NULL, ": ")) != NULL) {
-							//dlog_print(DLOG_INFO, "tdlna", "date[%d]: %s", i, date);
 							strcpy(metaData.date[i++], date);
-							//i++;
+							dlog_print(DLOG_INFO, "tdlna", "date[%d]: %s", i, date);
 						}
 					}
-
 						metaData.width = width;
 						metaData.height = height;
-						//strcpy(metaData.date,datetaken);
-
-						appdata->meta = (_META*)malloc(sizeof(_META));
-						memcpy(appdata->meta, &metaData, sizeof(_META));
 				}
-				dlog_print(DLOG_INFO,"tdlna","appdata meta: %s",appdata->meta->title);
 				if (datetaken)
 					free(datetaken);
 				if (burst_id)
 					free(burst_id);
 				image_meta_destroy(image_handle);
 			} else if (media_type == MEDIA_CONTENT_TYPE_VIDEO) {
-				dlog_print(DLOG_ERROR, "tdlna",	"MEDIA_CONTENT_TYPE_VIDEO~~~");
-//					metaData->type = 1;
-				metaData.type = 1;
+				metaData.type = 2;
 				video_meta_h video_handle;
 				char *title = NULL, *artist = NULL, *album = NULL,*album_artist = NULL,*datetoken=NULL;
 				int duration = 0,width=0,height=0;
@@ -423,14 +421,13 @@ void Meta_Get_from_path(void *_data,char *folder_path) {
 
 
 					dlog_print(DLOG_INFO, "tdlna", "-----V I D E O----");
-					dlog_print(DLOG_INFO, "tdlna",
-							"Title: %s, Album: %s, Artist: %s, Album_artist: %s \n Duration: %d, Played time: %d",
+					dlog_print(DLOG_INFO, "tdlna","Title: %s, Album: %s, Artist: %s, Album_artist: %s \n Duration: %d, Played time: %d",
 							title, album, artist, album_artist, duration,
 							time_played);
 					if (datetoken != NULL) {
 						char* date;
 						date = strtok(datetoken, ": ");
-						//dlog_print(DLOG_INFO, "tdlna", "date[%d]: %s", 0, date);
+						dlog_print(DLOG_INFO, "tdlna", "date[%d]: %s", 0, date);
 						strcpy(metaData.date[0], date);
 						int i = 1;
 						while ((date = strtok(NULL, ": ")) != NULL) {
@@ -439,13 +436,10 @@ void Meta_Get_from_path(void *_data,char *folder_path) {
 							//i++;
 						}
 					}
-
+					strcpy(metaData.thumbnail_path, thumbnail_path);
 					metaData.width = width;
 					metaData.height = height;
 					//strcpy(metaData.date,datetoken);
-
-					appdata->meta = (_META*) malloc(sizeof(_META));
-					memcpy(appdata->meta, &metaData, sizeof(_META));
 				}
 
 				free(artist);
@@ -454,23 +448,28 @@ void Meta_Get_from_path(void *_data,char *folder_path) {
 				media_content_disconnect();
 				video_meta_destroy(video_handle);
 			} else if (media_type == MEDIA_CONTENT_TYPE_MUSIC) {
-				dlog_print(DLOG_ERROR, "tdlna",	"MEDIA_CONTENT_TYPE_MUSIC~~~");
-//					metaData->type = 2;
+				// 오디오(1), 비디오(2), 사진(3)
+				metaData.type = 1;
 				dlog_print(DLOG_INFO, "tdlna", "-----M U S I C----");
-
 			}
+
 			dlog_print(DLOG_INFO, "tdlna", "media_id [%d] : %s", i, media_id);
 			dlog_print(DLOG_INFO, "tdlna", "media_name [%d] : %s", i, media_name);
 			dlog_print(DLOG_INFO, "tdlna", "media_path [%d] : %s", i, media_path);
 			dlog_print(DLOG_INFO, "tdlna", "thumbnail_path:%s",thumbnail_path);
+			dlog_print(DLOG_INFO, "tdlna", "file_size [%d] : %d", i, metaData.file_size);
 
 			free(media_id);
 			free(media_name);
 			free(media_path);
 			//free(title);
-		}
+			memcpy(&metaList[i],&metaData,sizeof(_META));
+			dlog_print(DLOG_INFO, "tdlna", "리스트 metaList 1 :%s",metaList[1].path);
+		}//------------------end for ---------------
 	}
-	dlog_print(DLOG_INFO,"tdlna", "끝!");
+
+	*result = metaList;
+	return media_count;
 }
 
 void Meta_Get_Video(char *path, _META *meta) {

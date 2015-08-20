@@ -243,8 +243,13 @@ static int _app_process_received_message(bundle *rec_msg,
 			dlog_print(DLOG_INFO, "tdlna","strtok: %s",str);
 			str = strtok(NULL, "|");
 			dlog_print(DLOG_INFO, "tdlna","strtok: %s",str);
-			if (str != NULL) {//새로운 name을 저장
-				strcpy(deviceName,str);
+
+			if(str != NULL){
+				if(strcmp(str,"&") == 0){//사용자가 빈값을 입력했을때, 장치 기본값으로 변경
+					get_DeviceID();
+				}else{//새로운 name을 저장
+					strcpy(deviceName,str);
+				}
 			}
 			resp_key_val = "(getDeviceId)수신";
 			*req_oper = REQ_OPER_DEVICE_ID;
@@ -297,10 +302,12 @@ static int _app_execute_operation(app_data *appdata, req_operation operation_typ
  //       	_media_search(appdata);
 
 //        	Meta_Get(appdata);
-        	Meta_Get_from_path(appdata,"/opt/usr/media/DCIM/Camera/%");
 
-//        	int vedioC = 0,imageC=0,musicC = 0 ;
-//        	media_Count(vedioC,imageC,musicC,"/opt/usr/media/DCIM/Camera/%");
+//        	Meta_Get_from_path(appdata,"/opt/usr/media/DCIM/Camera/%");
+
+        	int videoC = 0,imageC=0,musicC = 0 ;
+        	media_Count(&videoC,&imageC,&musicC,"/opt/usr/media/DCIM/Camera/%");
+
         	break;
         case REQ_OPER_DLNA_APP://실행 요청시
         	dlog_print(DLOG_INFO,"tdlna","dlna on 처리");
@@ -346,7 +353,12 @@ static int _app_execute_operation(app_data *appdata, req_operation operation_typ
         case REQ_SHARED_FOLDER:
 			resp_key_val = "공유폴더!";
 			dlog_print(DLOG_INFO, "tdlna", "%s 폴더 공유 실행",shared_folder);
-			Meta_Get_from_path(appdata,shared_folder);
+			_META *test;
+			int testC=0;
+			testC= Meta_Get_from_path(appdata,shared_folder,&test);
+			dlog_print(DLOG_INFO, "tdlna", "리스트갯수:%d",testC);
+			dlog_print(DLOG_INFO, "tdlna", "리스트 1 :%s",test[1].path);
+			free(test);
         	break;
         default:
             DBG("Unknown request id");
