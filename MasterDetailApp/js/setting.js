@@ -47,10 +47,14 @@ function addFolder(folder_path){
 	
 //	var str = '<div style="font-size: 15pt; color: #000000; margin: -10px; padding: 5px;">' + folder_path +'</div>';
 //	$('#folder_list').append(str).listview('refresh');
-	var str = '<li style="overflow: hidden; font-size: 10pt;min-height: 75px;max-height: 75px; max-width: inherit;"><a style="max-width: inherit;" onclick="sendShareFolder(this)">' + folder_path +'</a></li>';
+	var string = folder_path;
+	var strArray = string.split('/');
+//	alert(strArray[strArray.length - 1]);
+	
+	var str = '<li style="overflow: hidden; min-height: 65px;max-height: 75px; max-width: inherit;" onclick="sendShareFolder(\''+folder_path+'\')">'+
+		'<a style="max-width: inherit; margin-bottom: -20px; padding-top: 0px; padding-bottom: 0px;">'+strArray[strArray.length - 1]+'</a><br>'+
+		'<a style="font-size: 10pt; max-width: inherit; margin-top: -20px; padding-top: 0px; padding-bottom: 0px;">'+folder_path +'</a></li>';
 	$('#listParent').append(str).listview('refresh');
-//	$('#list-divider').style.height = "1000px";잘안되는군... 크기를 바꿔야 스크롤이 되는건가..
-//	$('#list-divider').style.width = window.innerWidth;
 }
 
 function writeToScreen(message) {
@@ -73,7 +77,8 @@ function writeToScreen(message) {
 function sendShareFolder(shareFolder){
 	'use strict';
 //	alert(shareFolder.text);
-	var folder = shareFolder.text;
+//	var folder = shareFolder.text;
+	var folder = shareFolder;
 	gRemoteMessagePort.sendMessage([{ key: 'shared', value: folder }],
 	        gLocalMessagePort);
 }
