@@ -288,21 +288,21 @@ function checkState(){
 	console.log("현재 상태 조회");
 	sendCommand('server state');
 }
-function specialCharRemove(obj) {
-	var val = obj.value;
-//	var pattern = /[^(가-힣ㄱ-ㅎㅏ-ㅣa-zA-Z0-9)]/gi;   // 특수문자 제거
-	var pattern = /[^(a-zA-Z0-9)]/gi;   // 특수문자 제거
-	 
-	//var pattern = /[^(0-9)]/gi;   // 숫자이외는 제거
-	if(pattern.test(val)){
-	obj.value = val.replace(pattern,"");
-	}
-}
+//function specialCharRemove(obj) {
+//	var val = obj.value;
+////	var pattern = /[^(가-힣ㄱ-ㅎㅏ-ㅣa-zA-Z0-9)]/gi;   // 특수문자 제거
+//	var pattern = /[^(a-zA-Z0-9)]/gi;   // 특수문자 제거
+//	 
+//	//var pattern = /[^(0-9)]/gi;   // 숫자이외는 제거
+//	if(pattern.test(val)){
+//	obj.value = val.replace(pattern,"");
+//	}
+//}
 function checkName(name){
 	  // 특수문자 제거
 	console.log("1:"+name);
 	var val = name;
-	var pattern = /[^(a-zA-Z0-9)]/gi; 
+	var pattern = /[^(a-zA-Z0-9ㄱ-ㅎㅏ-ㅣ가-힣)]/gi;
 	if(pattern.test(name)){
 		name = val.replace(pattern,"");
 	}
