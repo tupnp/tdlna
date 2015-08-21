@@ -35,6 +35,7 @@ typedef struct _app_data
 //    pthread_mutex_t tdlna_mutex;
     pthread_t tdlna_td;
     _META *meta;//media metadata
+    char deviceName[33];//장치 이름
 } app_data;
 int sendFolder(void *data, char* dir);
 

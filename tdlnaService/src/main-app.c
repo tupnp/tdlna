@@ -177,7 +177,7 @@ static int _app_init(app_data *app)
     app->run_tdlna = false;
     app->tdlna_td = NULL;
     get_DeviceID();//기본 기기 아이디값 가져오기
-
+    strcpy(app->deviceName,deviceName);
     return SVC_RES_OK;
 }
 
@@ -344,6 +344,8 @@ static int _app_execute_operation(app_data *appdata, req_operation operation_typ
 			break;
         case REQ_OPER_DEVICE_ID://tDlnaName 주기
 			if(deviceName){
+				strcpy(appdata->deviceName,deviceName);
+				setDeviceProperty(appdata);//tdlnamain으로 전달
 				sprintf(respStr,"%s%s","tDlnaName/",deviceName);
 			}else
 				sprintf(respStr,"%s%s","tDlnaName/","nameError!");

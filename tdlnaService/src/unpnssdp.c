@@ -10,16 +10,63 @@
 #include <errno.h>
 #include <dlog.h>
 
+#include "upnpssdp.h"
 #include "upnphttp.h"
 #include "upnpglobalvars.h"
-#include "upnpssdp.h"
+#include "upnpreplyparse.h"
 
 /* SSDP ip/port */
 #define SSDP_PORT 1900
 #define SSDP_MCAST_ADDR "239.255.255.250"
 
 
-//m-search에 응답하는 클라이언트 목록 등록
+
+
+
+char *strcasestr(s, find)
+	const char *s, *find;
+{
+	char c, sc;
+	size_t len;
+
+	if ((c = *find++) != 0) {
+		c = tolower((unsigned char)c);
+		len = strlen(find);
+		do {
+			do {
+				if ((sc = *s++) == 0)
+					return (NULL);
+			} while ((char)tolower((unsigned char)sc) != c);
+		} while (strncasecmp(s, find, len) != 0);
+		s--;
+	}
+	return ((char *)s);
+}
+
+char *
+strcasestrc(const char *s, const char *p, const char t)
+{
+	char *endptr;
+	size_t slen, plen;
+
+	endptr = strchr(s, t);
+	if (!endptr)
+		return strcasestr(s, p);
+
+	plen = strlen(p);
+	slen = endptr - s;
+	while (slen >= plen)
+	{
+		if (*s == *p && strncasecmp(s+1, p+1, plen-1) == 0)
+			return (char*)s;
+		s++;
+		slen--;
+	}
+
+	return NULL;
+}
+
+//ssdp 멀티캐스트 패킷 수신을 위한 멤버십등록???
 static int
 AddMulticastMembership(int s, struct lan_addr_s *iface)
 {
@@ -34,8 +81,7 @@ AddMulticastMembership(int s, struct lan_addr_s *iface)
 	ret = setsockopt(s, IPPROTO_IP, IP_ADD_MEMBERSHIP, (void *)&imr, sizeof(imr));
 	if (ret < 0 && errno != EADDRINUSE)
 	{
-		printf("setsockopt(udp, IP_ADD_MEMBERSHIP): %s\n",
-			strerror(errno));
+		dlog_print(DLOG_ERROR, "tdlna_ssdp", "setsockopt(udp[%d], IP_ADD_MEMBERSHIP): %s\n",	s, strerror(errno));
 		return -1;
 	}
 
@@ -51,7 +97,7 @@ OpenAndConfSSDPReceiveSocket(void)
 	int i = 1;
 	struct sockaddr_in sockname;
 	
-	s = socket(PF_INET, SOCK_DGRAM, 0);
+	s = socket(PF_INET, SOCK_DGRAM, IPPROTO_UDP);
 	if (s < 0)
 	{
 		printf("socket(udp): %s\n", strerror(errno));
@@ -59,8 +105,8 @@ OpenAndConfSSDPReceiveSocket(void)
 	}	
 
 	if (setsockopt(s, SOL_SOCKET, SO_REUSEADDR, &i, sizeof(i)) < 0)
-		dlog_print(DLOG_ERROR,"setsockopt(udp, SO_REUSEADDR): %s\n", strerror(errno));
-	
+		dlog_print(DLOG_ERROR, "tdlna_ssdp", "!!!!! setsockopt(udp, SO_REUSEADDR): %s\n", strerror(errno));
+
 	memset(&sockname, 0, sizeof(struct sockaddr_in));
 	sockname.sin_family = AF_INET;
 	sockname.sin_port = htons(SSDP_PORT);
@@ -68,7 +114,7 @@ OpenAndConfSSDPReceiveSocket(void)
 
 	if (bind(s, (struct sockaddr *)&sockname, sizeof(struct sockaddr_in)) < 0)
 	{
-		printf("bind(udp): %s\n", strerror(errno));
+		dlog_print(DLOG_ERROR, "tdlna_ssdp", "bind(udp): %s\n", strerror(errno));
 		close(s);
 		return -1;
 	}
@@ -77,8 +123,7 @@ OpenAndConfSSDPReceiveSocket(void)
 }
 
 //SSDP Notify 전송 소켓 설정
-int
-OpenAndConfSSDPNotifySocket(struct lan_addr_s *iface)
+int OpenAndConfSSDPNotifySocket(struct lan_addr_s *iface, int sssdpRcv)
 {
 	int s;
 	unsigned char loopchar = 0;
@@ -90,7 +135,7 @@ OpenAndConfSSDPNotifySocket(struct lan_addr_s *iface)
 	s = socket(PF_INET, SOCK_DGRAM, 0);
 	if (s < 0)
 	{
-		printf("socket(udp_notify): %s\n", strerror(errno));
+		dlog_print(DLOG_ERROR, "tdlna_ssdp", "socket(udp_notify): %s\n", strerror(errno));
 		return -1;
 	}
 
@@ -98,14 +143,14 @@ OpenAndConfSSDPNotifySocket(struct lan_addr_s *iface)
 
 	if (setsockopt(s, IPPROTO_IP, IP_MULTICAST_LOOP, (char *)&loopchar, sizeof(loopchar)) < 0)
 	{
-		printf("setsockopt(udp_notify, IP_MULTICAST_LOOP): %s\n", strerror(errno));
+		dlog_print(DLOG_ERROR, "tdlna_ssdp", "setsockopt(udp_notify, IP_MULTICAST_LOOP): %s\n", strerror(errno));
 		close(s);
 		return -1;
 	}
 
 	if (setsockopt(s, IPPROTO_IP, IP_MULTICAST_IF, (char *)&mc_if, sizeof(mc_if)) < 0)
 	{
-		printf("setsockopt(udp_notify, IP_MULTICAST_IF): %s\n", strerror(errno));
+		dlog_print(DLOG_ERROR, "tdlna_ssdp", "setsockopt(udp_notify, IP_MULTICAST_IF): %s\n", strerror(errno));
 		close(s);
 		return -1;
 	}
@@ -114,7 +159,7 @@ OpenAndConfSSDPNotifySocket(struct lan_addr_s *iface)
 	
 	if (setsockopt(s, SOL_SOCKET, SO_BROADCAST, &bcast, sizeof(bcast)) < 0)
 	{
-		printf("setsockopt(udp_notify, SO_BROADCAST): %s\n", strerror(errno));
+		dlog_print(DLOG_ERROR, "tdlna_ssdp", "setsockopt(udp_notify, SO_BROADCAST): %s\n", strerror(errno));
 		close(s);
 		return -1;
 	}
@@ -125,15 +170,14 @@ OpenAndConfSSDPNotifySocket(struct lan_addr_s *iface)
 
 	if (bind(s, (struct sockaddr *)&sockname, sizeof(struct sockaddr_in)) < 0)
 	{
-		printf("bind(udp_notify): %s\n", strerror(errno));
+		dlog_print(DLOG_ERROR, "tdlna_ssdp", "bind(udp_notify): %s\n", strerror(errno));
 		close(s);
 		return -1;
 	}
 
-	if (AddMulticastMembership(sssdp, iface) < 0)
+	if (AddMulticastMembership(sssdpRcv, iface) < 0)
 	{
-		printf("Failed to add multicast membership for address %s\n", 
-			iface->str);
+		dlog_print(DLOG_ERROR, "tdlna_ssdp", "Failed to add multicast membership for address %s\n", iface->str);
 	}
 
 	return s;
@@ -189,7 +233,8 @@ SendSSDPResponse(int s, struct sockaddr_in sockname, int st_no,
 		"LOCATION: http://%s:%u" ROOTDESC_PATH "\r\n"
 		"Content-Length: 0\r\n"
 		"\r\n",
-		(runtime_vars.notify_interval<<1)+10,
+		/*(runtime_vars.notify_interval<<1)+10,*/
+		120,
 		tmstr,
 		known_service_types[st_no],
 		(st_no > 1 ? "1" : ""),
@@ -198,11 +243,9 @@ SendSSDPResponse(int s, struct sockaddr_in sockname, int st_no,
 		(st_no > 0 ? known_service_types[st_no] : ""),
 		(st_no > 1 ? "1" : ""),
 		host, (unsigned int)port);
-	printf("Sending M-SEARCH response to %s:%d ST: %s\n",
-		inet_ntoa(sockname.sin_addr), ntohs(sockname.sin_port),
-		known_service_types[st_no]);
+	dlog_print(DLOG_INFO, "tdlna_ssdp", "▶▶ Sending M-SEARCH response to %s:%d ST: %s\n",inet_ntoa(sockname.sin_addr), ntohs(sockname.sin_port), known_service_types[st_no]);
 	n = sendto(s, buf, l, 0,
-	           (struct sockaddr *)&sockname, sizeof(struct sockaddr_in) );
+			(struct sockaddr *)&sockname, sizeof(struct sockaddr_in) );
 	if (n < 0)
 		printf("sendto(udp): %s\n", strerror(errno));
 }
@@ -266,8 +309,6 @@ SendSSDPNotifies(int s, const char *host, unsigned short port,
 	printf("Send ssdp:alive \n");
 }
 
-
-/*
 void
 ParseUPnPClient(char *location)
 {
@@ -372,7 +413,7 @@ close:
 	if (model)
 	{
 		int i;
-		DPRINTF(E_DEBUG, L_SSDP, "Model: %s\n", model);
+		//DPRINTF(E_DEBUG, L_SSDP, "Model: %s\n", model);
 		for (i = 0; client_types[i].name; i++)
 		{
 			if (client_types[i].match_type != EModelName)
@@ -389,7 +430,7 @@ close:
 		{
 			if (serial)
 			{
-				DPRINTF(E_DEBUG, L_SSDP, "Serial: %s\n", serial);
+				//DPRINTF(E_DEBUG, L_SSDP, "Serial: %s\n", serial);
 				//* The Series B I saw was 20081224DMR.  Series A should be older than that.
 				if (atoi(serial) < 20081201)
 					type = 0;
@@ -429,31 +470,36 @@ close:
 		client->age = time(NULL);
 	}
 }
-*/
+
 
 
 // ProcessSSDPRequest()
 // process SSDP M-SEARCH requests and responds to them 
-/*
-void
-ProcessSSDPRequest(int s, unsigned short port)
+
+void ProcessSSDPRequest(int s, unsigned short port)
 {
-	int n;
+	int n=0, i;
 	char bufr[1500];
 	socklen_t len_r;
 	struct sockaddr_in sendername;
-	int i;
 	char *st = NULL, *mx = NULL, *man = NULL, *mx_end = NULL;
 	int man_len = 0;
+
 	len_r = sizeof(struct sockaddr_in);
 
-	n = recvfrom(s, bufr, sizeof(bufr)-1, 0,
-	             (struct sockaddr *)&sendername, &len_r);
+	//dlog_print(DLOG_INFO, "tdlna_ssdp", "▶ ssdp패킷 수신대기");
+
+	// MSG_DONTWAIT플래그를 사용하여 non-blocking수신한다. 결과가 없으면 바로 리턴하도록
+	n = recvfrom(s, bufr, sizeof(bufr)-1, MSG_DONTWAIT, (struct sockaddr *)&sendername, &len_r);
+	//n = recvfrom(s, bufr, sizeof(bufr)-1, 0, (struct sockaddr *)&sendername, &len_r);
+
 	if (n < 0)
 	{
-		DPRINTF(E_ERROR, L_SSDP, "recvfrom(udp): %s\n", strerror(errno));
+		//dlog_print(DLOG_INFO, "tdlna_ssdp", "◆ 없어서 리턴됨");
+		//DPRINTF(E_ERROR, L_SSDP, "recvfrom(udp): %s\n", strerror(errno));
 		return;
 	}
+
 	bufr[n] = '\0';
 	n -= 2;
 
@@ -467,7 +513,8 @@ ProcessSSDPRequest(int s, unsigned short port)
 			if( bufr[i] == '*' )
 				break;
 		}
-		if (strcasestrc(bufr+i, "HTTP/1.1", '\r') == NULL)
+		//if (strcasestrc(bufr+i, "HTTP/1.1", '\r') == NULL)
+		if (strstr(bufr+i, "HTTP/1.1") == NULL)
 			return;
 		while (i < n)
 		{
@@ -502,12 +549,12 @@ ProcessSSDPRequest(int s, unsigned short port)
 			}
 		}
 		if (!loc || !srv || !nt || !nts || (strncmp(nts, "ssdp:alive", 10) != 0) ||
-		    (strncmp(nt, "urn:schemas-upnp-org:device:MediaRenderer", 41) != 0))
+				(strncmp(nt, "urn:schemas-upnp-org:device:MediaRenderer", 41) != 0))
 			return;
 		loc[loc_len] = '\0';
 		if ((strncmp(srv, "Allegro-Software-RomPlug", 24) == 0) || //* Roku
-		    (strstr(loc, "SamsungMRDesc.xml") != NULL) || //* Samsung TV
-		    (strstrc(srv, "DigiOn DiXiM", '\r') != NULL)) //* Marantz Receiver
+				(strstr(loc, "SamsungMRDesc.xml") != NULL)/* || //* Samsung TV
+		    (strstrc(srv, "DigiOn DiXiM", '\r') != NULL)*/) //* Marantz Receiver
 		{
 			//Check if the client is already in cache 
 			struct client_cache_s *client = SearchClientCache(sendername.sin_addr, 1);
@@ -526,14 +573,18 @@ ProcessSSDPRequest(int s, unsigned short port)
 	else if (memcmp(bufr, "M-SEARCH", 8) == 0)
 	{
 		int st_len = 0, mx_len = 0, mx_val = 0;
-		//DPRINTF(E_DEBUG, L_SSDP, "Received SSDP request:\n%.*s\n", n, bufr);
+		//dlog_print(DLOG_INFO, "tdlna_ssdp", "◀ Received SSDP M-SEARCH request:\n%.*s\n", n, bufr);
+		dlog_print(DLOG_INFO, "tdlna_ssdp", "▶ Received SSDP M-SEARCH request");
 		for (i = 0; i < n; i++)
 		{
 			if (bufr[i] == '*')
 				break;
 		}
-		if (strcasestrc(bufr+i, "HTTP/1.1", '\r') == NULL)
+		//if (strcasestrc(bufr+i, "HTTP/1.1", '\r') == NULL)
+		if (strstr(bufr+i, "HTTP/1.1") == NULL){
+			dlog_print(DLOG_INFO, "tdlna_ssdp", "◆ strstr(bufr+i, \"HTTP/1.1\") 리턴됨 HTTP/1.1없어서?" );
 			return;
+		}
 		while (i < n)
 		{
 			while ((i < n) && (bufr[i] != '\r' || bufr[i+1] != '\n'))
@@ -572,17 +623,17 @@ ProcessSSDPRequest(int s, unsigned short port)
 		//	inet_ntoa(sendername.sin_addr), ntohs(sendername.sin_port) );
 		if (GETFLAG(DLNA_STRICT_MASK) && (ntohs(sendername.sin_port) <= 1024 || ntohs(sendername.sin_port) == 1900))
 		{
-			DPRINTF(E_INFO, L_SSDP, "WARNING: Ignoring invalid SSDP M-SEARCH from %s [bad source port %d]\n",
+			dlog_print(DLOG_INFO, "tdlna_ssdp", "WARNING: Ignoring invalid SSDP M-SEARCH from %s [bad source port %d]\n",
 				inet_ntoa(sendername.sin_addr), ntohs(sendername.sin_port));
 		}
 		else if (!man || (strncmp(man, "\"ssdp:discover\"", 15) != 0))
 		{
-			DPRINTF(E_INFO, L_SSDP, "WARNING: Ignoring invalid SSDP M-SEARCH from %s [bad %s header '%.*s']\n",
+			dlog_print(DLOG_INFO, "tdlna_ssdp", "WARNING: Ignoring invalid SSDP M-SEARCH from %s [bad %s header '%.*s']\n",
 				inet_ntoa(sendername.sin_addr), "MAN", man_len, man);
 		}
 		else if (!mx || mx == mx_end || mx_val < 0)
 		{
-			DPRINTF(E_INFO, L_SSDP, "WARNING: Ignoring invalid SSDP M-SEARCH from %s [bad %s header '%.*s']\n",
+			dlog_print(DLOG_INFO, "tdlna_ssdp", "WARNING: Ignoring invalid SSDP M-SEARCH from %s [bad %s header '%.*s']\n",
 				inet_ntoa(sendername.sin_addr), "MX", mx_len, mx);
 		}
 		else if (st && (st_len > 0))
@@ -601,11 +652,11 @@ ProcessSSDPRequest(int s, unsigned short port)
 			}
 			if (n_lan_addr == i)
 			{
-				DPRINTF(E_DEBUG, L_SSDP, "Ignoring SSDP M-SEARCH on other interface [%s]\n",
+				dlog_print(DLOG_DEBUG, "tdlna_ssdp", "Ignoring SSDP M-SEARCH on other interface [%s]\n",
 					inet_ntoa(sendername.sin_addr));
 				return;
 			}
-			DPRINTF(E_DEBUG, L_SSDP, "SSDP M-SEARCH from %s:%d ST: %.*s, MX: %.*s, MAN: %.*s\n",
+			dlog_print(DLOG_DEBUG, "tdlna_ssdp", "SSDP M-SEARCH from %s:%d ST: %.*s, MX: %.*s, MAN: %.*s\n",
 				inet_ntoa(sendername.sin_addr),
 				ntohs(sendername.sin_port),
 				st_len, st, mx_len, mx, man_len, man);
@@ -629,7 +680,7 @@ ProcessSSDPRequest(int s, unsigned short port)
 							l++;
 							continue;
 						}
-						DPRINTF(E_MAXDEBUG, L_SSDP,
+						dlog_print(DLOG_DEBUG, "tdlna_ssdp",
 							"Ignoring SSDP M-SEARCH with bad extra data '%c' [%s]\n",
 							st[l], inet_ntoa(sendername.sin_addr));
 						break;
@@ -656,7 +707,7 @@ ProcessSSDPRequest(int s, unsigned short port)
 		}
 		else
 		{
-			DPRINTF(E_INFO, L_SSDP, "Invalid SSDP M-SEARCH from %s:%d\n",
+			dlog_print(DLOG_INFO, "tdlna_ssdp", "Invalid SSDP M-SEARCH from %s:%d\n",
 				inet_ntoa(sendername.sin_addr), ntohs(sendername.sin_port));
 		}
 	}
@@ -666,51 +717,10 @@ ProcessSSDPRequest(int s, unsigned short port)
 	}
 	else
 	{
-		DPRINTF(E_WARN, L_SSDP, "Unknown udp packet received from %s:%d\n",
+		dlog_print(DLOG_WARN, "tdlna_ssdp", "Unknown udp packet received from %s:%d\n",
 			inet_ntoa(sendername.sin_addr), ntohs(sendername.sin_port));
 	}
 }
-*/
-
-//M-Search 패킷 테스트용
-int JustSend_M_Search(int s)
-{
-	struct sockaddr_in sockname;
-	int n, l;
-	int i;
-	int dup, ret = 0;
-	char bufr[512];
-
-	memset(&sockname, 0, sizeof(struct sockaddr_in));
-	sockname.sin_family = AF_INET;
-	sockname.sin_port = htons(SSDP_PORT);
-	sockname.sin_addr.s_addr = inet_addr(SSDP_MCAST_ADDR);
-
-
-	for (i = 0; i<1 /*known_service_types[i]*/; i++)
-	{
-		l = snprintf(bufr, sizeof(bufr),
-				"M-SEARCH * HTTP/1.1\r\n"
-				"HOST:239.255.255.255:1900\r\n"
-				"MAN: \"ssdp:discover\"\r\n"
-				"MX: 30\r\n"
-				"ST:ssdp:all\r\n"
-				"\r\n");
-
-		printf("Sending M-SEARCH ssdp:all(discover) [%d]\n", s);
-		n = sendto(s, bufr, l, 0,
-		           (struct sockaddr *)&sockname, sizeof(struct sockaddr_in) );
-		if (n < 0)
-		{
-			printf("sendto(udp_shutdown=%d): %s\n", s, strerror(errno));
-			ret = -1;
-			break;
-		}
-	}
-
-	return ret;
-}
-
 
 //서비스가 종료될 때 SSDP byebye 패킷을 전송해주는 함수
 int
@@ -758,68 +768,3 @@ SendSSDPGoodbyes(int s)
 	return ret;
 }
 
-/* SubmitServicesToMiniSSDPD() :
- * register services offered by MiniUPnPd to a running instance of
- * MiniSSDPd */
-/*
-int
-SubmitServicesToMiniSSDPD(const char *host, unsigned short port)
-{
-	struct sockaddr_un addr;
-	int s;
-	unsigned char buffer[2048];
-	char strbuf[256];
-	unsigned char *p;
-	int i, l;
-
-	s = socket(AF_UNIX, SOCK_STREAM, 0);
-	if (s < 0)
-	{
-		printf("socket(unix): %s", strerror(errno));
-		return -1;
-	}
-	addr.sun_family = AF_UNIX;
-	strncpyt(addr.sun_path, minissdpdsocketpath, sizeof(addr.sun_path));
-	if (connect(s, (struct sockaddr *)&addr, sizeof(struct sockaddr_un)) < 0)
-	{
-		printf("connect(\"%s\"): %s", minissdpdsocketpath, strerror(errno));
-		close(s);
-		return -1;
-	}
-	for (i = 0; known_service_types[i]; i++)
-	{
-		buffer[0] = 4;
-		p = buffer + 1;
-		l = strlen(known_service_types[i]);
-		if (i > 0)
-			l++;
-		CODELENGTH(l, p);
-		memcpy(p, known_service_types[i], l);
-		if (i > 0)
-			p[l-1] = '1';
-		p += l;
-		l = snprintf(strbuf, sizeof(strbuf), "%s::%s%s", 
-		             uuidvalue, known_service_types[i], (i==0)?"":"1");
-		CODELENGTH(l, p);
-		memcpy(p, strbuf, l);
-		p += l;
-		l = strlen(MINIDLNA_SERVER_STRING);
-		CODELENGTH(l, p);
-		memcpy(p, MINIDLNA_SERVER_STRING, l);
-		p += l;
-		l = snprintf(strbuf, sizeof(strbuf), "http://%s:%u" ROOTDESC_PATH,
-		             host, (unsigned int)port);
-		CODELENGTH(l, p);
-		memcpy(p, strbuf, l);
-		p += l;
-		if(write(s, buffer, p - buffer) < 0)
-		{
-			DPRINTF(E_ERROR, L_SSDP, "write(): %s", strerror(errno));
-			close(s);
-			return -1;
-		}
-	}
-	close(s);
-	return 0;
-}
-*/

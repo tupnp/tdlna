@@ -12,6 +12,7 @@
 #include <arpa/inet.h>
 #include <fcntl.h>
 #include <errno.h>
+#include <dlog.h>
 
 #include "upnpevents.h"
 #include "upnpglobalvars.h"
@@ -25,9 +26,9 @@
 #define CONNECTIONMGR_PATH			"/ConnectionMgr.xml"
 #define CONNECTIONMGR_CONTROLURL		"/ctl/ConnectionMgr"
 #define CONNECTIONMGR_EVENTURL			"/evt/ConnectionMgr"
-#define X_MS_MEDIARECEIVERREGISTRAR_PATH	"/X_MS_MediaReceiverRegistrar.xml"
-#define X_MS_MEDIARECEIVERREGISTRAR_CONTROLURL	"/ctl/X_MS_MediaReceiverRegistrar"
-#define X_MS_MEDIARECEIVERREGISTRAR_EVENTURL	"/evt/X_MS_MediaReceiverRegistrar"
+//#define X_MS_MEDIARECEIVERREGISTRAR_PATH	"/X_MS_MediaReceiverRegistrar.xml"
+//#define X_MS_MEDIARECEIVERREGISTRAR_CONTROLURL	"/ctl/X_MS_MediaReceiverRegistrar"
+//#define X_MS_MEDIARECEIVERREGISTRAR_EVENTURL	"/evt/X_MS_MediaReceiverRegistrar"
 
 /* stuctures definitions */
 struct subscriber {
@@ -132,8 +133,8 @@ newSubscriber(const char * eventurl, const char * callback, int callbacklen)
 		tmp->service = EContentDirectory;
 	else if(strcmp(eventurl, CONNECTIONMGR_EVENTURL)==0)
 		tmp->service = EConnectionManager;
-	else if(strcmp(eventurl, X_MS_MEDIARECEIVERREGISTRAR_EVENTURL)==0)
-		tmp->service = EMSMediaReceiverRegistrar;
+//	else if(strcmp(eventurl, X_MS_MEDIARECEIVERREGISTRAR_EVENTURL)==0)
+//		tmp->service = EMSMediaReceiverRegistrar;
 	else {
 		free(tmp);
 		return NULL;
@@ -427,13 +428,23 @@ upnp_event_process_notify(struct upnp_event_notify * obj)
 void upnpevents_selectfds(fd_set *readset, fd_set *writeset, int * max_fd)
 {
 	struct upnp_event_notify * obj;
-	for(obj = notifylist.lh_first; obj != NULL; obj = obj->entries.le_next) {
-		printf("upnpevents_selectfds: %p %d %d\n",
-		       obj, obj->state, obj->s);
+	for(obj = notifylist.lh_first; obj != NULL; obj = obj->entries.le_next)
+	{
+
+		dlog_print(DLOG_INFO, "tdlna","◆◆ upnpevents_selectfds: %p %d %d\n", obj, obj->state, obj->s);
 		if(obj->s >= 0) {
 			switch(obj->state) {
 			case ECreated:
 				upnp_event_notify_connect(obj);
+				dlog_print(DLOG_INFO, "tdlna", "◆◆ upnp_event_notify_connect(obj) - %d", (int)obj->state);
+				/*
+				 enum { ECreated=1,
+	       	   	   EConnecting,
+					   ESending,
+					   EWaitingForResponse,
+					   EFinished,
+					   EError } state;
+				 */
 				if(obj->state != EConnecting)
 					break;
 			case EConnecting:

@@ -20,6 +20,7 @@
 #include <net/if.h>
 #include <dlog.h>
 #include <pthread.h>
+#include <system_settings.h>   //serUUID (getMAC Addr)
 
 #include "upnphttp.h"
 #include "upnpglobalvars.h"
@@ -39,8 +40,10 @@ int serviceOn(void* data){
 		dlog_print(DLOG_ERROR,"tdlna", "이전 실행된 서비스가 정상적으로 종료되지 않았습니다.");
 		return 0;
 	}
+
 	ad->run_tdlna = true;
 	r = pthread_create(&(ad->tdlna_td), NULL, tdlnamain, (void*)data);
+
 	dlog_print(DLOG_INFO,"tdlna", "◆ 서비스 스레드 생성: %d", r);
 
 	return 1;
@@ -49,31 +52,65 @@ int serviceOn(void* data){
 //서비스 종료
 int serviceOff(void* data){
 	app_data *ad = data;
-	int r;
+	int status;
+	int r = 0;
 	ad->run_tdlna = false;
 
-//	r = pthread_join(&(ad->tdlna_td), NULL);
-	ad->tdlna_td = NULL;
-//	dlog_print(DLOG_INFO,"tdlna","◆ 서비스 스레드 종료: %d", r);
+	if(ad->tdlna_td){
+		r = pthread_join(ad->tdlna_td,  (void *)&status);
+		ad->tdlna_td = NULL;
+	}
 
+	dlog_print(DLOG_INFO,"tdlna","tdlna 스레드 종료: %d", r);
 	return 1;
 }
 
-void setDeviceProperty(void* data, char* dName){
+void setUUID()
+{
+	   struct ifreq ifr;
+	   int fd;
+	   unsigned char mac[6];
+	   unsigned char buf[13];
+	   fd = socket(AF_INET, SOCK_DGRAM, 0);      //소켓 생성
+	   strncpy(ifr.ifr_name, "wlan0", IFNAMSIZ);   //interface의 eth0 등록.
+	   ioctl(fd, SIOCGIFHWADDR, &ifr);            //연결시도.
+	   close(fd);                           //소켓 닫음
+
+	   memcpy(mac, ifr.ifr_hwaddr.sa_data, 6);      //가져온다.
+	   dlog_print(DLOG_INFO, "tdlna","MAC[wlan0]: %02x:%02x:%02x:%02x:%02x:%02x\n", mac[0], mac[1], mac[2], mac[3], mac[4], mac[5]);
+	   sprintf(buf, "%02x%02x%02x%02x%02x%02x", mac[0]&0xFF, mac[1]&0xFF, mac[2]&0xFF,mac[3]&0xFF, mac[4]&0xFF, mac[5]&0xFF);
+	   strcpy(uuidvalue+5, "3d696e69-444c-164e-9d41-");
+	   strncat(uuidvalue, buf, 12);
+	   dlog_print(DLOG_INFO, "tdlna","uuid설정: %s", uuidvalue);
+}
+
+//디바이스명 등의 환경설정 적용하는부분
+void setDeviceProperty(void* data){
 
 	app_data *ad = data;
+	char* dName = ad->deviceName;
 	bool saveState = ad->run_tdlna;
 
+	//설정값이 기존 값이랑 동일하다면 아무일 안함
 	if(!strcmp(modelname, dName)) return;
 
+	//기존 서비스 가동중이라면 중지
 	if(ad->run_tdlna == true){
 		serviceOff(data);
 	}
 
 	sprintf(modelname, "%s", dName);
 	if(saveState == true){
-		sleep(3);
-		serviceOn(data);
+		//sleep(1);
+		serviceOn(data); //(기존 가동상태였다면)변경 후 서비스 재시작
+	}
+}
+
+void sSleep(app_data* data, int sTime){
+	unsigned long long i, dst;
+	dst = sTime*1000;
+	for(i=0; i<dst && data->run_tdlna; i++){
+		usleep(1000);
 	}
 }
 
@@ -83,13 +120,14 @@ void* ssdpAlive(void* data){
 	while(ad->run_tdlna){
 		//dlog_print(DLOG_INFO, "tdlna", "SSDP Alive (run:%d)", ad->run_tdlna);
 		SendSSDPNotifies(lan_addr[0].snotify, lan_addr[0].str, runtime_vars.port, runtime_vars.notify_interval);
-		//sleep(runtime_vars.notify_interval - 10 ); // 딜레이를 기존보다 10초 정도 적게 보냄
-		sleep(3); //테스트 3초
+		//sSleep(ad, runtime_vars.notify_interval - 10 ); // 딜레이를 기존보다 10초 정도 적게 보냄
+		sSleep(ad, 5);
 	}
 
-	dlog_print(DLOG_INFO, "tdlna", "♠♠♠ GoodBye~ (ssdp)♠♠♠ %d", ad->run_tdlna);
+	dlog_print(DLOG_INFO, "tdlna", "(Thread) GoodBye~ (ssdp) %d", ad->run_tdlna);
 	SendSSDPGoodbyes(lan_addr[0].snotify);
 }
+
 
 //  upnp server main
 void* tdlnamain(void* data)
@@ -106,9 +144,10 @@ void* tdlnamain(void* data)
 		fd_set readset;	// select() 사용
 		fd_set writeset;
 		int max_fd = -1;
+
 		struct timeval timeout;
 
-		dlog_print(DLOG_INFO, "tdlna", "Server Main Start!!!");
+		dlog_print(DLOG_INFO, "tdlna", "tdlna Server Main Start!!!");
 
 		//초기화
 		runtime_vars.port = 9090; //http요청 수신 포트
@@ -117,16 +156,22 @@ void* tdlnamain(void* data)
 		runtime_vars.root_container = NULL;
 		runtime_vars.ifaces[0] = NULL;
 
-		reload_ifaces(0); //네트워크 초기화(기존 연결된 기기들이 있으면 끊고 다시 ssdp알림 발송)
+		//디바이스 이름 설정
+		strcpy(modelname, ad->deviceName);
+		//UUID 설정
+		setUUID();
 
+		//http요청 리스트 초기화
 		LIST_INIT(&upnphttphead);
+
 		shttpl = OpenAndConfHTTPSocket(runtime_vars.port); // Http 수신 소켓 설정
 
 		if (shttpl < 0)
 		{
 			close(shttpl);
 			dlog_print(DLOG_ERROR, "tdlna", "HTTP 수신 소켓 실패");
-			exit(0);
+			ad->run_tdlna = false;
+			//serviceOff(data);
 			return 0;
 		}
 		else
@@ -136,11 +181,13 @@ void* tdlnamain(void* data)
 		if (sssdp < 0)
 			dlog_print(DLOG_ERROR, "tdlna", "SSDP 수신 소켓 실패");
 
-	//	JustSend_M_Search(0); //M-search 패킷 테스트
-	//	return 0;
+		dlog_print(DLOG_DEBUG, "tdlna", "sssdp (Recivce): %d", sssdp);
+
+		reload_ifaces(0, sssdp); //인터페이스 리로드(기존 연결된 기기들이 있으면 끊고 다시 ssdp알림 발송)
 
 		//ssdp alive 스레드 생성 (이녀석은 서비스 실행중인 동안 주기적으로 Alive패킷을 보낸다.)
 		pthread_create(&ssdptd, NULL, ssdpAlive, (void*)data);
+
 
 		//***** 메인루프 *****//
 		while(ad->run_tdlna)
@@ -156,7 +203,7 @@ void* tdlnamain(void* data)
 				max_fd = MAX(max_fd, shttpl);
 			}
 
-			i = 0;	//연결 되어있는 http소켓 수를 카운트
+			i = 0;	//연결 되어있는 http소켓 카운트
 			for (e = upnphttphead.lh_first; e != NULL; e = e->entries.le_next)
 			{
 				if ((e->socket >= 0) && (e->state <= 2))
@@ -167,18 +214,23 @@ void* tdlnamain(void* data)
 				}
 			}
 			FD_ZERO(&writeset);
-	//		upnpevents_selectfds(&readset, &writeset, &max_fd);
-
+			//		upnpevents_selectfds(&readset, &writeset, &max_fd);
 
 			ret = select(max_fd+1, &readset, &writeset, 0, &timeout);
 			if (ret < 0)
 			{
-			//	if(quitting) goto shutdown;
+				//	if(quitting) goto shutdown;
 				if(errno == EINTR) continue;
 			}
 
-			//dlog_print(DLOG_DEBUG, "max_fd - %d\n",max_fd);
-	//		upnpevents_processfds(&readset, &writeset);
+			//upnpevents_processfds(&readset, &writeset);
+
+//			//SSDP패킷 처리
+			if (sssdp >= 0) //|| FD_ISSET(sssdp, &readset))
+			{
+				//dlog_print(DLOG_INFO, "tdlna", "▶ 메인에서 SSDP 처리 들어옴 %d", sssdp);
+				ProcessSSDPRequest(sssdp, (unsigned short)runtime_vars.port);
+			}
 
 			//리스트에 접속된 http요청을 처리한다.
 			for (e = upnphttphead.lh_first; e != NULL; e = e->entries.le_next)
@@ -186,14 +238,13 @@ void* tdlnamain(void* data)
 
 				if ((e->socket >= 0) && (e->state <= 2) && (FD_ISSET(e->socket, &readset)))
 				{
-					dlog_print(DLOG_INFO, "tdlna", "Process_upnpHttp 호출");
+					//dlog_print(DLOG_INFO, "tdlna", "Process_upnpHttp 호출");
 					Process_upnphttp(e); // 본격적 처리부분
 				}
 			}
 
-
-			// 들어오는 http연결을 수락한 후 리스트에 추가한다.
-			if (shttpl >= 0 && FD_ISSET(shttpl, &readset))
+			// 들어오는 http연결이 있으면 수락한 후 리스트에 추가한다.
+			if (shttpl >= 0  && FD_ISSET(shttpl, &readset))
 			{
 				int shttp;
 				socklen_t clientnamelen;
@@ -203,22 +254,25 @@ void* tdlnamain(void* data)
 				//수락
 				shttp = accept(shttpl, (struct sockaddr *) &clientname, &clientnamelen);
 
+				//dlog_print(DLOG_INFO, "tdlna", "shttp accept!");
+
 				if(shttp <0)
 					dlog_print(DLOG_ERROR, "tdlna", "Http accept error !!!");
-				else
-					dlog_print(DLOG_INFO, "tdlna", "client socket: %d\n", shttp);
+				else{
+					//dlog_print(DLOG_INFO, "tdlna", "client socket: %d\n", shttp);
 
-				struct upnphttp * tmp = 0;
-				tmp = New_upnphttp(shttp); //노드 할당
-				if(tmp)
-				{
-					tmp->clientaddr = clientname.sin_addr;
-					LIST_INSERT_HEAD(&upnphttphead, tmp, entries); //리스트 추가
-				}
-				else
-				{
-					dlog_print(DLOG_ERROR, "tdlna", "New_upnphttp() failed");
-					close(shttp);
+					struct upnphttp * tmp = 0;
+					tmp = New_upnphttp(shttp); //노드 할당
+					if(tmp)
+					{
+						tmp->clientaddr = clientname.sin_addr;
+						LIST_INSERT_HEAD(&upnphttphead, tmp, entries); //리스트 추가
+					}
+					else
+					{
+						dlog_print(DLOG_ERROR, "tdlna", "New_upnphttp() failed");
+						close(shttp);
+					}
 				}
 			}
 
@@ -228,7 +282,7 @@ void* tdlnamain(void* data)
 				next = e->entries.le_next;
 				if(e->state >= 100)
 				{
-					dlog_print(DLOG_INFO, "tdlna", "Delete upnphttp (%d)", e->clientaddr);
+					//dlog_print(DLOG_INFO, "tdlna", "Delete upnphttp (%d)", e->clientaddr);
 					LIST_REMOVE(e, entries);
 					Delete_upnphttp(e);
 				}
@@ -238,15 +292,9 @@ void* tdlnamain(void* data)
 	//Main Loop End
 
 
-	shutdown:
+shutdown:
 		dlog_print(DLOG_INFO, "tdlna", "+=== Shutdown ====+\n");
-		/* kill the scanner */
-	//	if (scanning && scanner_pid)
-	//		kill(scanner_pid, SIGKILL);
 
-		/* kill other child processes */
-	//	process_reap_children();
-	//	free(children);
 
 		// 연결된 모든 소켓을 닫는다.
 		while (upnphttphead.lh_first != NULL)
@@ -255,8 +303,9 @@ void* tdlnamain(void* data)
 			LIST_REMOVE(e, entries);
 			Delete_upnphttp(e);
 		}
-		if (sssdp >= 0)
-			close(sssdp);
+
+//		if (sssdp >= 0)
+//			close(sssdp);
 		if (shttpl >= 0)
 			close(shttpl);
 
@@ -272,11 +321,9 @@ void* tdlnamain(void* data)
 		if (ssdptd)
 			pthread_join(ssdptd, NULL);
 
-	//	sqlite3_close(db);
-	//	upnpevents_removeSubscribers();
-	//	freeoptions();
+		upnpevents_removeSubscribers();
 
-		dlog_print(DLOG_INFO, "tdlna", "+=== 서비스 Main 종료됨!! ====+\n");
+		dlog_print(DLOG_INFO, "tdlna", "+=== tdlna 종료!! ====+\n");
 		return 0;
 }
 
@@ -325,7 +372,7 @@ void* tdlnamain(void* data)
 
 
 //네트워크 인터페이스 설정
-static int getifaddr(const char *ifname)
+static int getifaddr(const char *ifname, int sssdpr)
 {
 	int s = socket(PF_INET, SOCK_STREAM, 0);
 	struct sockaddr_in addr;
@@ -369,7 +416,7 @@ static int getifaddr(const char *ifname)
 		memcpy(&addr, &(ifr->ifr_addr), sizeof(addr));
 		memcpy(&lan_addr[n_lan_addr].mask, &addr.sin_addr, sizeof(addr));
 		lan_addr[n_lan_addr].ifindex = if_nametoindex(ifr->ifr_name);
-		lan_addr[n_lan_addr].snotify = OpenAndConfSSDPNotifySocket(&lan_addr[n_lan_addr]);
+		lan_addr[n_lan_addr].snotify = OpenAndConfSSDPNotifySocket(&lan_addr[n_lan_addr], sssdpr);
 		if (lan_addr[n_lan_addr].snotify >= 0)
 			n_lan_addr++;
 		if (ifname || n_lan_addr >= MAX_LAN_ADDR)
@@ -386,7 +433,7 @@ static int getifaddr(const char *ifname)
 }
 
 //인터페이스 초기화
-void reload_ifaces(int force_notify)
+static void reload_ifaces(int force_notify, int sssdpr)
 {
 	struct in_addr old_addr[4];
 	int i, j;
@@ -401,7 +448,7 @@ void reload_ifaces(int force_notify)
 
 	i = 0;
 	do {
-		getifaddr(runtime_vars.ifaces[i]);
+		getifaddr(runtime_vars.ifaces[i], sssdpr);
 		i++;
 	} while (runtime_vars.ifaces[i]);
 

@@ -71,7 +71,7 @@ static char* strstrc(const char *s, const char *p, const char t)
 }
 
 //URL 문자열 인코딩
-char *UrlEncode(char *str, char *encstr){
+char* mUrlEncode(char *str, char *encstr){
 	//char encstr[128],
 	char buf[2+1];
 	int i, j;
@@ -129,7 +129,7 @@ static void BuildSendAndCloseSoapResp(struct upnphttp * h, const char * body, in
 	memcpy(h->res_buf + h->res_buflen, afterbody, sizeof(afterbody) - 1);
 	h->res_buflen += sizeof(afterbody) - 1;
 
-	//dlog_print(DLOG_DEBUG, "tdlna", "★SOAP RESPONSE: %s", h->res_buf);
+	//dlog_print(DLOG_DEBUG, "tdlna_soap", "★SOAP RESPONSE: %s", h->res_buf);
 	SendResp_upnphttp(h);
 	CloseSocket_upnphttp(h);
 }
@@ -206,7 +206,7 @@ RegisterDevice(struct upnphttp * h, const char * action)
 static void
 GetProtocolInfo(struct upnphttp * h, const char * action)
 {
-
+	dlog_print(DLOG_ERROR, "tdlna_soap", "GetProtocolInfo!!!");
 	static const char resp[] =
 		"<u:%sResponse "
 		"xmlns:u=\"%s\">"
@@ -219,13 +219,14 @@ GetProtocolInfo(struct upnphttp * h, const char * action)
 	char * body;
 	int bodylen;
 
-	bodylen = strlen(resp) + strlen(action) + 50;
+	bodylen = strlen(resp) + strlen(action) + 100;
 	body = malloc(bodylen);
+	body[bodylen-1] = '\0';
 
 	bodylen = sprintf(body, resp, action, "urn:schemas-upnp-org:service:ConnectionManager:1", action);
 	BuildSendAndCloseSoapResp(h, body, bodylen);
 
-	dlog_print(DLOG_DEBUG,"tdlna", "겟프로토콜 %s", body);
+	dlog_print(DLOG_DEBUG,"tdlna_soap", "겟프로토콜 %s", body);
 	free(body);
 }
 */
@@ -252,24 +253,13 @@ GetSortCapabilities(struct upnphttp * h, const char * action)
 		action);	
 	BuildSendAndCloseSoapResp(h, body, bodylen);
 }
-/*
+
 static void
 GetSearchCapabilities(struct upnphttp * h, const char * action)
 {
 	static const char resp[] =
 		"<u:%sResponse xmlns:u=\"%s\">"
 		"<SearchCaps>"
-		  "dc:creator,"
-		  "dc:date,"
-		  "dc:title,"
-		  "upnp:album,"
-		  "upnp:actor,"
-		  "upnp:artist,"
-		  "upnp:class,"
-		  "upnp:genre,"
-		  "@id,"
-		  "@parentID,"
-		  "@refID"
 		"</SearchCaps>"
 		"</u:%sResponse>";
 
@@ -281,7 +271,7 @@ GetSearchCapabilities(struct upnphttp * h, const char * action)
 		action);	
 	BuildSendAndCloseSoapResp(h, body, bodylen);
 }
-*/
+
 static void
 GetCurrentConnectionIDs(struct upnphttp * h, const char * action)
 {
@@ -300,7 +290,7 @@ GetCurrentConnectionIDs(struct upnphttp * h, const char * action)
 		action);	
 	BuildSendAndCloseSoapResp(h, body, bodylen);
 }
- /*
+
 static void
 GetCurrentConnectionInfo(struct upnphttp * h, const char * action)
 {
@@ -325,7 +315,7 @@ GetCurrentConnectionInfo(struct upnphttp * h, const char * action)
 
 	ParseNameValue(h->req_buf + h->req_contentoff, h->req_contentlen, &data, XML_STORE_EMPTY_FL);
 	id_str = GetValueFromNameValueList(&data, "ConnectionID");
-	printf("GetCurrentConnectionInfo(%s)\n", id_str);
+	dlog_print(DLOG_DEBUG, "tdlna_soap", "GetCurrentConnectionInfo(%s)\n", id_str);
 	if(id_str)
 		id = strtol(id_str, &endptr, 10);
 	if (!id_str || endptr == id_str)
@@ -346,7 +336,7 @@ GetCurrentConnectionInfo(struct upnphttp * h, const char * action)
 	}
 	ClearNameValueList(&data);	
 }
-*/
+
 /* Standard DLNA/UPnP filter flags */
 #define FILTER_CHILDCOUNT                        0x00000001
 #define FILTER_DC_CREATOR                        0x00000002
@@ -1150,7 +1140,7 @@ callback(void *args, int argc, char **argv, char **azColName)
 	*/
 
 //파일 확장명 비교
-int file_ext_same (char *filename, char *ext)
+int FileExtCmp (char *filename, char *ext)
 {
 
 	int i, ext_len, filename_len, cnt=0;
@@ -1174,7 +1164,8 @@ int file_ext_same (char *filename, char *ext)
 		return 0;
 }
 
-void processSpecialCharacter(char* str1){
+//xml 특수문자 처리
+void ProcessSpecialCharacter(char* str1){
 	int i=0, j=0;
 	char str2[600]= {'\0',};
 
@@ -1184,6 +1175,21 @@ void processSpecialCharacter(char* str1){
 		if(str1[i] == '&'){
 			strcat(&str2[i], "&amp;amp;");
 			j += 9;
+			i++;
+		}
+		else if(str1[i] == '<'){
+			strcat(&str2[i], "&amp;lt;");
+			j += 8;
+			i++;
+		}
+		else if(str1[i] == '>'){
+			strcat(&str2[i], "&amp;gt;");
+			j += 8;
+			i++;
+		}
+		else if(str1[i] == '\"'){
+			strcat(&str2[i], "&amp;quot;");
+			j += 10;
 			i++;
 		}
 
@@ -1225,6 +1231,7 @@ BrowseContentDirectory(struct upnphttp * h, const char * action)
 	struct NameValueParserData data;
 	int RequestedCount = 0;
 	int StartingIndex = 0;
+	int itemCount = 0;
 
 	//--- dirent -----
 	struct dirent* dp;
@@ -1235,7 +1242,7 @@ BrowseContentDirectory(struct upnphttp * h, const char * action)
 	char encodedFileName[512];
 	//----------------
 
-	dlog_print(DLOG_INFO,"tdlna", "★★★  Browse 액션 처리중 ★★★");
+	dlog_print(DLOG_INFO,"tdlna_soap", "★★★  Browse 액션 처리중 ★★★");
 
 	memset(&args, 0, sizeof(args));
 	memset(&str, 0, sizeof(str));
@@ -1289,11 +1296,9 @@ BrowseContentDirectory(struct upnphttp * h, const char * action)
 	if( args.filter & FILTER_DLNA_NAMESPACE )
 		ret = strcatf(&str, DLNA_NAMESPACE);
 	if( args.filter & FILTER_PV_SUBTITLE ){
-		dlog_print(DLOG_DEBUG, "tdlna", "삼성!!기기 연결! PV NameSpase 찍음");
+		dlog_print(DLOG_DEBUG, "tdlna_soap", "삼성!!기기 연결! PV NameSpase 찍음");
 		ret = strcatf(&str, PV_NAMESPACE);
 	}
-
-	//strcatf(&str, "&gt;\n"); //>
 
 	args.returned = 0;
 	args.requested = RequestedCount;
@@ -1301,51 +1306,58 @@ BrowseContentDirectory(struct upnphttp * h, const char * action)
 	args.flags = h->req_client ? h->req_client->type->flags : 0;
 	args.str = &str;
 
-	dlog_print(DLOG_WARN,"tdlna", " ObjectID: %s", ObjectID);
-	dlog_print(DLOG_WARN,"tdlna", " RequestedCount: %d", RequestedCount);
-	dlog_print(DLOG_WARN,"tdlna", " StartingIndex: %d", StartingIndex);
-	dlog_print(DLOG_WARN,"tdlna", " BrowseFlag: %s", BrowseFlag);
-	dlog_print(DLOG_WARN,"tdlna", " Filter: %s", Filter);
-	//dlog_print(DLOG_INFO,"tdlna", " SortCriteria: %s", SortCriteria);
+	dlog_print(DLOG_WARN,"tdlna_soap", " ObjectID: %s", ObjectID);
+	dlog_print(DLOG_WARN,"tdlna_soap", " RequestedCount: %d", RequestedCount);
+	dlog_print(DLOG_WARN,"tdlna_soap", " StartingIndex: %d", StartingIndex);
+	dlog_print(DLOG_WARN,"tdlna_soap", " BrowseFlag: %s", BrowseFlag);
+	dlog_print(DLOG_WARN,"tdlna_soap", " Filter: %s", Filter);
+	//dlog_print(DLOG_INFO,"tdlna_soap", " SortCriteria: %s", SortCriteria);
 
 	//=========================================== 여기까지는 정상작동할것으로 봄 ==================================
+	strcat(str.data, "&gt;");
 
-	if(strcmp(ObjectID, "2$8") == 0){ //비디오!!!!!!!!!!!!!!!!!!!!!!!!!!!
+	//Video
+	if(strcmp(ObjectID, "2") == 0 || strncmp(ObjectID, "2$", 2) == 0){
 
-		strcat(str.data, "&gt;");
-		int itemCount = 0;
+		itemCount = 0;
 
 		//홈 디렉토리의 파일목록을 구해 확장자가 mp4인것만 추출
 		dirp = opendir(HOME_DIR);
 		while((dp = readdir(dirp)) != NULL) //디렉토리 안의 내용을 하나씩 가져와 확장자 비교
 		{
 			//if(itemCount == 1) break;
-			if(file_ext_same(dp->d_name, "mp4")){
+			if(FileExtCmp(dp->d_name, "mp4")){
 				sprintf(fileFullPath, "%s/%s", HOME_DIR, dp->d_name); //전체 파일경로
 				//strcpy(encodedFileName, dp->d_name);
-				UrlEncode(dp->d_name, encodedFileName);
+				mUrlEncode(dp->d_name, encodedFileName);
 
-				dlog_print(DLOG_DEBUG, "tdlna", "해당파일 경로: %s 인코딩 파일명 %s", fileFullPath, encodedFileName);
+				dlog_print(DLOG_DEBUG, "tdlna_soap", "해당파일 경로: %s 인코딩 파일명 %s", fileFullPath, encodedFileName);
 
-				//파일 사이즈 구하기
-				if((fp=fopen(fileFullPath, "rb"))==NULL)
-					goto browse_error;
-				fseek(fp, 0L, SEEK_END);
-				fileSize = ftell(fp);
-				fclose(fp);
+				//파일 사이즈 구하기 (파일 열기 실패시 건너뜀)
+				if((fp=fopen(fileFullPath, "rb"))==NULL){
+					//goto browse_error;
+					continue;
+				}
+				else{
+					fseek(fp, 0L, SEEK_END);
+					fileSize = ftell(fp);
+					fclose(fp);
+					dlog_print(DLOG_DEBUG, "tdlna_soap", "해당파일 크기: %ld", fileSize);
+				}
 
-				dlog_print(DLOG_DEBUG, "tdlna", "해당파일 크기: %ld", fileSize);
-
-				processSpecialCharacter(dp->d_name);
-				dlog_print(DLOG_ERROR, "tdlna" , "변환된파일명: %s",dp->d_name);
+				ProcessSpecialCharacter(dp->d_name);
+				dlog_print(DLOG_ERROR, "tdlna_soap" , "변환된파일명: %s",dp->d_name);
 				//--- temp문자열에 각 파일의 xml요소 제작 -----
-				sprintf(temp, BROWSE_VIDEO_ITEM, itemCount++, dp->d_name, fileSize, lan_addr[0].str, runtime_vars.port, encodedFileName);
-				dlog_print(DLOG_DEBUG, "tdlna", "temp길이: %d", strlen(temp));
+				sprintf(temp, BROWSE_VIDEO_ITEM, itemCount++,
+						dp->d_name, fileSize, lan_addr[0].str, runtime_vars.port, encodedFileName,
+						lan_addr[0].str, runtime_vars.port, lan_addr[0].str, runtime_vars.port);
+
+				dlog_print(DLOG_DEBUG, "tdlna_soap", "temp길이: %d", strlen(temp));
 
 				strcat(str.data, temp); //각 파일에 대한 xml코드 이어붙임
 
-				dlog_print(DLOG_ERROR, "tdlna", "템프%d: %s", itemCount, temp);
-				dlog_print(DLOG_ERROR, "tdlna", "데이타: %s",  str.data);
+				dlog_print(DLOG_ERROR, "tdlna_soap", "템프%d: %s", itemCount, temp);
+				dlog_print(DLOG_ERROR, "tdlna_soap", "데이타: %s",  str.data);
 			}
 		}
 
@@ -1356,39 +1368,64 @@ BrowseContentDirectory(struct upnphttp * h, const char * action)
 				"</u:BrowseResponse>", itemCount, itemCount, updateID);
 
 		strcat(str.data, temp); //각 파일에 대한 xml코드 이어붙임
+		dlog_print(DLOG_ERROR, "tdlna_soap", "데이타 길이 %d", strlen(str.data));
+		closedir(dirp); //디렉터리 닫기
 
-		dlog_print(DLOG_ERROR, "tdlna", "데이타 길이 %d", strlen(str.data));
-
-		//파일디버깅!!!
-		FILE* dfp;
-		dfp = fopen("/opt/usr/media/tdlnaDbg.txt", "w+");
-		if(dfp == NULL){
-			dlog_print(DLOG_ERROR, "tdlna", "디버그파일 실패");
-			goto browse_error;
-		}
-		fprintf(dfp, "%s", str.data);
-		fclose(dfp);
+//		//파일디버깅!!!
+//		FILE* dfp;
+//		dfp = fopen("/opt/usr/media/tdlnaDbg.txt", "w+");
+//		if(dfp == NULL){
+//			dlog_print(DLOG_ERROR, "tdlna_soap", "디버그파일 실패");
+//			goto browse_error;
+//		}
+//		fprintf(dfp, "%s", str.data);
+//		fclose(dfp);
 
 	}
-	else if(strcmp(ObjectID, "2") == 0){
+//	else if(strcmp(ObjectID, "2") == 0){
+//
+//		//비디오의 폴더목록
+//		char* BrowseRoot;
+//		BrowseRoot = malloc(2048);
+//
+//		sprintf(BrowseRoot, SAMSUNG_BROWSE_VIDEO);
+//
+//		str.off = sprintf(str.data, "%s&gt;\n%s"
+//				"&lt;/DIDL-Lite&gt;</Result>\n"
+//				"<NumberReturned>%u</NumberReturned>\n"
+//				"<TotalMatches>%u</TotalMatches>\n"
+//				"<UpdateID>%u</UpdateID>"
+//				"</u:BrowseResponse>", resp0, BrowseRoot, 1, 1, updateID);
+//
+//		//dlog_print(DLOG_DEBUG, "tdlna_soap", "%s", BrowseRoot);
+//		dlog_print(DLOG_DEBUG, "tdlna_soap", "삼성용 루트 복사");
+//
+//		free(BrowseRoot);
+//
+//	}
+	//Audio
+	else if(strcmp(ObjectID, "1") == 0 || strncmp(ObjectID, "1$", 2) == 0){
+		itemCount = 0;
 
-		//비디오의 폴더목록
-		char* BrowseRoot;
-		BrowseRoot = malloc(2048);
-
-		sprintf(BrowseRoot, SAMSUNG_BROWSE_VIDEO);
-
-		str.off = sprintf(str.data, "%s&gt;\n%s"
-				"&lt;/DIDL-Lite&gt;</Result>\n"
+		sprintf(temp, "&lt;/DIDL-Lite&gt;</Result>\n"
 				"<NumberReturned>%u</NumberReturned>\n"
 				"<TotalMatches>%u</TotalMatches>\n"
 				"<UpdateID>%u</UpdateID>"
-				"</u:BrowseResponse>", resp0, BrowseRoot, 2, 2, updateID);
+				"</u:BrowseResponse>", itemCount, itemCount, updateID);
 
-		//dlog_print(DLOG_DEBUG, "tdlna", "%s", BrowseRoot);
-		dlog_print(DLOG_DEBUG, "tdlna", "삼성용 루트 복사");
+		strcat(str.data, temp); //각 파일에 대한 xml코드 이어붙임
+	}
+	//Image
+	else if(strcmp(ObjectID, "3") == 0 || strncmp(ObjectID, "3$", 2) == 0){
+		itemCount = 0;
 
-		free(BrowseRoot);
+		sprintf(temp, "&lt;/DIDL-Lite&gt;</Result>\n"
+				"<NumberReturned>%u</NumberReturned>\n"
+				"<TotalMatches>%u</TotalMatches>\n"
+				"<UpdateID>%u</UpdateID>"
+				"</u:BrowseResponse>", itemCount, itemCount, updateID);
+
+		strcat(str.data, temp); //각 파일에 대한 xml코드 이어붙임
 
 	}
 	else
@@ -1398,7 +1435,8 @@ BrowseContentDirectory(struct upnphttp * h, const char * action)
 		char* BrowseRoot;
 				BrowseRoot = malloc(1024);
 
-				sprintf(BrowseRoot, BROWSE_ROOT_RESULT, 1,1,1); //ImageNum, AudioNum, VideoNum
+				sprintf(BrowseRoot, BROWSE_ROOT_RESULT, 5,1,1); //동영상,음악,사진의 자식 아이템 갯수
+														//테스트로 동영상5개 나머지 1개 하드코딩
 
 				//strcatf(&str, BROWSE_ROOT_RESULT, 0,0,1);
 				str.off = sprintf(str.data, "%s&gt;\n%s"
@@ -1406,10 +1444,10 @@ BrowseContentDirectory(struct upnphttp * h, const char * action)
 			                    "<NumberReturned>%u</NumberReturned>\n"
 			                    "<TotalMatches>%u</TotalMatches>\n"
 			                    "<UpdateID>%u</UpdateID>"
-			                    "</u:BrowseResponse>", resp0, BrowseRoot, 3, 3, updateID);
+			                    "</u:BrowseResponse>", resp0, BrowseRoot, 3, 3, updateID); // 3, 3
 
-				//dlog_print(DLOG_DEBUG, "tdlna", "%s", BrowseRoot);
-				dlog_print(DLOG_DEBUG, "tdlna", "브라우즈루트 복사");
+				//dlog_print(DLOG_DEBUG, "tdlna_soap", "%s", BrowseRoot);
+				dlog_print(DLOG_DEBUG, "tdlna_soap", "브라우즈루트 복사");
 
 				free(BrowseRoot);
 
@@ -1418,135 +1456,9 @@ BrowseContentDirectory(struct upnphttp * h, const char * action)
 				totalMatches = 3;
 	}
 
-	/*
-	//--------------------------
-	 //BrowseDirectChildren or BrowseMetadata
-	if( strcmp(BrowseFlag+6, "Metadata") == 0 )
-	{
-		const char *id = ObjectID;
-		args.requested = 1;
-
-		magic = in_magic_container(ObjectID, args.flags, &id);
-		if (magic)
-		{
-			if (magic->objectid_sql && strcmp(id, ObjectID) != 0)
-				objectid_sql = magic->objectid_sql;
-			if (magic->parentid_sql && strcmp(id, ObjectID) != 0)
-				parentid_sql = magic->parentid_sql;
-			if (magic->refid_sql)
-				refid_sql = magic->refid_sql;
-		}
-		sql = sqlite3_mprintf("SELECT %s, %s, %s, " COLUMNS
-				      "from OBJECTS o left join DETAILS d on (d.ID = o.DETAIL_ID)"
-				      " where OBJECT_ID = '%q';",
-				      objectid_sql, parentid_sql, refid_sql, id);
-		ret = sqlite3_exec(db, sql, callback, (void *) &args, &zErrMsg);
-
-		totalMatches = 0; //args.returned;
-
-	}
-	else
-	{
-		magic = check_magic_container(ObjectID, args.flags);
-		if (magic)
-		{
-			if (magic->objectid && *(magic->objectid))
-				ObjectID = *(magic->objectid);
-			if (magic->objectid_sql)
-				objectid_sql = magic->objectid_sql;
-			if (magic->parentid_sql)
-				parentid_sql = magic->parentid_sql;
-			if (magic->refid_sql)
-				refid_sql = magic->refid_sql;
-			if (magic->where)
-				strncpyt(where, magic->where, sizeof(where));
-			if (magic->max_count > 0)
-			{
-				ret = get_child_count(ObjectID, magic);
-				totalMatches = ret > magic->max_count ? magic->max_count : ret;
-				if (RequestedCount > magic->max_count || RequestedCount < 0)
-					RequestedCount = magic->max_count;
-			}
-		}
-		if (!where[0])
-			sqlite3_snprintf(sizeof(where), where, "PARENT_ID = '%q'", ObjectID);
-
-		if (!totalMatches)
-			totalMatches = get_child_count(ObjectID, magic);
-		ret = 0;
-		if( SortCriteria )
-		{
-			__SORT_LIMIT
-			orderBy = parse_sort_criteria(SortCriteria, &ret);
-		}
-		else if (!orderBy)
-		{
-			if( strncmp(ObjectID, MUSIC_PLIST_ID, strlen(MUSIC_PLIST_ID)) == 0 )
-			{
-				if( strcmp(ObjectID, MUSIC_PLIST_ID) == 0 )
-					ret = xasprintf(&orderBy, "order by d.TITLE");
-				else
-					ret = xasprintf(&orderBy, "order by length(OBJECT_ID), OBJECT_ID");
-			}
-			else if( args.flags & FLAG_FORCE_SORT )
-			{
-				__SORT_LIMIT
-				ret = xasprintf(&orderBy, "order by o.CLASS, d.DISC, d.TRACK, d.TITLE");
-			}
-			else
-				orderBy = parse_sort_criteria(SortCriteria, &ret);
-			if( ret == -1 )
-			{
-				free(orderBy);
-				orderBy = NULL;
-				ret = 0;
-			}
-		}
-		// If it's a DLNA client, return an error for bad sort criteria 
-		if( ret < 0 && ((args.flags & FLAG_DLNA) || GETFLAG(DLNA_STRICT_MASK)) )
-		{
-			SoapError(h, 709, "Unsupported or invalid sort criteria");
-			goto browse_error;
-		}
-
-		sql = sqlite3_mprintf("SELECT %s, %s, %s, " COLUMNS
-		                      "from OBJECTS o left join DETAILS d on (d.ID = o.DETAIL_ID)"
-				      " where %s %s limit %d, %d;",
-				      objectid_sql, parentid_sql, refid_sql,
-				      where, THISORNUL(orderBy), StartingIndex, RequestedCount);
-		printf("Browse SQL: %s\n", sql);
-		ret = sqlite3_exec(db, sql, callback, (void *) &args, &zErrMsg);
-	}
-	if( (ret != SQLITE_OK) && (zErrMsg != NULL) )
-	{
-		printf("SQL error: %s\nBAD SQL: %s\n", zErrMsg, sql);
-		sqlite3_free(zErrMsg);
-		SoapError(h, 709, "Unsupported or invalid sort criteria");
-		goto browse_error;
-	}
-	sqlite3_free(sql);
-	// Does the object even exist? 
-	if( !totalMatches )
-	{
-		if( !object_exists(ObjectID) )
-		{
-			SoapError(h, 701, "No such object error");
-			goto browse_error;
-		}
-	}
-
-	//-------------------------- */
-/*
-	ret = strcatf(&str, "&lt;/DIDL-Lite&gt;</Result>\n"
-	                    "<NumberReturned>%u</NumberReturned>\n"
-	                    "<TotalMatches>%u</TotalMatches>\n"
-	                    "<UpdateID>%u</UpdateID>"
-	                    "</u:BrowseResponse>",
-	                    args.returned, totalMatches, updateID);
-*/
 
 	str.off = strlen(str.data);
-	dlog_print(DLOG_DEBUG, "tdlna", "----- 최종 Borwse 응답\n%s\n---------------------------------", str.data);
+	dlog_print(DLOG_DEBUG, "tdlna_soap", "----- 최종 Borwse 응답\n%s\n---------------------------------", str.data);
 
 	BuildSendAndCloseSoapResp(h, str.data, str.off);
 browse_error:
@@ -1554,490 +1466,13 @@ browse_error:
 	//free(orderBy);
 	free(str.data);
 }
-/*
-inline void
-charcat(struct string_s *str, char c)
-{
-	if (str->size <= str->off)
-	{
-		str->data[str->size-1] = '\0';
-		return;
-	}
-	str->data[str->off] = c;
-	str->off += 1;
-}
-
-static inline char *
-parse_search_criteria(const char *str, char *sep)
-{
-	struct string_s criteria;
-	int len;
-	int literal = 0, like = 0;
-	const char *s;
-
-	if (!str)
-		return strdup("1 = 1");
-
-	len = strlen(str) + 32;
-	criteria.data = malloc(len);
-	criteria.size = len;
-	criteria.off = 0;
-
-	s = str;
-
-	while (isspace(*s))
-		s++;
-
-	while (*s)
-	{
-		if (literal)
-		{
-			switch (*s) {
-			case '&':
-				if (strncmp(s, "&quot;", 6) == 0)
-					s += 5;
-				else if (strncmp(s, "&apos;", 6) == 0)
-				{
-					strcatf(&criteria, "'");
-					s += 6;
-					continue;
-				}
-				else
-					break;
-			case '"':
-				literal = 0;
-				if (like)
-				{
-					charcat(&criteria, '%');
-					like--;
-				}
-				charcat(&criteria, '"');
-				break;
-			case '\\':
-				if (strncmp(s, "\\&quot;", 7) == 0)
-				{
-					strcatf(&criteria, "&amp;quot;");
-					s += 7;
-					continue;
-				}
-				break;
-			case 'o':
-				if (strncmp(s, "object.", 7) == 0)
-					s += 7;
-				else if (strncmp(s, "object\"", 7) == 0 ||
-				         strncmp(s, "object&quot;", 12) == 0)
-				{
-					s += 6;
-					continue;
-				}
-			default:
-				charcat(&criteria, *s);
-				break;
-			}
-		}
-		else
-		{
-			switch (*s) {
-			case '\\':
-				if (strncmp(s, "\\&quot;", 7) == 0)
-				{
-					strcatf(&criteria, "&amp;quot;");
-					s += 7;
-					continue;
-				}
-				else
-					charcat(&criteria, *s);
-				break;
-			case '"':
-				literal = 1;
-				charcat(&criteria, *s);
-				if (like == 2)
-				{
-					charcat(&criteria, '%');
-					like--;
-				}
-				break;
-			case '&':
-				if (strncmp(s, "&quot;", 6) == 0)
-				{
-					literal = 1;
-					strcatf(&criteria, "\"");
-					if (like == 2)
-					{
-						charcat(&criteria, '%');
-						like--;
-					}
-					s += 5;
-				}
-				else if (strncmp(s, "&apos;", 6) == 0)
-				{
-					strcatf(&criteria, "'");
-					s += 5;
-				}
-				else if (strncmp(s, "&lt;", 4) == 0)
-				{
-					strcatf(&criteria, "<");
-					s += 3;
-				}
-				else if (strncmp(s, "&gt;", 4) == 0)
-				{
-					strcatf(&criteria, ">");
-					s += 3;
-				}
-				else
-					charcat(&criteria, *s);
-				break;
-			case '@':
-				if (strncmp(s, "@refID", 6) == 0)
-				{
-					strcatf(&criteria, "REF_ID");
-					s += 6;
-					continue;
-				}
-				else if (strncmp(s, "@id", 3) == 0)
-				{
-					strcatf(&criteria, "OBJECT_ID");
-					s += 3;
-					continue;
-				}
-				else if (strncmp(s, "@parentID", 9) == 0)
-				{
-					strcatf(&criteria, "PARENT_ID");
-					s += 9;
-					strcpy(sep, "*");
-					continue;
-				}
-				else
-					charcat(&criteria, *s);
-				break;
-			case 'c':
-				if (strncmp(s, "contains", 8) == 0)
-				{
-					strcatf(&criteria, "like");
-					s += 8;
-					like = 2;
-					continue;
-				}
-				else
-					charcat(&criteria, *s);
-				break;
-			case 'd':
-				if (strncmp(s, "derivedfrom", 11) == 0)
-				{
-					strcatf(&criteria, "like");
-					s += 11;
-					like = 1;
-					continue;
-				}
-				else if (strncmp(s, "dc:date", 7) == 0)
-				{
-					strcatf(&criteria, "d.DATE");
-					s += 7;
-					continue;
-				}
-				else if (strncmp(s, "dc:title", 8) == 0)
-				{
-					strcatf(&criteria, "d.TITLE");
-					s += 8;
-					continue;
-				}
-				else if (strncmp(s, "dc:creator", 10) == 0)
-				{
-					strcatf(&criteria, "d.CREATOR");
-					s += 10;
-					continue;
-				}
-				else
-					charcat(&criteria, *s);
-				break;
-			case 'e':
-				if (strncmp(s, "exists", 6) == 0)
-				{
-					s += 6;
-					while (isspace(*s))
-						s++;
-					if (strncmp(s, "true", 4) == 0)
-					{
-						strcatf(&criteria, "is not NULL");
-						s += 3;
-					}
-					else if (strncmp(s, "false", 5) == 0)
-					{
-						strcatf(&criteria, "is NULL");
-						s += 4;
-					}
-				}
-				else
-					charcat(&criteria, *s);
-				break;
-			case 'u':
-				if (strncmp(s, "upnp:class", 10) == 0)
-				{
-					strcatf(&criteria, "o.CLASS");
-					s += 10;
-					continue;
-				}
-				else if (strncmp(s, "upnp:actor", 10) == 0)
-				{
-					strcatf(&criteria, "d.ARTIST");
-					s += 10;
-					continue;
-				}
-				else if (strncmp(s, "upnp:artist", 11) == 0)
-				{
-					strcatf(&criteria, "d.ARTIST");
-					s += 11;
-					continue;
-				}
-				else if (strncmp(s, "upnp:album", 10) == 0)
-				{
-					strcatf(&criteria, "d.ALBUM");
-					s += 10;
-					continue;
-				}
-				else if (strncmp(s, "upnp:genre", 10) == 0)
-				{
-					strcatf(&criteria, "d.GENRE");
-					s += 10;
-					continue;
-				}
-				else
-					charcat(&criteria, *s);
-				break;
-			case '(':
-				if (s > str && !isspace(s[-1]))
-					charcat(&criteria, ' ');
-				charcat(&criteria, *s);
-				break;
-			case ')':
-				charcat(&criteria, *s);
-				if (!isspace(s[1]))
-					charcat(&criteria, ' ');
-				break;
-			default:
-				charcat(&criteria, *s);
-				break;
-			}
-		}
-		s++;
-	}
-	charcat(&criteria, '\0');
-
-	return criteria.data;
-}
 
 static void
 SearchContentDirectory(struct upnphttp * h, const char * action)
 {
-	static const char resp0[] =
-			"<u:SearchResponse "
-			"xmlns:u=\"urn:schemas-upnp-org:service:ContentDirectory:1\">"
-			"<Result>"
-			"&lt;DIDL-Lite"
-			CONTENT_DIRECTORY_SCHEMAS;
-
-//	struct magic_container_s *magic;
-	char *zErrMsg = NULL;
-	char *sql, *ptr;
-	struct Response args;
-	struct string_s str;
-	int totalMatches;
-	int ret;
-	const char *ContainerID;
-	char *Filter, *SearchCriteria, *SortCriteria;
-	char *orderBy = NULL, *where = NULL, sep[] = "$*";
-	char groupBy[] = "group by DETAIL_ID";
-//	struct NameValueParserData data;
-	int RequestedCount = 0;
-	int StartingIndex = 0;
-
-	memset(&args, 0, sizeof(args));
-	memset(&str, 0, sizeof(str));
-/*
-	ParseNameValue(h->req_buf + h->req_contentoff, h->req_contentlen, &data, 0);
-
-	ContainerID = GetValueFromNameValueList(&data, "ContainerID");
-	Filter = GetValueFromNameValueList(&data, "Filter");
-	SearchCriteria = GetValueFromNameValueList(&data, "SearchCriteria");
-	SortCriteria = GetValueFromNameValueList(&data, "SortCriteria");
-
-	if( (ptr = GetValueFromNameValueList(&data, "RequestedCount")) )
-		RequestedCount = atoi(ptr);
-	if( !RequestedCount )
-		RequestedCount = -1;
-	if( (ptr = GetValueFromNameValueList(&data, "StartingIndex")) )
-		StartingIndex = atoi(ptr);
-	if( !ContainerID )
-	{
-		if( !(ContainerID = GetValueFromNameValueList(&data, "ObjectID")) )
-		{
-			SoapError(h, 402, "Invalid Args");
-			goto search_error;
-		}
-	}
-
-	str.data = malloc(DEFAULT_RESP_SIZE);
-	str.size = DEFAULT_RESP_SIZE;
-	str.off = sprintf(str.data, "%s", resp0);
-	// See if we need to include DLNA namespace reference 
-	args.iface = h->iface;
-	args.filter = set_filter_flags(Filter, h);
-	if( args.filter & FILTER_DLNA_NAMESPACE )
-	{
-		ret = strcatf(&str, DLNA_NAMESPACE);
-	}  strcatf(&str, DLNA_NAMESPACE);
-	strcatf(&str, "&gt;\n");
-//------------------------------------
-/*
-	args.returned = 0;
-	args.requested = RequestedCount;
-	args.client = h->req_client ? h->req_client->type->type : 0;
-	args.flags = h->req_client ? h->req_client->type->flags : 0;
-	args.str = &str;
-	printf("Searching ContentDirectory:\n"
-	                         " * ObjectID: %s\n"
-	                         " * Count: %d\n"
-	                         " * StartingIndex: %d\n"
-	                         " * SearchCriteria: %s\n"
-	                         " * Filter: %s\n"
-	                         " * SortCriteria: %s\n",
-				ContainerID, RequestedCount, StartingIndex,
-	                        SearchCriteria, Filter, SortCriteria);
-
-	magic = check_magic_container(ContainerID, args.flags);
-	if (magic && magic->objectid && *(magic->objectid))
-		ContainerID = *(magic->objectid);
-
-	if( strcmp(ContainerID, "0") == 0 )
-		ContainerID = "*";
-
-	if( strcmp(ContainerID, MUSIC_ALL_ID) == 0 ||
-	    GETFLAG(DLNA_STRICT_MASK) )
-		groupBy[0] = '\0';
-
-	where = parse_search_criteria(SearchCriteria, sep);
-	printf("Translated SearchCriteria: %s\n", where);
-
-	totalMatches = sql_get_int_field(db, "SELECT (select count(distinct DETAIL_ID)"
-	                                     " from OBJECTS o left join DETAILS d on (o.DETAIL_ID = d.ID)"
-	                                     " where (OBJECT_ID glob '%q%s') and (%s))"
-	                                     " + "
-	                                     "(select count(*) from OBJECTS o left join DETAILS d on (o.DETAIL_ID = d.ID)"
-	                                     " where (OBJECT_ID = '%q') and (%s))",
-	                                     ContainerID, sep, where, ContainerID, where);
-	if( totalMatches < 0 )
-	{
-		// Must be invalid SQL, so most likely bad or unhandled search criteria. 
-		SoapError(h, 708, "Unsupported or invalid search criteria");
-		goto search_error;
-	}
-	// Does the object even exist? 
-	if( !totalMatches )
-	{
-		if( !object_exists(ContainerID) )
-		{
-			SoapError(h, 710, "No such container");
-			goto search_error;
-		}
-	}
-	ret = 0;
-	__SORT_LIMIT
-	orderBy = parse_sort_criteria(SortCriteria, &ret);
-	// If it's a DLNA client, return an error for bad sort criteria 
-	if( ret < 0 && ((args.flags & FLAG_DLNA) || GETFLAG(DLNA_STRICT_MASK)) )
-	{
-		SoapError(h, 709, "Unsupported or invalid sort criteria");
-		goto search_error;
-	}
-
-	sql = sqlite3_mprintf( SELECT_COLUMNS
-	                      "from OBJECTS o left join DETAILS d on (d.ID = o.DETAIL_ID)"
-	                      " where OBJECT_ID glob '%q%s' and (%s) %s "
-	                      "%z %s"
-	                      " limit %d, %d",
-	                      ContainerID, sep, where, groupBy,
-	                      (*ContainerID == '*') ? NULL :
-	                      sqlite3_mprintf("UNION ALL " SELECT_COLUMNS
-	                                      "from OBJECTS o left join DETAILS d on (d.ID = o.DETAIL_ID)"
-	                                      " where OBJECT_ID = '%q' and (%s) ", ContainerID, where),
-	                      orderBy, StartingIndex, RequestedCount);
-	printf( "Search SQL: %s\n", sql);
-	ret = sqlite3_exec(db, sql, callback, (void *) &args, &zErrMsg);
-	if( (ret != SQLITE_OK) && (zErrMsg != NULL) )
-	{
-		printf( "SQL error: %s\nBAD SQL: %s\n", zErrMsg, sql);
-		sqlite3_free(zErrMsg);
-	}
-	sqlite3_free(sql);
-
-//------------------------------------
-
-	strcatf(&str, "&lt;item id=\"64$6$0\" parentID=\"64$6\" restricted=\"1\"&gt;&lt;dc:title&gt;720p&lt;/dc:title&gt;&lt;upnp:class&gt;object.item.videoItem&lt;/upnp:class&gt;&lt;dc:date&gt;2015-06-19T18:16:02&lt;/dc:date&gt;&lt;res size=\"175812287\" duration=\"0:08:52.608\" bitrate=\"330096\" sampleFrequency=\"48000\" nrAudioChannels=\"2\" resolution=\"1280x720\" protocolInfo=\"http-get:*:video/mp4:DLNA.ORG_PN=AVC_MP4_HP_HD_AAC;DLNA.ORG_OP=01;DLNA.ORG_CI=0\"&gt;http://192.168.137.2:9090/720p.mp4&lt;/res&gt;&lt;/item&gt;\n");
-
-
-	ret = strcatf(&str, "&lt;/DIDL-Lite&gt;</Result>\n"
-	                    "<NumberReturned>%u</NumberReturned>\n"
-	                    "<TotalMatches>%u</TotalMatches>\n"
-	                    "<UpdateID>%u</UpdateID>"
-	                    "</u:SearchResponse>",
-	                    args.returned, totalMatches, updateID);
-	BuildSendAndCloseSoapResp(h, str.data, str.off);
-search_error:
-//	ClearNameValueList(&data);
-	free(orderBy);
-	free(where);
-	free(str.data);
+	SoapError(h, 800, "Internal error");
 }
-*/
-/*
-If a control point calls QueryStateVariable on a state variable that is not
-buffered in memory within (or otherwise available from) the service,
-the service must return a SOAP fault with an errorCode of 404 Invalid Var.
 
-QueryStateVariable remains useful as a limited test tool but may not be
-part of some future versions of UPnP.
-*/ /*
-static void
-QueryStateVariable(struct upnphttp * h, const char * action)
-{
-	static const char resp[] =
-        "<u:%sResponse "
-        "xmlns:u=\"%s\">"
-		"<return>%s</return>"
-        "</u:%sResponse>";
-
-	char body[512];
-	struct NameValueParserData data;
-	const char * var_name;
-
-	ParseNameValue(h->req_buf + h->req_contentoff, h->req_contentlen, &data, 0);
-	///*var_name = GetValueFromNameValueList(&data, "QueryStateVariable");
-	///*var_name = GetValueFromNameValueListIgnoreNS(&data, "varName")
-	var_name = GetValueFromNameValueList(&data, "varName");
-
-	printf("QueryStateVariable(%.40s)\n", var_name);
-
-	if(!var_name)
-	{
-		SoapError(h, 402, "Invalid Args");
-	}
-	else if(strcmp(var_name, "ConnectionStatus") == 0)
-	{	
-		int bodylen;
-		bodylen = snprintf(body, sizeof(body), resp,
-                           action, "urn:schemas-upnp-org:control-1-0",
-		                   "Connected", action);
-		BuildSendAndCloseSoapResp(h, body, bodylen);
-	}
-	else
-	{
-		printf("%s: Unknown: %s\n", action, THISORNUL(var_name));
-		SoapError(h, 404, "Invalid Var");
-	}
-
-	ClearNameValueList(&data);	
-}
-*/
 static void
 SamsungGetFeatureList(struct upnphttp * h, const char * action)
 {
@@ -2061,37 +1496,7 @@ SamsungGetFeatureList(struct upnphttp * h, const char * action)
 
 	BuildSendAndCloseSoapResp(h, resp, sizeof(resp)-1);
 }
-/*
-static void
-SamsungSetBookmark(struct upnphttp * h, const char * action)
-{
-	static const char resp[] =
-	    "<u:X_SetBookmarkResponse"
-	    " xmlns:u=\"urn:schemas-upnp-org:service:ContentDirectory:1\">"
-	    "</u:X_SetBookmarkResponse>";
 
-	struct NameValueParserData data;
-	char *ObjectID, *PosSecond;
-
-	ParseNameValue(h->req_buf + h->req_contentoff, h->req_contentlen, &data, 0);
-	ObjectID = GetValueFromNameValueList(&data, "ObjectID");
-	PosSecond = GetValueFromNameValueList(&data, "PosSecond");
-	if( ObjectID && PosSecond )
-	{
-		int ret;
-		ret = sql_exec(db, "INSERT OR REPLACE into BOOKMARKS"
-		                   " VALUES "
-		                   "((select DETAIL_ID from OBJECTS where OBJECT_ID = '%q'), %q)", ObjectID, PosSecond);
-		if( ret != SQLITE_OK )
-			printf("Error setting bookmark %s on ObjectID='%s'\n", PosSecond, ObjectID);
-		BuildSendAndCloseSoapResp(h, resp, sizeof(resp)-1);
-	}
-	else
-		SoapError(h, 402, "Invalid Args");
-
-	ClearNameValueList(&data);	
-}
-*/
 static const struct 
 {
 	const char * methodName; 
@@ -2107,14 +1512,13 @@ soapMethods[] =
 	{ "Browse", BrowseContentDirectory},
 	//{ "GetProtocolInfo", GetProtocolInfo}, // 현재 프로그램이 멈추는 문제가 있음
 	//{ "QueryStateVariable", QueryStateVariable},
-	//{ "Search", SearchContentDirectory},
-	//{ "GetSearchCapabilities", GetSearchCapabilities},
+	{ "Search", SearchContentDirectory},
+	{ "GetSearchCapabilities", GetSearchCapabilities},
 	{ "GetSortCapabilities", GetSortCapabilities},
 	{ "GetSystemUpdateID", GetSystemUpdateID},
 	{ "GetCurrentConnectionIDs", GetCurrentConnectionIDs},
-	//{ "GetCurrentConnectionInfo", GetCurrentConnectionInfo},
+	{ "GetCurrentConnectionInfo", GetCurrentConnectionInfo},
 	{ "X_GetFeatureList", SamsungGetFeatureList},
-	//{ "X_SetBookmark", SamsungSetBookmark},
 	{ 0, 0 }
 };
 
@@ -2137,7 +1541,7 @@ ExecuteSoapAction(struct upnphttp * h, const char * action, int n)
 			methodlen = p2 - p;
 		else
 			methodlen = n - (p - action);
-		dlog_print(DLOG_DEBUG,"tdlna", "SoapMethod: %.*s\n", methodlen, p);
+		dlog_print(DLOG_DEBUG,"tdlna_soap", "SoapMethod: %.*s\n", methodlen, p);
 		while(soapMethods[i].methodName)
 		{
 			len = strlen(soapMethods[i].methodName);
@@ -2150,7 +1554,7 @@ ExecuteSoapAction(struct upnphttp * h, const char * action, int n)
 			i++;
 		}
 
-		dlog_print(DLOG_ERROR,"tdlna", "soap [%.*s] 메소드 처리하지 못함\n", methodlen, p);
+		dlog_print(DLOG_ERROR,"tdlna_soap", "soap [%.*s] 메소드 처리하지 못함\n", methodlen, p);
 	}
 
 	SoapError(h, 401, "Invalid Action");

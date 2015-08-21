@@ -15,7 +15,7 @@ uint32_t runtime_flags = INOTIFY_MASK;
 
 char HOME_DIR[512] = "/opt/usr/media/DCIM/Camera";
 
-char uuidvalue[50] = "uuid:12345678-0000-0000-0000-00001234eeee";
+char uuidvalue[50] = "uuid:12345678-0000-0000-0000-00001234abcd";
 char modelname[MODELNAME_MAX_LEN] = "TizenDevice";
 char modelnumber[MODELNUMBER_MAX_LEN] = MINIDLNA_VERSION;
 char serialnumber[SERIALNUMBER_MAX_LEN] = "12345678";
@@ -29,7 +29,6 @@ char presentationurl[PRESENTATIONURL_MAX_LEN];
 
 int n_lan_addr = 0;
 struct lan_addr_s lan_addr[MAX_LAN_ADDR];
-int sssdp = -1;
 
 //-- UPnP-A/V [DLNA] --/
 //sqlite3 *db;

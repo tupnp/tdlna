@@ -42,7 +42,8 @@ static void ParseHttpHeaders(struct upnphttp * h);
 static void start_dlna_header(struct string_s *str, int respcode, const char *tmode, const char *mime);
 static int send_data(struct upnphttp * h, char * header, size_t size, int flags);
 static void send_file(struct upnphttp * h, int sendfd, off_t offset, off_t end_offset);
-static void sendXMLdesc(struct upnphttp * h);
+static void sendXMLdesc(struct upnphttp * h, int mode);
+static void SendResp_icon(struct upnphttp * h);
 
 static void Send406(struct upnphttp * h);
 static void Send400(struct upnphttp * h);
@@ -114,7 +115,7 @@ char* strstrc(const char *s, const char *p, const char t)
 }
 
 //URL 한글 특수 문자열 디코딩
-void urldecode(char *src, char *last, char *dest) {
+void UrlDecode(char *src, char *last, char *dest) {
 	for(;src<=last;src++,dest++){
 		if(*src=='%'){
 			int code;
@@ -130,6 +131,36 @@ void urldecode(char *src, char *last, char *dest) {
 	*(++dest) = '\0';
 }
 
+
+//URL 문자열 인코딩
+char* UrlEncode(char *str, char *result){
+	char encstr[512];
+	char buf[2+1];
+	int i, j;
+	unsigned char c;
+	if(str == NULL) return NULL;
+	//if((encstr = (char *)malloc((strlen(str) * 3) + 1)) == NULL) return NULL;
+
+	for(i = j = 0; str[i] != '\0'; i++){
+
+		c = (unsigned char)str[i];
+		if (c == ' ') encstr[j++] = '+';
+		else if ((c >= '0') && (c <= '9')) encstr[j++] = c;
+		else if ((c >= 'A') && (c <= 'Z')) encstr[j++] = c;
+		else if ((c >= 'a') && (c <= 'z')) encstr[j++] = c;
+		else if ((c == '@') || (c == '.')) encstr[j++] = c;
+		else {
+			sprintf(buf, "%02x", c);
+			encstr[j++] = '%';
+			encstr[j++] = buf[0];
+			encstr[j++] = buf[1];
+		}
+	}
+	encstr[j] = '\0';
+	strcpy(result, encstr);
+	return encstr;
+}
+
 void Process_upnphttp(struct upnphttp * h)
 {
 	char buf[2048];
@@ -143,7 +174,7 @@ void Process_upnphttp(struct upnphttp * h)
 		n = recv(h->socket, buf, 2048, 0); //접속된 소켓의 데이터를 수신
 		if(n<0)
 		{ //수신실패
-			dlog_print(DLOG_ERROR, "tdlna", "http recv state: 0\n");
+			dlog_print(DLOG_ERROR, "tdlna_http", "http recv state: 0\n");
 			h->state = 100;
 		}
 		else if(n==0)
@@ -161,7 +192,7 @@ void Process_upnphttp(struct upnphttp * h)
 			//헤더가 너무 크면 처리하지 않는다. 
 			if (new_req_buflen >= 1024 * 1024)
 			{
-				dlog_print(DLOG_DEBUG, "tdlna", "http 헤더가 너무 커서 처리하지 않음(%d byte)", new_req_buflen);
+				dlog_print(DLOG_DEBUG, "tdlna_http", "http 헤더가 너무 커서 처리하지 않음(%d byte)", new_req_buflen);
 				h->state = 100;
 				break;
 			}
@@ -196,12 +227,12 @@ void Process_upnphttp(struct upnphttp * h)
 
 		if(n < 0)
 		{
-			dlog_print(DLOG_ERROR, "tdlna", "recv (state %d)\n", h->state);
+			dlog_print(DLOG_ERROR, "tdlna_http", "recv (state %d)\n", h->state);
 			h->state = 100;
 		}
 		else if(n == 0)
 		{
-			dlog_print(DLOG_ERROR, "tdlna", "2_HTTP Connection closed unexpectedly\n");
+			dlog_print(DLOG_ERROR, "tdlna_http", "2_HTTP Connection closed unexpectedly\n");
 			h->state = 100;
 		}
 		else
@@ -213,7 +244,7 @@ void Process_upnphttp(struct upnphttp * h)
 			h->req_buf = (char *)realloc(h->req_buf, n + h->req_buflen);
 			if (!h->req_buf)
 			{
-				dlog_print(DLOG_INFO, "tdlna", "http post 요청 본문 수신중 \n");
+				dlog_print(DLOG_INFO, "tdlna_http", "http post 요청 본문 수신중 \n");
 				h->state = 100;
 				break;
 			}
@@ -237,7 +268,7 @@ void Process_upnphttp(struct upnphttp * h)
 		}
 		break;
 	default:
-		dlog_print(DLOG_ERROR, "tdlna", "Unexpected state: %d\n", h->state);
+		dlog_print(DLOG_ERROR, "tdlna_http", "Unexpected state: %d\n", h->state);
 	}
 }
 
@@ -247,7 +278,7 @@ void Delete_upnphttp(struct upnphttp * h)
 	{
 		if(h->socket >= 0)
 		{
-			printf("<CloseSocket_upnphttp>\n");
+			//printf("<CloseSocket_upnphttp>\n");
 			CloseSocket_upnphttp(h);
 		}
 		free(h->req_buf);
@@ -277,7 +308,7 @@ ProcessHTTPPOST_upnphttp(struct upnphttp * h)
 		if(h->req_soapAction)
 		{
 			// *** Post 요청을 처리한다. POST 요청은 여기에서 SOAP처리에 쓰인다.
-			dlog_print(DLOG_DEBUG, "tdlna", "SOAPAction: %.*s\n", h->req_soapActionLen, h->req_soapAction);
+			dlog_print(DLOG_DEBUG, "tdlna_http", "SOAPAction: %.*s\n", h->req_soapActionLen, h->req_soapAction);
 
 			ExecuteSoapAction(h, h->req_soapAction,	h->req_soapActionLen);
 		}
@@ -353,8 +384,8 @@ ProcessHTTPSubscribe_upnphttp(struct upnphttp * h, const char * path)
 {
 	const char * sid;
 	enum event_type type;
-	dlog_print(DLOG_DEBUG,"tdlna", "ProcessHTTPSubscribe %s\n", path);
-	dlog_print(DLOG_DEBUG,"tdlna", "Callback '%.*s' Timeout=%d\n",
+	dlog_print(DLOG_DEBUG,"tdlna_http", "ProcessHTTPSubscribe %s\n", path);
+	dlog_print(DLOG_DEBUG,"tdlna_http", "Callback '%.*s' Timeout=%d\n",
 		h->req_CallbackLen, h->req_Callback, h->req_Timeout);
 	printf("SID '%.*s'\n", h->req_SIDLen, h->req_SID);
 
@@ -406,8 +437,8 @@ ProcessHTTPUnSubscribe_upnphttp(struct upnphttp * h, const char * path)
 {
 
 	enum event_type type;
-	dlog_print(DLOG_DEBUG,"tdlna","ProcessHTTPUnSubscribe %s\n", path);
-	dlog_print(DLOG_DEBUG,"tdlna","SID '%.*s'\n", h->req_SIDLen, h->req_SID);
+	dlog_print(DLOG_DEBUG,"tdlna_http","ProcessHTTPUnSubscribe %s\n", path);
+	dlog_print(DLOG_DEBUG,"tdlna_http","SID '%.*s'\n", h->req_SIDLen, h->req_SID);
 
 	// Remove from the list 
 	type = check_event(h);
@@ -579,31 +610,25 @@ static void ProcessHttpQuery_upnphttp(struct upnphttp * h)
 
 
 			//url 경로를 보고 필요한 프로토콜에 대한 처리 or http 요청 처리
-			if(strcmp(ROOTDESC_PATH, HttpUrl) == 0) //RootDisc(Discription) Xml 전송
+			if(strcmp(HttpUrl, ROOTDESC_PATH) == 0) //RootDisc(Discription) Xml 전송
 			{
-				dlog_print(DLOG_DEBUG, "tdlna", "RootDisc.XML 요청 수신");
-				sendXMLdesc(h);
+				dlog_print(DLOG_DEBUG, "tdlna_http", "RootDisc.XML 요청 수신 (%s)", inet_ntoa(h->clientaddr));
+				sendXMLdesc(h, 0);
 			}
-			/*
-			else if(strcmp(CONTENTDIRECTORY_PATH, HttpUrl) == 0)
+
+			else if(strcmp(HttpUrl, "/ContentDir.xml") == 0)
 			{
-				sendXMLdesc(h, genContentDirectory);
+				dlog_print(DLOG_DEBUG, "tdlna_http", "ContentDir.xml 요청 수신 (%s)", inet_ntoa(h->clientaddr));
+				sendXMLdesc(h, 1);
 			}
-			else if(strcmp(CONNECTIONMGR_PATH, HttpUrl) == 0)
+			else if(strcmp(HttpUrl, "/ConnectionMgr.xml") == 0)
 			{
-				sendXMLdesc(h, genConnectionManager);
-			}
+				dlog_print(DLOG_DEBUG, "tdlna_http", "ConnectionMgr.xml 요청 수신 (%s)", inet_ntoa(h->clientaddr));
+				sendXMLdesc(h, 2);
+			}/*
 			else if(strcmp(X_MS_MEDIARECEIVERREGISTRAR_PATH, HttpUrl) == 0)
 			{
 				sendXMLdesc(h, genX_MS_MediaReceiverRegistrar);
-			}
-			
-			else if(strncmp(HttpUrl, "/MediaItems/", 12) == 0)			//미디어 항목
-			{
-				printf("MediaItems Start\n");
-				 //printf("-> %s\n\n",HttpUrl+12);
-				//SendResp_dlnafile(h, HttpUrl+12);
-				printf("MediaItems End\n");
 			}
 			else if(strncmp(HttpUrl, "/Thumbnails/", 12) == 0)	//썸네일
 			{
@@ -619,10 +644,11 @@ static void ProcessHttpQuery_upnphttp(struct upnphttp * h)
 			}*/
 			else if(strncmp(HttpUrl, "/icons/", 7) == 0)			//아이콘
 			{
-				strcpy(filePath, HOME_DIR);
-				strcat(filePath, HttpUrl);
-				SendResp_dlnafile(h, filePath); //파일요청 처리
-				dlog_print(DLOG_DEBUG, "tdlna", "아이콘 파일 요청처리 (%s)", HttpUrl, inet_ntoa(h->clientaddr));
+				//strcpy(filePath, HOME_DIR);
+				//strcat(filePath, HttpUrl);
+				//SendResp_dlnafile(h, filePath); //파일요청 처리
+				SendResp_icon(h); //아이콘 데이터 보내기
+				dlog_print(DLOG_DEBUG, "tdlna_http", "아이콘 파일 요청처리 (%s)", HttpUrl, inet_ntoa(h->clientaddr));
 			}
 			/*else if(strncmp(HttpUrl, "/Captions/", 10) == 0)		//캡션
 			{
@@ -631,46 +657,36 @@ static void ProcessHttpQuery_upnphttp(struct upnphttp * h)
 			else if(strncmp(HttpUrl, "/status", 7) == 0)			//상태
 			{
 			//	SendResp_presentation(h);
-			}
+			}*/
 			else if(strcmp(HttpUrl, "/") == 0)
 			{
-				#ifdef READYNAS
-			//	SendResp_readynas_admin(h);
-				#else
-			//	SendResp_presentation(h);
-				#endif
+				Send404(h);
 			}
-			else
-			{
-			//	DPRINTF(E_WARN, L_HTTP, "%s not found, responding ERROR 404\n", HttpUrl);
-				
-				//Send404(h);
-			}*/
 			else
 			{
 				strcpy(filePath, HOME_DIR);
 				strcat(filePath, HttpUrl);
-				urldecode(filePath, filePath+strlen(filePath), filePath);
+				UrlDecode(filePath, filePath+strlen(filePath), filePath);
 
 				SendResp_dlnafile(h, filePath); //파일요청 처리
-				dlog_print(DLOG_DEBUG, "tdlna_file", "파일 요청 %s (%s)", HttpUrl, inet_ntoa(h->clientaddr));
+				dlog_print(DLOG_DEBUG, "tdlna_http", "파일 요청 %s (%s)", HttpUrl, inet_ntoa(h->clientaddr));
 			}
 		}
 		else if(strcmp("SUBSCRIBE", HttpCommand) == 0)  //SUBSCRIBE 요청이 오면 ssid가 포함된 헤더를 보내준다.
 		{
-			dlog_print(DLOG_DEBUG, "tdlna", "SUBSCRIBE 요청");
+			dlog_print(DLOG_DEBUG, "tdlna_http", "SUBSCRIBE 요청");
 			h->req_command = ESubscribe;
 			ProcessHTTPSubscribe_upnphttp(h, HttpUrl);
 		}
 		else if(strcmp("UNSUBSCRIBE", HttpCommand) == 0)
 		{
-			dlog_print(DLOG_DEBUG, "tdlna", "UnSUBSCRIBE 요청");
+			dlog_print(DLOG_DEBUG, "tdlna_http", "UnSUBSCRIBE 요청");
 			h->req_command = EUnSubscribe;
 			ProcessHTTPUnSubscribe_upnphttp(h, HttpUrl);
 		}
 		else
 		{
-			dlog_print(DLOG_DEBUG, "tdlna", "알 수 없는 요청");
+			dlog_print(DLOG_DEBUG, "tdlna_http", "알 수 없는 요청");
 			printf("Unsupported HTTP Command %s\n", HttpCommand);
 			Send501(h);
 		}
@@ -784,7 +800,7 @@ static void ParseHttpHeaders(struct upnphttp * h)
 					h->req_RangeEnd = colon ? atoll(colon+1) : 0;
 				}
 
-				dlog_print(DLOG_DEBUG,"tdlna", "Range - %d %d %d\n", h->reqflags, (int)h->req_RangeStart, (int)h->req_RangeEnd);
+				dlog_print(DLOG_DEBUG,"tdlna_http", "Range - %d %d %d\n", h->reqflags, (int)h->req_RangeStart, (int)h->req_RangeEnd);
 			}
 			else if(strncasecmp(line, "Host", 4)==0)
 			{
@@ -1005,7 +1021,7 @@ next_header:
 static void
 Send400(struct upnphttp * h)
 {
-	dlog_print(DLOG_ERROR,"tdlna","HTTP 400 ");
+	dlog_print(DLOG_ERROR,"tdlna_http","HTTP 400 ");
 
 	static const char body400[] =
 		"<HTML><HEAD><TITLE>400 Bad Request</TITLE></HEAD>"
@@ -1021,7 +1037,7 @@ Send400(struct upnphttp * h)
 static void
 Send404(struct upnphttp * h)
 {
-	dlog_print(DLOG_ERROR,"tdlna","HTTP 404 ");
+	dlog_print(DLOG_ERROR,"tdlna_http","HTTP 404 ");
 
 	static const char body404[] =
 		"<HTML><HEAD><TITLE>404 Not Found</TITLE></HEAD>"
@@ -1037,7 +1053,7 @@ Send404(struct upnphttp * h)
 static void
 Send406(struct upnphttp * h)
 {
-	dlog_print(DLOG_ERROR,"tdlna","HTTP 406 ");
+	dlog_print(DLOG_ERROR,"tdlna_http","HTTP 406 ");
 
 	static const char body406[] =
 		"<HTML><HEAD><TITLE>406 Not Acceptable</TITLE></HEAD>"
@@ -1053,7 +1069,7 @@ Send406(struct upnphttp * h)
 static void
 Send416(struct upnphttp * h)
 {
-	dlog_print(DLOG_ERROR,"tdlna","HTTP 416 ");
+	dlog_print(DLOG_ERROR,"tdlna_http","HTTP 416 ");
 
 	static const char body416[] =
 		"<HTML><HEAD><TITLE>416 Requested Range Not Satisfiable</TITLE></HEAD>"
@@ -1070,7 +1086,7 @@ Send416(struct upnphttp * h)
 void
 Send500(struct upnphttp * h)
 {
-	dlog_print(DLOG_ERROR,"tdlna","HTTP 500 ");
+	dlog_print(DLOG_ERROR,"tdlna_http","HTTP 500 ");
 
 	static const char body500[] =
 		"<HTML><HEAD><TITLE>500 Internal Server Error</TITLE></HEAD>"
@@ -1087,7 +1103,7 @@ Send500(struct upnphttp * h)
 void
 Send501(struct upnphttp * h)
 {
-	dlog_print(DLOG_ERROR,"tdlna","HTTP 501 ");
+	dlog_print(DLOG_ERROR,"tdlna_http","HTTP 501 ");
 
 	static const char body501[] = 
 		"<HTML><HEAD><TITLE>501 Not Implemented</TITLE></HEAD>"
@@ -1102,18 +1118,31 @@ Send501(struct upnphttp * h)
 
 // rootDesc.xml 요청에 대해 xml data전송
 static void
-sendXMLdesc(struct upnphttp * h)
+sendXMLdesc(struct upnphttp * h, int mode)
 {
 	char * desc;
-	int len = 4096;
-
-	//rootDesc.xml 빌드
+	int len = 8192;
 	desc = malloc(len);
-	len = sprintf(desc, ROOT_DESC_XML, modelname, uuidvalue, lan_addr[0].str , runtime_vars.port );
+
+	switch(mode){
+	case 1: //ContentDir.xml
+		len = sprintf(desc, CONTENT_DIR_XML);
+		dlog_print(DLOG_INFO, "tdlna_http", "→ Send ContentDir.xml");
+		break;
+	case 2: //ConnectionMgr.xml
+		len = sprintf(desc, CONNECTION_MGR_XML);
+		dlog_print(DLOG_INFO, "tdlna_http", "→ Send ConnectionMgr.xml");
+		break;
+	default:
+		//rootDesc.xml 빌드
+		len = sprintf(desc, ROOT_DESC_XML, modelname, uuidvalue, lan_addr[0].str , runtime_vars.port );
+		dlog_print(DLOG_DEBUG, "tdlna_http", "→ Send RootDisc.xml");
+		break;
+	}
 
 	if(desc < 1)
 	{
-		dlog_print(DLOG_DEBUG, "tdlna", "Failed to generate XML description");
+		dlog_print(DLOG_DEBUG, "tdlna_http", "Failed to generate XML description");
 		Send500(h);
 		return;
 	}
@@ -1121,8 +1150,31 @@ sendXMLdesc(struct upnphttp * h)
 	SendResp_upnphttp(h);
 	CloseSocket_upnphttp(h);
 	free(desc);
+}
 
-	dlog_print(DLOG_DEBUG, "tdlna", "Send RootDisc.XML");
+//아이콘 파일 요청시 아이콘 데이터 보내기
+static void
+SendResp_icon(struct upnphttp * h)
+{
+	char header[512];
+	char mime[12] = "image/png";
+	char data[] = ICON_PNG; //미리 정의된 아이콘 png파일 데이터
+	int size;
+	struct string_s str;
+
+	size = sizeof(data);
+
+	INIT_STR(str, header);
+
+	start_dlna_header(&str, 200, "Interactive", mime);
+	strcatf(&str, "Content-Length: %d\r\n\r\n", size);
+
+	if( send_data(h, str.data, str.off, MSG_MORE) == 0 )
+	{
+		if( h->req_command != EHead )
+			send_data(h, data, size, 0);
+	}
+	CloseSocket_upnphttp(h);
 }
 
 //응답헤더 빌드
@@ -1220,23 +1272,23 @@ void strLwr(char* str){
 	}
 }
 
-void simpleGetMimeStr(char* mimeStr, char* path){
+void SimpleGetMimeStr(char* mimeStr, char* path){
 
 	int i, path_len;
-	char* ext;
+	char* ext = NULL;
 	char lExt[10];
 
 	path_len = strlen(path); //주어진 파일명 길이
 
 	//확장자 구하기
-	for(i = path_len-1; 0<i; i--){
+	for(i = path_len-1;1 < i; i--){
 		if(path[i] == '.'){
 			ext = &path[i];
 			break;
 		}
 	}
 
-	if(strlen(ext) < 2){
+	if(ext == NULL){
 		strcpy(mimeStr,"text/html"); //http 기본값
 	}
 	else{
@@ -1251,13 +1303,16 @@ void simpleGetMimeStr(char* mimeStr, char* path){
 			strcpy(mimeStr, "video/mp4");
 		}
 		else if(!strcmp(ext, ".png")){
-					strcpy(mimeStr, "image/png");
+			strcpy(mimeStr, "image/png");
 		}
 		else if(!strcmp(ext, ".jpg") || !strcmp(ext, ".jpeg")){
-					strcpy(mimeStr, "image/jpeg");
+			strcpy(mimeStr, "image/jpeg");
 		}
 		else if(!strcmp(ext, ".mp3")){
-							strcpy(mimeStr, "audio/mp3");
+			strcpy(mimeStr, "audio/mp3");
+		}
+		else if(!strcmp(ext, ".smi")){
+			strcpy(mimeStr, "application/smil+xml");
 		}
 		else
 		{
@@ -1265,20 +1320,33 @@ void simpleGetMimeStr(char* mimeStr, char* path){
 		}
 	}
 
-	dlog_print(DLOG_ERROR, "tdlna", "마임타입 %s", mimeStr);
+	//dlog_print(DLOG_ERROR, "tdlna_http", "마임타입 %s", mimeStr);
+}
+
+void ExtModStrCpy(char* orgPath, char* ext){
+	int i, j;
+	for(i=0; orgPath[i] != '\0'; i++);
+	for(; 0<i; i--) if(orgPath[i] == '.') break;
+	i++;
+
+	for(j=0; ext[j] != '\0'; j++){
+		orgPath[i++] = ext[j];
+	}
+	orgPath[i] = '\0';
 }
 
 //파일 요청에 대해 해당하는 경로(object로 넘어옴)의 파일을 가져와 네트워크 스트림으로 전송한다.
 static void SendResp_dlnafile(struct upnphttp *h, char *object)
 {
 	char header[1024];
+	char captionPath[512];
 	struct string_s str;
 //	char buf[128];
 //	char **result;
 //	int rows, ret;
 	off_t total, offset, size;
 //	int64_t id;
-	int sendfh;
+	int sendfh, captionfh;
 	uint32_t dlna_flags = DLNA_FLAG_DLNA_V1_5|DLNA_FLAG_HTTP_STALLING|DLNA_FLAG_TM_B;
 //	uint32_t cflags = h->req_client ? h->req_client->type->flags : 0;
 	const char *tmode;
@@ -1309,19 +1377,19 @@ static void SendResp_dlnafile(struct upnphttp *h, char *object)
 	offset = h->req_RangeStart; //range 요청시 시작 바이트만큼 offset 이동
 	
 	//strcat(last_file.path, HOME_DIR);
-	strcat(last_file.path, object);
+	strcpy(last_file.path, object); //파일경로 복사
 
 	sendfh = open(last_file.path, O_RDONLY); //로컬 파일을 여는부분
 	
-	simpleGetMimeStr(last_file.mime, object); //mimetype구하기
+	SimpleGetMimeStr(last_file.mime, object); //mimetype구하기
 
-	dlog_print(DLOG_DEBUG, "tdlna", "HTTP MIME = %s", last_file.mime);
+	dlog_print(DLOG_DEBUG, "tdlna_http", "HTTP MIME = %s", last_file.mime);
 	//strcpy(last_file.dlna,"DLNA.ORG_PN=AVC_MP4_HP_HD_AAC;");
 
 	if( sendfh < 0 ) {
 	//	DPRINTF(E_ERROR, L_HTTP, "Error opening %s\n", last_file.path);
 		Send404(h);
-		dlog_print(DLOG_ERROR, "tdlna", "http로 요청한 파일을 로컬에서 열지못함 ㅠ %s", last_file.path);
+		dlog_print(DLOG_ERROR, "tdlna_http", "http로 요청한 파일을 로컬에서 열지못함 ㅠ %s", last_file.path);
 		goto error;
 	}
 	size = lseek(sendfh, 0, SEEK_END);
@@ -1387,12 +1455,21 @@ static void SendResp_dlnafile(struct upnphttp *h, char *object)
 			break;
 	}
 
-/*	if( h->reqflags & FLAG_CAPTION )
-	{
-		if( sql_get_int_field(db, "SELECT ID from CAPTIONS where ID = '%lld'", (long long)id) > 0 )
-			strcatf(&str, "CaptionInfo.sec: http://%s:%d/Captions/%lld.srt\r\n", lan_addr[h->iface].str, runtime_vars.port, (long long)id);
+	//자막요청 헤더가 있을 시 자막파일 정보를 헤더에 포함
+	if(h->reqflags & FLAG_CAPTION)
+	{ //UrlDecode(filePath, filePath+strlen(filePath), filePath);
+		strcpy(captionPath, last_file.path);
+		ExtModStrCpy(captionPath, "smi");
+		dlog_print(DLOG_INFO, "tdlna_http", "♣ 자막파일 확인 %s",captionPath);
+		captionfh = open(captionPath, O_RDONLY); //자막파일 존재여부 확인
+		if(!(captionfh < 0)){
+			dlog_print(DLOG_INFO, "tdlna_http", "♣ 자막파일 존재[%d] %s", captionfh, captionPath);
+			UrlEncode(captionPath+strlen(HOME_DIR)+1, captionPath); //자막주소 URL인코딩
+			strcatf(&str, "CaptionInfo.sec: http://%s:%d/%s\r\n", lan_addr[h->iface].str, runtime_vars.port, captionPath);
+			dlog_print(DLOG_INFO, "tdlna_http", "♣ 자막파일 존재[%d] %s", captionfh, captionPath);
+			close(captionfh);
+		}
 	}
-*/
 
 	strcatf(&str, "Accept-Ranges: bytes\r\n"
 	              "contentFeatures.dlna.org: %sDLNA.ORG_OP=%02X;DLNA.ORG_CI=%X;DLNA.ORG_FLAGS=%08X%024X\r\n\r\n",
@@ -1415,7 +1492,7 @@ error:
 	{
 		//return ;
 		_exit(0);
-		printf("자식프로세스 종료됨 - 이 메시지가 보이면 종료가 안됨\n");
+		//printf("자식프로세스 종료됨 - 이 메시지가 보이면 종료가 안됨\n");
 	}
 #endif
 	return;
