@@ -40,7 +40,6 @@ static int _app_send_response(app_data *app, bundle *const msg);
 static int _app_execute_operation(app_data *appdata, req_operation operation_type);
 static int _app_process_received_message(bundle *rec_msg, bundle *resp_msg, req_operation *req_oper);
 static int _on_proxy_client_msg_received_cb(void *data, bundle *const rec_msg);
-static void _media_search(app_data* data);
 static void _media_search_completed_cb(media_content_error_e error,void* user_data);
 static void get_DeviceID();
 
@@ -298,15 +297,19 @@ static int _app_execute_operation(app_data *appdata, req_operation operation_typ
 
         case REQ_OPER_META_GET_APP:
         	dlog_print(DLOG_INFO,"tdlna","메타정보 가져오기 실행 ");
-//테스트중        	_vedioMetadataGet(appdata);
- //       	_media_search(appdata);
+//------------------------------------------------------------------------------------------------------김태형~~!!!
+        	char* testDir;
+        	mediaDirectory_folder(&testDir,2);
+        	dlog_print(DLOG_INFO,"tdlna","비디오 폴더 이어붙인것:%s",testDir);
+//-------------------------------------------------------------------------------------------------------
 
-//        	Meta_Get(appdata);
+ //       	_media_search(appdata);
 
 //        	Meta_Get_from_path(appdata,"/opt/usr/media/DCIM/Camera/%");
 
-        	int videoC = 0,imageC=0,musicC = 0 ;
-        	media_Count(&videoC,&imageC,&musicC,"/opt/usr/media/DCIM/Camera/%");
+
+//        	int videoC = 0,imageC=0,musicC = 0 ;
+//        	media_Count(&videoC,&imageC,&musicC,"/opt/usr/media/DCIM/Camera/%");
 
         	break;
         case REQ_OPER_DLNA_APP://실행 요청시
@@ -357,7 +360,7 @@ static int _app_execute_operation(app_data *appdata, req_operation operation_typ
 			dlog_print(DLOG_INFO, "tdlna", "%s 폴더 공유 실행",shared_folder);
 			_META *test;
 			int testC=0;
-			testC= Meta_Get_from_path(appdata,shared_folder,&test);
+			testC= Meta_Get_from_path(appdata,shared_folder,2,&test);
 			dlog_print(DLOG_INFO, "tdlna", "리스트갯수:%d",testC);
 			dlog_print(DLOG_INFO, "tdlna", "리스트 1 :%s",test[1].path);
 			free(test);
@@ -398,14 +401,6 @@ static void get_DeviceID()
    strcpy(deviceName,string_ret[0]);//디바이스 ID
 }
 
-static void _media_search(app_data* data){
-	dlog_print(DLOG_INFO, "tdlna", "@@@@@_media_search");
-	 const char* path = "/opt/usr/media/DCIM/Camera/";
-	media_content_scan_folder(path,true,_media_search_completed_cb,data);
-}
-static void _media_search_completed_cb(media_content_error_e error,void* user_data){
-	dlog_print(DLOG_INFO, "tdlna", "@@@@@_media_search_completed_cb error:%d",error);
-}
 
 static int _app_send_response(app_data *app, bundle *const msg)
 {

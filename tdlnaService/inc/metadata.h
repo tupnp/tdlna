@@ -23,14 +23,13 @@ typedef struct meta_struct{
 _META* meta_create();
 
 void media_Count(int *videoCount,int *imageCount,int *musicCount,char *path);
+// 오디오(1), 비디오(2), 사진(3)
 void check_returnValue(int ret);
 void media_Directory(void *data);
-bool media_folder_db(media_folder_h folder);
-
-void Meta_Get();
-int Meta_Get_from_path(void *data,char *folder_path,_META **metaList);
-void Meta_Get_Video(char *path, _META *meta);
-void Meta_Get_Image(char *path, _META *meta);
-void Meta_Get_Audio(char *path, _META *meta);
+int mediaDirectory_folder(char** path,int mediaType);//타입별 폴더 찾기
+int mediaDirectory_count(int mediaType);//타입별 폴더 갯수 리턴
+bool _media_type_folder_db(media_folder_h folder,char *retPath);//타입별 폴더 경로 리턴
+bool _media_folder_db(media_folder_h folder,void *data);
+int Meta_Get_from_path(void *data,char *folder_path,int mediaType,_META **metaList);
 
 #endif
