@@ -614,11 +614,13 @@ BrowseContentDirectory(struct upnphttp * h, const char * action)
 			CONTENT_DIRECTORY_SCHEMAS;
 
 	char* ptr;
+	char* timeStr[32];
 	char temp[8192];
 
 	struct Response args;
 	struct string_s str;
-	int i, ret;
+	int i, ret, hur, min, sec, msec;
+	int audioCnt=0, videoCnt=0, imageCnt=0;
 	int totalMatches = 0;
 	const char *ObjectID, *BrowseFlag;
 	char *Filter, *SortCriteria;
@@ -721,7 +723,7 @@ BrowseContentDirectory(struct upnphttp * h, const char * action)
 //				"</u:BrowseResponse>", resp0, BrowseRoot, 2, 2, updateID);
 //		free(BrowseRoot);
 //	}
-	//모든 비디오
+	//★★★ 모든 비디오
 	if(strcmp(ObjectID, "2") == 0 || strncmp(ObjectID, "2$", 2) == 0){
 
 		_META* items;
@@ -733,13 +735,21 @@ BrowseContentDirectory(struct upnphttp * h, const char * action)
 			mUrlEncode(items[i].path, encodedFileName);
 			ProcessSpecialCharacter(items[i].title);
 
+			//[duration] 시간 형식 /*재생시간 0:08:52.608*/
+			msec = items[i].duration % 1000;
+			sec = items[i].duration / 1000;
+			min = (sec % 3600) / 60;
+			hur = sec / 3600;
+			sec= sec % 60;
+			sprintf(timeStr, "%d:%02d:%02d.%03d", hur,min,sec,msec);
+
 			sprintf(temp, BROWSE_VIDEO_ITEM,
 					i, items[i].title, items[i].artist,
 					items[i].date[0], items[i].date[1], items[i].date[2], items[i].date[3], items[i].date[4], items[i].date[5], /*년월일시분초*/
 					items[i].file_size, /*파일크기*/
-					items[i].duration, /*재생시간 0:08:52.608*/
-					items[i].bitrate,   /*오디오 비트레이트*/
-					items[i].samplerate,/*오디오 샘플레이트*/
+					timeStr, /*재생시간 0:08:52.608*/
+					items[i].bitrate,   /*비트레이트*/
+					items[i].samplerate,/*샘플레이트*/
 					items[i].channels,  /*오디어 채널수*/
 					items[i].width, items[i].height,  /*해상도 가로세로*/
 					lan_addr[0].str, runtime_vars.port, encodedFileName, /*동영상주소*/
@@ -757,39 +767,39 @@ BrowseContentDirectory(struct upnphttp * h, const char * action)
 				"</u:BrowseResponse>", itemCount, itemCount, updateID);
 
 		strcat(str.data, temp); //각 파일에 대한 xml코드 이어붙임
+		free(items);
 	}
-	//Audio
+	//★★★ Audio
 	else if(strcmp(ObjectID, "1") == 0 || strncmp(ObjectID, "1$", 2) == 0){
-		itemCount = 0;
-
-		sprintf(temp, "&lt;/DIDL-Lite&gt;</Result>\n"
-				"<NumberReturned>%u</NumberReturned>\n"
-				"<TotalMatches>%u</TotalMatches>\n"
-				"<UpdateID>%u</UpdateID>"
-				"</u:BrowseResponse>", itemCount, itemCount, updateID);
-
-		strcat(str.data, temp); //각 파일에 대한 xml코드 이어붙임
-	}
-	//Image
-	else if(strcmp(ObjectID, "3") == 0 || strncmp(ObjectID, "3$", 2) == 0){
 
 		_META* items;
-		itemCount = Meta_Get_from_path(ServiceAppData, "/%", 3, &items); //모든 폴더의 사진을 구해온다.
+		itemCount = Meta_Get_from_path(ServiceAppData, "/%", 1, &items); //모든 폴더의 음악을 구한다.
 		dlog_print(DLOG_ERROR, "tdlna_soap", "itemCount %d", itemCount);
+
 		for(i=0; i<itemCount; i++){
 
+			//--- temp문자열에 각 파일의 xml요소 제작 -----
 			mUrlEncode(items[i].path, encodedFileName);
 			ProcessSpecialCharacter(items[i].title);
 
-			dlog_print(DLOG_ERROR, "tdlna_soap", "%s-%s-%s %s:%s:%s", items[i].date[0], items[i].date[1], items[i].date[2], items[i].date[3], items[i].date[4], items[i].date[5]);
+			//[duration] 시간 형식 /*재생시간 0:08:52.608*/
+			msec = items[i].duration % 1000;
+			sec = items[i].duration / 1000;
+			min = (sec % 3600) / 60;
+			hur = sec / 3600;
+			sec= sec % 60;
+			sprintf(timeStr, "%d:%02d:%02d.%03d", hur,min,sec,msec);
 
-			sprintf(temp, BROWSE_IMAGE_ITEM,
-					i, items[i].title,
+			sprintf(temp, BROWSE_AUDIO_ITEM,
+					i, items[i].title,items[i].artist, /*아티스트*/
 					items[i].date[0], items[i].date[1], items[i].date[2], items[i].date[3], items[i].date[4], items[i].date[5], /*년월일시분초*/
+					items[i].genre, /*장르*/
+					items[i].album_name, /*앨범명*/
 					items[i].file_size, /*파일크기*/
-					items[i].width, items[i].height,  /*해상도 가로세로*/
-					lan_addr[0].str, runtime_vars.port, encodedFileName, /*동영상주소*/
-					lan_addr[0].str, runtime_vars.port, "items[i].thumbnail_path"); /*썸네일주소*/
+					timeStr, /*재생시간 0:08:52.608*/
+					items[i].bitrate,   /*오디오 비트레이트*/
+					lan_addr[0].str, runtime_vars.port, encodedFileName, /*미디어주소*/
+					lan_addr[0].str, runtime_vars.port, items[i].thumbnail_path); /*썸네일주소*/
 
 			strcat(str.data, temp); //각 파일에 대한 xml코드 이어붙임
 
@@ -802,6 +812,39 @@ BrowseContentDirectory(struct upnphttp * h, const char * action)
 				"</u:BrowseResponse>", itemCount, itemCount, updateID);
 
 		strcat(str.data, temp); //각 파일에 대한 xml코드 이어붙임
+		free(items);
+	}
+	//★★★ Image
+	else if(strcmp(ObjectID, "3") == 0 || strncmp(ObjectID, "3$", 2) == 0){
+
+		_META* items;
+		itemCount = Meta_Get_from_path(ServiceAppData, "/%", 3, &items); //모든 폴더의 사진을 구해온다.
+		dlog_print(DLOG_ERROR, "tdlna_soap", "itemCount %d", itemCount);
+		for(i=0; i<itemCount; i++){
+
+			mUrlEncode(items[i].path, encodedFileName);
+			ProcessSpecialCharacter(items[i].title);
+
+			sprintf(temp, BROWSE_IMAGE_ITEM,
+					i, items[i].title,
+					items[i].date[0], items[i].date[1], items[i].date[2], items[i].date[3], items[i].date[4], items[i].date[5], /*년월일시분초*/
+					items[i].file_size, /*파일크기*/
+					items[i].width, items[i].height,  /*해상도 가로세로*/
+					lan_addr[0].str, runtime_vars.port, encodedFileName, /*동영상주소*/
+					lan_addr[0].str, runtime_vars.port, items[i].thumbnail_path, /*썸네일주소*/
+					lan_addr[0].str, runtime_vars.port, items[i].thumbnail_path); /*썸네일주소*/
+
+			strcat(str.data, temp); //각 파일에 대한 xml코드 이어붙임
+		}//for
+
+		sprintf(temp, "&lt;/DIDL-Lite&gt;</Result>\n"
+				"<NumberReturned>%u</NumberReturned>\n"
+				"<TotalMatches>%u</TotalMatches>\n"
+				"<UpdateID>%u</UpdateID>"
+				"</u:BrowseResponse>", itemCount, itemCount, updateID);
+
+		strcat(str.data, temp); //각 파일에 대한 xml코드 이어붙임
+		free(items);
 	}
 	else
 	{
@@ -810,8 +853,8 @@ BrowseContentDirectory(struct upnphttp * h, const char * action)
 		char* BrowseRoot;
 		BrowseRoot = malloc(1024);
 
-		sprintf(BrowseRoot, BROWSE_ROOT_RESULT, 1,1,1); //동영상,음악,사진의 자식 아이템 갯수
-		//테스트로 동영상5개 나머지 1개 하드코딩
+		media_Count(&videoCnt, &imageCnt, &audioCnt, "/%");
+		sprintf(BrowseRoot, BROWSE_ROOT_RESULT, videoCnt, audioCnt, imageCnt); //동영상,음악,사진의 자식 아이템 갯수
 
 		//strcatf(&str, BROWSE_ROOT_RESULT, 0,0,1);
 		str.off = sprintf(str.data, "%s&gt;\n%s"
@@ -831,16 +874,15 @@ BrowseContentDirectory(struct upnphttp * h, const char * action)
 		totalMatches = 3;
 	}
 
-	//		//파일디버깅!!!
-	//		FILE* dfp;
-	//		dfp = fopen("/opt/usr/media/tdlnaDbg.txt", "w+");
-	//		if(dfp == NULL){
-	//			dlog_print(DLOG_ERROR, "tdlna_soap", "디버그파일 실패");
-	//			goto browse_error;
-	//		}
-	//		fprintf(dfp, "%s", str.data);
-	//		free(items);
-	//		fclose(dfp);
+			//파일디버깅!!!
+			FILE* dfp;
+			dfp = fopen("/opt/usr/media/tdlnaDbg.txt", "w+");
+			if(dfp == NULL){
+				dlog_print(DLOG_ERROR, "tdlna_soap", "디버그파일 실패");
+				goto browse_error;
+			}
+			fprintf(dfp, "%s", str.data);
+			fclose(dfp);
 
 	str.off = strlen(str.data);
 	dlog_print(DLOG_DEBUG, "tdlna_soap", "----- 최종 Borwse 응답\n%s\n---------------------------------", str.data);

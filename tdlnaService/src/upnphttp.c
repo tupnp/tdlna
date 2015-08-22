@@ -16,13 +16,16 @@
 #include <sys/resource.h>
 #include <limits.h>
 #include <stdarg.h> //가변인자
-
 #include <dlog.h>
 
 #include "upnphttp.h"
 #include "upnpglobalvars.h"
 #include "upnpsoap.h"
 #include "upnpevents.h"
+
+//#define _LARGEFILE_SOURCE
+//#define _FILE_OFFSET_BITS 64
+
 
 #define MAX_BUFFER_SIZE 2147483647
 #define MIN_BUFFER_SIZE 65536
@@ -1281,7 +1284,7 @@ void SimpleGetMimeStr(char* mimeStr, char* path){
 	path_len = strlen(path); //주어진 파일명 길이
 
 	//확장자 구하기
-	for(i = path_len-1;1 < i; i--){
+	for(i = path_len-1; 1 < i; i--){
 		if(path[i] == '.'){
 			ext = &path[i];
 			break;
@@ -1299,11 +1302,14 @@ void SimpleGetMimeStr(char* mimeStr, char* path){
 		if(!strcmp(ext, ".xml")){
 			strcpy(mimeStr,"application/xml");
 		}
-		else if(!strcmp(ext, ".mkv") || !strcmp(ext, ".mp4")){
+		else if(!strcmp(ext, ".mkv")){
+			strcpy(mimeStr, "video/x-mkv");
+		}
+		else if(!strcmp(ext, ".mp4")){
 			strcpy(mimeStr, "video/mpeg");
 		}
 		else if(!strcmp(ext, ".avi")){
-			strcpy(mimeStr, "video/avi");
+			strcpy(mimeStr, "video/x-msvideo");
 		}
 		else if(!strcmp(ext, ".wmv")){
 			strcpy(mimeStr, "video/x-ms-wmv");
@@ -1315,7 +1321,10 @@ void SimpleGetMimeStr(char* mimeStr, char* path){
 			strcpy(mimeStr, "image/jpeg");
 		}
 		else if(!strcmp(ext, ".mp3")){
-			strcpy(mimeStr, "audio/mp3");
+			strcpy(mimeStr, "audio/mpeg");
+		}
+		else if(!strcmp(ext, ".ogg")){
+			strcpy(mimeStr, "audio/ogg");
 		}
 		else if(!strcmp(ext, ".smi")){
 			strcpy(mimeStr, "application/smil+xml");
@@ -1399,8 +1408,11 @@ static void SendResp_dlnafile(struct upnphttp *h, char *object)
 		goto error;
 	}
 	size = lseek(sendfh, 0, SEEK_END);
-	lseek(sendfh, 0, SEEK_SET);
-
+	lseek(sendfh, 0, SEEK_SET); //파일사이즈 구하기
+	if(size < 0){
+		dlog_print(DLOG_ERROR, "tdlna_http", "fileSize: %jd", (intmax_t)size);
+		Send500(h);
+	}
 	INIT_STR(str, header);
 
 #if USE_FORK
@@ -1466,7 +1478,7 @@ static void SendResp_dlnafile(struct upnphttp *h, char *object)
 	{ //UrlDecode(filePath, filePath+strlen(filePath), filePath);
 		strcpy(captionPath, last_file.path);
 		ExtModStrCpy(captionPath, "smi");
-		dlog_print(DLOG_INFO, "tdlna_http", "♣ 자막파일 확인 %s",captionPath);
+		//dlog_print(DLOG_INFO, "tdlna_http", "♣ 자막파일 확인 %s",captionPath);
 		captionfh = open(captionPath, O_RDONLY); //자막파일 존재여부 확인
 		if(!(captionfh < 0)){
 			dlog_print(DLOG_INFO, "tdlna_http", "♣ 자막파일 존재[%d] %s", captionfh, captionPath);

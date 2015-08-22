@@ -5,6 +5,7 @@
 #include "main-app.h"
 #include "metadata.h"
 #include <dlog.h>
+#include <time.h>
 
 #define BUFLEN 200
 
@@ -31,7 +32,7 @@ void media_Count(int *videoCount,int *imageCount,int *musicCount, char *path){
 	media_content_connect();
 
 	snprintf(buf, BUFLEN, "%s Like '%s' AND %s = %d",MEDIA_PATH, path, MEDIA_TYPE, MEDIA_CONTENT_TYPE_VIDEO);
-//	snprintf(buf, BUFLEN, "%s Like %s", MEDIA_PATH,"'/opt/usr/media/DCIM/Camera/%'");
+	//   snprintf(buf, BUFLEN, "%s Like %s", MEDIA_PATH,"'/opt/usr/media/DCIM/Camera/%'");
 	media_filter_set_condition(filter, buf, collate_type);
 	ret = media_info_get_media_count_from_db(filter, &videoCount);
 	check_returnValue(ret);
@@ -40,13 +41,13 @@ void media_Count(int *videoCount,int *imageCount,int *musicCount, char *path){
 	snprintf(buf, BUFLEN, "%s Like '%s' AND %s = %d",MEDIA_PATH, path, MEDIA_TYPE, MEDIA_CONTENT_TYPE_IMAGE);
 	media_filter_set_condition(filter, buf, collate_type);
 	ret = media_info_get_media_count_from_db(filter,&imageCount);
-//	check_returnValue(ret);
+	//   check_returnValue(ret);
 	dlog_print(DLOG_INFO, "tdlna", "이미지 갯수: %d",imageCount);
 
 	snprintf(buf, BUFLEN, "%s Like '%s' AND %s = %d",MEDIA_PATH, path, MEDIA_TYPE,MEDIA_CONTENT_TYPE_MUSIC);
 	media_filter_set_condition(filter, buf, collate_type);
 	ret = media_info_get_media_count_from_db(filter,&musicCount);
-//	check_returnValue(ret);
+	//   check_returnValue(ret);
 	dlog_print(DLOG_INFO, "tdlna", "음악 갯수: %d",musicCount);
 
 	media_content_disconnect();
@@ -75,89 +76,89 @@ void check_returnValue(int ret){
 
 bool _media_type_folder_db(media_folder_h folder,char *retPath){
 	dlog_print(DLOG_INFO, "tdlna", "_media_type_folder_db 실행");
-		char *folder_path;
-		int ret = 0;
+	char *folder_path;
+	int ret = 0;
 
-		ret = media_folder_get_path(folder,&folder_path);
-		check_returnValue(ret);
-		dlog_print(DLOG_DEBUG,"tdlna","media Folder_path:%s",folder_path);
+	ret = media_folder_get_path(folder,&folder_path);
+	check_returnValue(ret);
+	dlog_print(DLOG_DEBUG,"tdlna","media Folder_path:%s",folder_path);
 
-		strcat(retPath, folder_path);
-		strcat(retPath, "|");
+	strcat(retPath, folder_path);
+	strcat(retPath, "|");
 }
 
 int mediaDirectory_folder(char** path,int mediaType){//타입별 폴더 리턴
-		filter_h filter = NULL;
-		media_info_h _media_handle;
-		media_folder_h _media_folder;
-		int ret = 0,mediaCount=0 ;
-		char buf[BUFLEN] = { '\0' };
-		media_content_collation_e collate_type = MEDIA_CONTENT_COLLATE_NOCASE;
-		media_filter_create(&filter);
-		media_content_connect();
-		mediaCount = mediaDirectory_count(mediaType);
+	filter_h filter = NULL;
+	media_info_h _media_handle;
+	media_folder_h _media_folder;
+	int ret = 0,mediaCount=0 ;
+	char buf[BUFLEN] = { '\0' };
+	media_content_collation_e collate_type = MEDIA_CONTENT_COLLATE_NOCASE;
+	media_filter_create(&filter);
+	media_content_connect();
+	mediaCount = mediaDirectory_count(mediaType);
 
-		char* mPath = malloc(mediaCount * 512);
+	char* mPath = malloc(mediaCount * 512);
 
-		mPath[0] = '\0';
-		*path = mPath;
-		switch (mediaType) {
-			case 1:
-				snprintf(buf, BUFLEN, "%s = %d", MEDIA_TYPE, MEDIA_CONTENT_TYPE_MUSIC);
-				media_filter_set_condition(filter, buf, collate_type);
-				ret = media_folder_foreach_folder_from_db(filter,_media_type_folder_db,mPath);//DB 검색후 폴더 콜백 호출
-				break;
-			case 2:
-				snprintf(buf, BUFLEN, "%s = %d", MEDIA_TYPE, MEDIA_CONTENT_TYPE_VIDEO);
-				media_filter_set_condition(filter, buf, collate_type);
-				ret = media_folder_foreach_folder_from_db(filter,_media_type_folder_db,mPath);//DB 검색후 폴더 콜백 호출
-				break;
-			case 3:
-				snprintf(buf, BUFLEN, "%s = %d", MEDIA_TYPE, MEDIA_CONTENT_TYPE_IMAGE);
-				media_filter_set_condition(filter, buf, collate_type);
-				ret = media_folder_foreach_folder_from_db(filter,_media_type_folder_db,mPath);//DB 검색후 폴더 콜백 호출
-				break;
-			default:
-				dlog_print(DLOG_ERROR, "tdlna", "media_Directory ERROR!");
-				return 0;
-				break;
-		}
-			media_content_disconnect();
-			media_filter_destroy(filter);
-			return mediaCount;
+	mPath[0] = '\0';
+	*path = mPath;
+	switch (mediaType) {
+	case 1:
+		snprintf(buf, BUFLEN, "%s = %d", MEDIA_TYPE, MEDIA_CONTENT_TYPE_MUSIC);
+		media_filter_set_condition(filter, buf, collate_type);
+		ret = media_folder_foreach_folder_from_db(filter,_media_type_folder_db,mPath);//DB 검색후 폴더 콜백 호출
+		break;
+	case 2:
+		snprintf(buf, BUFLEN, "%s = %d", MEDIA_TYPE, MEDIA_CONTENT_TYPE_VIDEO);
+		media_filter_set_condition(filter, buf, collate_type);
+		ret = media_folder_foreach_folder_from_db(filter,_media_type_folder_db,mPath);//DB 검색후 폴더 콜백 호출
+		break;
+	case 3:
+		snprintf(buf, BUFLEN, "%s = %d", MEDIA_TYPE, MEDIA_CONTENT_TYPE_IMAGE);
+		media_filter_set_condition(filter, buf, collate_type);
+		ret = media_folder_foreach_folder_from_db(filter,_media_type_folder_db,mPath);//DB 검색후 폴더 콜백 호출
+		break;
+	default:
+		dlog_print(DLOG_ERROR, "tdlna", "media_Directory ERROR!");
+		return 0;
+		break;
+	}
+	media_content_disconnect();
+	media_filter_destroy(filter);
+	return mediaCount;
 }
 
 int mediaDirectory_count(int mediaType){//미디어 타입 별 폴더 갯수 리턴
-		filter_h filter = NULL;
-		media_info_h _media_handle;
-		media_folder_h _media_folder;
-		char buf[BUFLEN] = { '\0' };
-		media_content_collation_e collate_type = MEDIA_CONTENT_COLLATE_NOCASE;
-		media_filter_create(&filter);
-		media_content_connect();
-		int folderCount=0;
-		switch (mediaType) {
-			case 1:
-				snprintf(buf, BUFLEN, "%s = %d", MEDIA_TYPE, MEDIA_CONTENT_TYPE_MUSIC);
-				media_filter_set_condition(filter, buf, collate_type);
-				break;
-			case 2:
-				snprintf(buf, BUFLEN, "%s = %d", MEDIA_TYPE, MEDIA_CONTENT_TYPE_VIDEO);
-				media_filter_set_condition(filter, buf, collate_type);
-				break;
-			case 3:
-				snprintf(buf, BUFLEN, "%s = %d", MEDIA_TYPE, MEDIA_CONTENT_TYPE_IMAGE);
-				media_filter_set_condition(filter, buf, collate_type);
-				break;
-			default:
-				dlog_print(DLOG_ERROR, "tdlna", "media_Directory ERROR!");
-				return 0;
-				break;
-		}
-			media_folder_get_folder_count_from_db(filter,&folderCount);
-			media_content_disconnect();
-			media_filter_destroy(filter);
-			return folderCount;
+	filter_h filter = NULL;
+	media_info_h _media_handle;
+	media_folder_h _media_folder;
+	char buf[BUFLEN] = { '\0' };
+	media_content_collation_e collate_type = MEDIA_CONTENT_COLLATE_NOCASE;
+	media_filter_create(&filter);
+	media_content_connect();
+	int folderCount=0;
+	switch (mediaType) {
+	case 1:
+		snprintf(buf, BUFLEN, "%s = %d", MEDIA_TYPE, MEDIA_CONTENT_TYPE_MUSIC);
+		media_filter_set_condition(filter, buf, collate_type);
+		break;
+	case 2:
+		snprintf(buf, BUFLEN, "%s = %d", MEDIA_TYPE, MEDIA_CONTENT_TYPE_VIDEO);
+		media_filter_set_condition(filter, buf, collate_type);
+		break;
+	case 3:
+		snprintf(buf, BUFLEN, "%s = %d", MEDIA_TYPE, MEDIA_CONTENT_TYPE_IMAGE);
+		media_filter_set_condition(filter, buf, collate_type);
+		break;
+	default:
+		dlog_print(DLOG_ERROR, "tdlna", "media_Directory ERROR!");
+		return 0;
+		break;
+	}
+	media_folder_get_folder_count_from_db(filter,&folderCount);
+	media_content_disconnect();
+	media_filter_destroy(filter);
+	return folderCount;
 }
 
 
@@ -185,28 +186,28 @@ void media_Directory(void* data){
 	filter_h filter = NULL;
 	media_info_h _media_handle;
 	media_folder_h _media_folder;
-		int ret = 0 ;
-		char buf[BUFLEN] = { '\0' };
-		media_content_collation_e collate_type = MEDIA_CONTENT_COLLATE_NOCASE;
-		media_filter_create(&filter);
-		media_content_connect();
+	int ret = 0 ;
+	char buf[BUFLEN] = { '\0' };
+	media_content_collation_e collate_type = MEDIA_CONTENT_COLLATE_NOCASE;
+	media_filter_create(&filter);
+	media_content_connect();
 
-		snprintf(buf, BUFLEN, "%s = %d OR %s = %d OR %s = %d", MEDIA_TYPE,
-						MEDIA_CONTENT_TYPE_IMAGE, MEDIA_TYPE, MEDIA_CONTENT_TYPE_VIDEO,MEDIA_TYPE,MEDIA_CONTENT_TYPE_MUSIC);
-		//이미지,비디오,음악 파일의 미디어만 검색
-		media_filter_set_condition(filter, buf, collate_type);
+	snprintf(buf, BUFLEN, "%s = %d OR %s = %d OR %s = %d", MEDIA_TYPE,
+			MEDIA_CONTENT_TYPE_IMAGE, MEDIA_TYPE, MEDIA_CONTENT_TYPE_VIDEO,MEDIA_TYPE,MEDIA_CONTENT_TYPE_MUSIC);
+	//이미지,비디오,음악 파일의 미디어만 검색
+	media_filter_set_condition(filter, buf, collate_type);
 
-		ret = media_folder_foreach_folder_from_db(filter,_media_folder_db,data);//DB 검색후 폴더 콜백 호출
-		check_returnValue(ret);
-		media_content_disconnect();
-		media_filter_destroy(filter);
+	ret = media_folder_foreach_folder_from_db(filter,_media_folder_db,data);//DB 검색후 폴더 콜백 호출
+	check_returnValue(ret);
+	media_content_disconnect();
+	media_filter_destroy(filter);
 }
 
 
 int Meta_Get_from_path(void *appData, char *folderPath,int mediaType, _META** result) {// data : app_data, folderPath : 폴더경로,
 	// 오디오(1), 비디오(2), 사진(3)
 	dlog_print(DLOG_INFO, "tdlna", "Meta_Get_from_path(%s) mediaType:%d",folderPath,mediaType);
-	//	app_data *appdata = appData;
+	//   app_data *appdata = appData;
 
 	GList *all_item_list = NULL; // Include glib.h
 	media_content_type_e media_type;
@@ -218,17 +219,25 @@ int Meta_Get_from_path(void *appData, char *folderPath,int mediaType, _META** re
 	int ret = MEDIA_CONTENT_ERROR_NONE;
 	int media_count = 0;
 	unsigned long long media_size = 0;
+
+	//meta type list
+	int width, height, duration;
+	char *title, *artist;
+	char *album, *genre, *datetaken;
+	int samplerate, bitrate, channels;
+	char *Temp;
+
+	time_t timer;
+	struct tm *t;
+	timer = time(NULL); // 현재 시각을 초 단위로 얻기
+	t = localtime(&timer); // 초 단위의 시간을 분리하여 구조체에 넣기
+
 	_META* metaList = NULL;
 	filter_h filter = NULL;
 	media_content_collation_e collate_type = MEDIA_CONTENT_COLLATE_NOCASE;
 	media_content_order_e order_type = MEDIA_CONTENT_ORDER_DESC;
 
 	media_filter_create(&filter);
-	// Set the condition
-	//	snprintf(buf, BUFLEN, "%s Like '%s'",MEDIA_PATH, folderPath);//!!!
-
-	//	snprintf(buf, BUFLEN, "%s Like '%s' AND  (%s = %d OR %s = %d  OR %s = %d)", MEDIA_PATH, folderPath, MEDIA_TYPE,
-	//					MEDIA_CONTENT_TYPE_IMAGE, MEDIA_TYPE, MEDIA_CONTENT_TYPE_VIDEO,MEDIA_TYPE,MEDIA_CONTENT_TYPE_MUSIC);
 
 	switch(mediaType){
 	case 1://오디오
@@ -245,7 +254,7 @@ int Meta_Get_from_path(void *appData, char *folderPath,int mediaType, _META** re
 		return 0;
 		break;
 	}
-	//	ret = media_filter_set_offset(filter, 0, 20);
+	//   ret = media_filter_set_offset(filter, 0, 20);
 	ret = media_filter_set_condition(filter, buf, collate_type);
 	if (ret != MEDIA_CONTENT_ERROR_NONE) {
 		media_filter_destroy(filter);
@@ -265,78 +274,90 @@ int Meta_Get_from_path(void *appData, char *folderPath,int mediaType, _META** re
 		dlog_print(DLOG_INFO, "tdlna","media_info_foreach_media_from_db failed: %d", ret);
 		media_filter_destroy(filter);
 	} else {//-------------------------------------------------------------------------------------
-		int i;
+		int i, j;
 		media_count =g_list_length(all_item_list);
 		dlog_print(DLOG_INFO, "tdlna","media_count: %d", media_count);
 
 		metaList = (_META*)malloc(sizeof(_META)*media_count);//tdlna로 전달하는 리스트
-		for (i = 0; i < media_count; i++) {
-			//-------------------------------------------미디어 검색
-			_META metaData;		// = meta_create();
+		memset(metaList, '\0' , sizeof(_META)*media_count);
+
+		for (i = 0; i < media_count; i++)
+		{
+			_META metaData;
+			memset(&metaData, '\0' , sizeof(_META));
+
 			media_handle = (media_info_h) g_list_nth_data(all_item_list, i);
 			media_info_get_media_id(media_handle, &media_id);
 			media_info_get_media_type(media_handle, &media_type);
-			media_info_get_display_name(media_handle, &media_name);
-			media_info_get_file_path(media_handle, &media_path);
-			media_info_get_thumbnail_path(media_handle,&thumbnail_path);
-			media_info_get_size(media_handle,&media_size);
+			ret = media_info_get_display_name(media_handle, &media_name);
+			if(ret == MEDIA_CONTENT_ERROR_NONE){
+				strcpy(metaData.title,media_name);
+			}
+			ret = media_info_get_file_path(media_handle, &media_path);
+			if(ret == MEDIA_CONTENT_ERROR_NONE){
+				strcpy(metaData.path,media_path);
+			}
+			ret = media_info_get_thumbnail_path(media_handle,&thumbnail_path);
+			if(ret == MEDIA_CONTENT_ERROR_NONE && thumbnail_path != NULL){
+				strcpy(metaData.thumbnail_path, thumbnail_path);
+			}
+			ret = media_info_get_size(media_handle,&media_size);
+			if(ret == MEDIA_CONTENT_ERROR_NONE){
+				metaData.file_size = media_size;
+			}
 
-			strcpy(metaData.title,media_name);
-			strcpy(metaData.path,media_path);
-			metaData.file_size = media_size;
+			sprintf(metaData.date[0], "%04d", t->tm_year + 1900);
+			sprintf(metaData.date[1], "%02d", t->tm_mon + 1);
+			sprintf(metaData.date[2], "%02d", t->tm_mday);
+			sprintf(metaData.date[3], "%02d", t->tm_hour);
+			sprintf(metaData.date[4], "%02d", t->tm_min);
+			sprintf(metaData.date[5], "%02d", t->tm_sec);
+			sprintf(metaData.date[6], "%02d", 0);
 
-			if (media_type == MEDIA_CONTENT_TYPE_IMAGE) {
-				dlog_print(DLOG_ERROR, "tdlna",	"MEDIA_CONTENT_TYPE_IMAGE~~~");
-				metaData.type = 3;		// 오디오(1), 비디오(2), 사진(3)
+			title = artist = NULL;
+			album = genre = datetaken = NULL;
+			width = height = duration = 0;
+			samplerate = bitrate = channels = 0;
+			Temp = NULL;
+
+			if (media_type == MEDIA_CONTENT_TYPE_IMAGE)
+			{
+				metaData.type = 3;      // 오디오(1), 비디오(2), 사진(3)
 				image_meta_h image_handle;
-				media_content_orientation_e orientation = 0;
-				int width = 0, height = 0;
-				char *datetaken = NULL;
-				char *burst_id = NULL;
 
 				ret = media_info_get_image(media_handle, &image_handle);
 				if (ret != MEDIA_CONTENT_ERROR_NONE) {
 					// Error handling
-					dlog_print(DLOG_ERROR, "tdlna",	"MEDIA_CONTENT_ERROR! imageMeta");
+					dlog_print(DLOG_ERROR, "tdlna",   "MEDIA_CONTENT_ERROR! imageMeta");
 				} else {
-					image_meta_get_width(image_handle, &width);
 
-					image_meta_get_height(image_handle, &height);
+					ret = image_meta_get_width(image_handle, &width);         //넓이
+					if(ret==MEDIA_CONTENT_ERROR_NONE){
+						metaData.width = width;
+					}
 
-					image_meta_get_orientation(image_handle, &orientation);
+					ret = image_meta_get_height(image_handle, &height);         //높이
+					if(ret==MEDIA_CONTENT_ERROR_NONE){
+						metaData.height = height;
+					}
 
-					image_meta_get_date_taken(image_handle, &datetaken);
-
-					image_meta_get_burst_id(image_handle, &burst_id);
-
-					dlog_print(DLOG_INFO, "tdlna", "----I M E A G E-----");
-					dlog_print(DLOG_INFO, "tdlna","Width : %d, Height : %d, Orientation : %d, Date taken : %s",
-							width, height, orientation, datetaken);
-					if (datetaken != NULL) {
-						char* date;
-						date = strtok(datetaken, ": ");
+					ret = image_meta_get_date_taken(image_handle, &datetaken);   //만든날짜
+					if(ret==MEDIA_CONTENT_ERROR_NONE && datetaken!=NULL){
+						char* date = strtok(datetaken, ": ");
 						strcpy(metaData.date[0], date);
-						dlog_print(DLOG_INFO, "tdlna", "date[%d]: %s", 0, date);
-						int ii = 1;
-						while ((date = strtok(NULL, ": ")) != NULL) {
-							strcpy(metaData.date[ii++], date);
-							dlog_print(DLOG_INFO, "tdlna", "date[%d]: %s", ii, date);
+						j = 1;
+						while ((Temp = strtok(NULL, ": ")) != NULL) {
+							strcpy(metaData.date[j++], Temp);
 						}
 					}
-					metaData.width = width;
-					metaData.height = height;
 				}
-				if (datetaken)
-					free(datetaken);
-				if (burst_id)
-					free(burst_id);
 				image_meta_destroy(image_handle);
-			} else if (media_type == MEDIA_CONTENT_TYPE_VIDEO) {
+				media_content_disconnect();
+			}//END image
+			else if (media_type == MEDIA_CONTENT_TYPE_VIDEO)
+			{
 				metaData.type = 2;
 				video_meta_h video_handle;
-				char *title = NULL, *artist = NULL, *album = NULL,*album_artist = NULL,*datetoken=NULL;
-				int duration = 0,width=0,height=0;
-				time_t time_played = 0;
 
 				ret = media_info_get_video(media_handle, &video_handle);
 				if (ret != MEDIA_CONTENT_ERROR_NONE) {
@@ -344,80 +365,110 @@ int Meta_Get_from_path(void *appData, char *folderPath,int mediaType, _META** re
 					dlog_print(DLOG_ERROR, "tdlna",
 							"MEDIA_CONTENT_ERROR! videoMeta");
 				} else {
-					video_meta_get_artist(video_handle, &artist);
+					ret = video_meta_get_width(video_handle,&width);
+					if(ret==MEDIA_CONTENT_ERROR_NONE){
+						metaData.width = width;
+					}
 
-					video_meta_get_album(video_handle, &album);
+					ret = video_meta_get_height(video_handle,&height);
+					if(ret==MEDIA_CONTENT_ERROR_NONE){
+						metaData.height = height;
+					}
 
-					video_meta_get_album_artist(video_handle, &album_artist);
+					ret = video_meta_get_duration(video_handle, &duration);
+					if(ret==MEDIA_CONTENT_ERROR_NONE){
+						metaData.duration = duration;
+					}
 
-					video_meta_get_duration(video_handle, &duration);
+					ret = video_meta_get_artist(video_handle, &artist);
+					if(ret==MEDIA_CONTENT_ERROR_NONE && artist != NULL){
+						strcpy(metaData.artist, artist);
+					}
 
-					video_meta_get_played_time(video_handle, &time_played);
-
-					video_meta_get_width(video_handle,&width);
-
-					video_meta_get_height(video_handle,&height);
-
-					video_meta_get_recorded_date(video_handle,&datetoken);
-
-					dlog_print(DLOG_INFO, "tdlna", "-----V I D E O----");
-					dlog_print(DLOG_INFO, "tdlna","Title: %s, Album: %s, Artist: %s, Album_artist: %s \n Duration: %d, Played time: %d",
-							title, album, artist, album_artist, duration,
-							time_played);
-					if (datetoken != NULL && 0 < strlen(datetoken)) {
-						char* date;
-						date = strtok(datetoken, ": ");
-						dlog_print(DLOG_INFO, "tdlna", "date[%d]: %s", 0, date);
+					ret = video_meta_get_recorded_date(video_handle,&datetaken);
+					if(ret==MEDIA_CONTENT_ERROR_NONE && datetaken!=NULL){
+						char* date = strtok(datetaken, ": ");
 						strcpy(metaData.date[0], date);
-
-						int ii;
-						for(ii=1; ii<6 && (date = strtok(NULL, ": ")) != NULL; ii++){
-							dlog_print(DLOG_INFO, "tdlna", "date[%d]: %s", ii, date);
-							strcpy(metaData.date[ii++], date);
+						j = 1;
+						while ((Temp = strtok(NULL, ": ")) != NULL) {
+							strcpy(metaData.date[j++], Temp);
 						}
 					}
-					else{
-						strcpy(metaData.date[0], "0");
-						strcpy(metaData.date[1], "0");
-						strcpy(metaData.date[2], "0");
-						strcpy(metaData.date[3], "0");
-						strcpy(metaData.date[4], "0");
-						strcpy(metaData.date[5], "0");
-						strcpy(metaData.date[6], "0");
-					}
-					strcpy(metaData.thumbnail_path, thumbnail_path);
-					metaData.width = width;
-					metaData.height = height;
-					//strcpy(metaData.date,datetoken);
 				}
 
-				free(artist);
-				free(album);
-				free(album_artist);
-				free(datetoken);
-				media_content_disconnect();
 				video_meta_destroy(video_handle);
-			} else if (media_type == MEDIA_CONTENT_TYPE_MUSIC) {
+				media_content_disconnect();
+			}// END video
+			else if (media_type == MEDIA_CONTENT_TYPE_MUSIC)
+			{
 				// 오디오(1), 비디오(2), 사진(3)
 				metaData.type = 1;
-				dlog_print(DLOG_INFO, "tdlna", "-----M U S I C----");
-			}
+				audio_meta_h audio_handle;
 
-			dlog_print(DLOG_INFO, "tdlna", "media_id [%d] : %s", i, media_id);
-			dlog_print(DLOG_INFO, "tdlna", "media_name [%d] : %s", i, media_name);
-			dlog_print(DLOG_INFO, "tdlna", "media_path [%d] : %s", i, media_path);
-			dlog_print(DLOG_INFO, "tdlna", "thumbnail_path:%s",thumbnail_path);
-			dlog_print(DLOG_INFO, "tdlna", "file_size [%d] : %d", i, metaData.file_size);
+				ret = media_info_get_audio(media_handle, &audio_handle);
+				if (ret != MEDIA_CONTENT_ERROR_NONE) {
+					// Error handling
+					dlog_print(DLOG_ERROR, "tdlna","MEDIA_CONTENT_ERROR! audioMeta");
+				} else {
+					ret = audio_meta_get_artist(audio_handle,&artist);         //아티스트
+					if(ret==MEDIA_CONTENT_ERROR_NONE && artist!=NULL){
+						strcpy(metaData.artist, artist);
+					}
 
-			free(media_id);
-			free(media_name);
-			free(media_path);
-			//free(title);
+					ret = audio_meta_get_album(audio_handle, &album);         //앨범
+					if(ret==MEDIA_CONTENT_ERROR_NONE && album!=NULL){
+						strcpy(metaData.album_name, album);
+					}
+
+					ret = audio_meta_get_genre(audio_handle, &genre);         //장르
+					if(ret==MEDIA_CONTENT_ERROR_NONE && genre!=NULL){
+						strcpy(metaData.genre, genre);
+					}
+
+					ret = audio_meta_get_duration(audio_handle, &duration);      //재생시간
+					if(ret==MEDIA_CONTENT_ERROR_NONE){
+						metaData.duration = duration;
+					}
+
+					ret = audio_meta_get_bit_rate(audio_handle, &bitrate);      //비트레이트
+					if(ret==MEDIA_CONTENT_ERROR_NONE){
+						metaData.bitrate = bitrate;
+					}
+
+					ret = audio_meta_get_sample_rate(audio_handle, &samplerate);   //샘플레이트
+					if(ret==MEDIA_CONTENT_ERROR_NONE){
+						metaData.samplerate = samplerate;
+					}
+
+					ret = audio_meta_get_channel(audio_handle, &channels);         //채널
+					if(ret==MEDIA_CONTENT_ERROR_NONE){
+						metaData.channels = channels;
+					}
+
+					ret = audio_meta_get_recorded_date(audio_handle, &datetaken);
+					if(ret==MEDIA_CONTENT_ERROR_NONE && datetaken!=NULL){
+						char* date = strtok(datetaken, ": ");
+						strcpy(metaData.date[0], date);
+						j = 1;
+						while ((Temp = strtok(NULL, ": ")) != NULL) {
+							strcpy(metaData.date[j++], Temp);
+						}
+					}
+
+				}
+			}// END audio
+
+			if(title) free(title);
+			if(artist) free(artist);
+			if(album) free(album);
+			if(genre) free(genre);
+			if(datetaken) free(datetaken);
+			if(Temp) free(Temp);
+
 			memcpy(&metaList[i],&metaData,sizeof(_META));
-			dlog_print(DLOG_INFO, "tdlna", "리스트 metaList 1 :%s",metaList[1].path);
-		}//------------------end for ---------------
-	}
+		}// END i
 
-	*result = metaList;
-	return media_count;
+		*result = metaList;
+		return media_count;
+	}
 }
