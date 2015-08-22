@@ -205,8 +205,8 @@ void media_Directory(void* data){
 
 int Meta_Get_from_path(void *appData, char *folderPath,int mediaType, _META** result) {// data : app_data, folderPath : 폴더경로,
 	// 오디오(1), 비디오(2), 사진(3)
-	dlog_print(DLOG_INFO, "tdlna", "Meta_Get_from_path(%s)",folderPath);
-//	app_data *appdata = appData;
+	dlog_print(DLOG_INFO, "tdlna", "Meta_Get_from_path(%s) mediaType:%d",folderPath,mediaType);
+	//	app_data *appdata = appData;
 
 	GList *all_item_list = NULL; // Include glib.h
 	media_content_type_e media_type;
@@ -225,26 +225,27 @@ int Meta_Get_from_path(void *appData, char *folderPath,int mediaType, _META** re
 
 	media_filter_create(&filter);
 	// Set the condition
-//	snprintf(buf, BUFLEN, "%s Like '%s'",MEDIA_PATH, folderPath);//!!!
+	//	snprintf(buf, BUFLEN, "%s Like '%s'",MEDIA_PATH, folderPath);//!!!
 
-//	snprintf(buf, BUFLEN, "%s Like '%s' AND  (%s = %d OR %s = %d  OR %s = %d)", MEDIA_PATH, folderPath, MEDIA_TYPE,
-//					MEDIA_CONTENT_TYPE_IMAGE, MEDIA_TYPE, MEDIA_CONTENT_TYPE_VIDEO,MEDIA_TYPE,MEDIA_CONTENT_TYPE_MUSIC);
+	//	snprintf(buf, BUFLEN, "%s Like '%s' AND  (%s = %d OR %s = %d  OR %s = %d)", MEDIA_PATH, folderPath, MEDIA_TYPE,
+	//					MEDIA_CONTENT_TYPE_IMAGE, MEDIA_TYPE, MEDIA_CONTENT_TYPE_VIDEO,MEDIA_TYPE,MEDIA_CONTENT_TYPE_MUSIC);
 
 	switch(mediaType){
 	case 1://오디오
 		snprintf(buf, BUFLEN, "%s Like '%s' AND  %s = %d", MEDIA_PATH, folderPath, MEDIA_TYPE, MEDIA_CONTENT_TYPE_MUSIC);
-			break;
+		break;
 	case 2://비디오
 		snprintf(buf, BUFLEN, "%s Like '%s' AND  %s = %d", MEDIA_PATH, folderPath, MEDIA_TYPE, MEDIA_CONTENT_TYPE_VIDEO);
-			break;
+		break;
 	case 3://사진
 		snprintf(buf, BUFLEN, "%s Like '%s' AND  %s = %d", MEDIA_PATH, folderPath, MEDIA_TYPE, MEDIA_CONTENT_TYPE_IMAGE);
-			break;
+		break;
 	default:
+		dlog_print(DLOG_ERROR, "tdlna", "default");
 		return 0;
 		break;
 	}
-//	ret = media_filter_set_offset(filter, 0, 20);
+	//	ret = media_filter_set_offset(filter, 0, 20);
 	ret = media_filter_set_condition(filter, buf, collate_type);
 	if (ret != MEDIA_CONTENT_ERROR_NONE) {
 		media_filter_destroy(filter);
@@ -266,6 +267,7 @@ int Meta_Get_from_path(void *appData, char *folderPath,int mediaType, _META** re
 	} else {//-------------------------------------------------------------------------------------
 		int i;
 		media_count =g_list_length(all_item_list);
+		dlog_print(DLOG_INFO, "tdlna","media_count: %d", media_count);
 
 		metaList = (_META*)malloc(sizeof(_META)*media_count);//tdlna로 전달하는 리스트
 		for (i = 0; i < media_count; i++) {
@@ -315,14 +317,14 @@ int Meta_Get_from_path(void *appData, char *folderPath,int mediaType, _META** re
 						date = strtok(datetaken, ": ");
 						strcpy(metaData.date[0], date);
 						dlog_print(DLOG_INFO, "tdlna", "date[%d]: %s", 0, date);
-						int i = 1;
+						int ii = 1;
 						while ((date = strtok(NULL, ": ")) != NULL) {
-							strcpy(metaData.date[i++], date);
-							dlog_print(DLOG_INFO, "tdlna", "date[%d]: %s", i, date);
+							strcpy(metaData.date[ii++], date);
+							dlog_print(DLOG_INFO, "tdlna", "date[%d]: %s", ii, date);
 						}
 					}
-						metaData.width = width;
-						metaData.height = height;
+					metaData.width = width;
+					metaData.height = height;
 				}
 				if (datetaken)
 					free(datetaken);
@@ -362,17 +364,26 @@ int Meta_Get_from_path(void *appData, char *folderPath,int mediaType, _META** re
 					dlog_print(DLOG_INFO, "tdlna","Title: %s, Album: %s, Artist: %s, Album_artist: %s \n Duration: %d, Played time: %d",
 							title, album, artist, album_artist, duration,
 							time_played);
-					if (datetoken != NULL) {
+					if (datetoken != NULL && 0 < strlen(datetoken)) {
 						char* date;
 						date = strtok(datetoken, ": ");
 						dlog_print(DLOG_INFO, "tdlna", "date[%d]: %s", 0, date);
 						strcpy(metaData.date[0], date);
-						int i = 1;
-						while ((date = strtok(NULL, ": ")) != NULL) {
-							dlog_print(DLOG_INFO, "tdlna", "date[%d]: %s", i, date);
-							strcpy(metaData.date[i++], date);
-							//i++;
+
+						int ii;
+						for(ii=1; ii<6 && (date = strtok(NULL, ": ")) != NULL; ii++){
+							dlog_print(DLOG_INFO, "tdlna", "date[%d]: %s", ii, date);
+							strcpy(metaData.date[ii++], date);
 						}
+					}
+					else{
+						strcpy(metaData.date[0], "0");
+						strcpy(metaData.date[1], "0");
+						strcpy(metaData.date[2], "0");
+						strcpy(metaData.date[3], "0");
+						strcpy(metaData.date[4], "0");
+						strcpy(metaData.date[5], "0");
+						strcpy(metaData.date[6], "0");
 					}
 					strcpy(metaData.thumbnail_path, thumbnail_path);
 					metaData.width = width;
@@ -383,6 +394,7 @@ int Meta_Get_from_path(void *appData, char *folderPath,int mediaType, _META** re
 				free(artist);
 				free(album);
 				free(album_artist);
+				free(datetoken);
 				media_content_disconnect();
 				video_meta_destroy(video_handle);
 			} else if (media_type == MEDIA_CONTENT_TYPE_MUSIC) {

@@ -27,7 +27,7 @@
 #include "upnpevents.h"
 #include "clients.h"
 #include "upnpssdp.h"
-
+#include "upnpsoap.h"
 #include "main-app.h"
 #include "tdlnamain.h"
 
@@ -160,6 +160,7 @@ void* tdlnamain(void* data)
 		strcpy(modelname, ad->deviceName);
 		//UUID 설정
 		setUUID();
+		SetAppDataSoap(ad); //Soap.c에서 사용할 appData설정
 
 		//http요청 리스트 초기화
 		LIST_INIT(&upnphttphead);
@@ -309,6 +310,10 @@ shutdown:
 		if (shttpl >= 0)
 			close(shttpl);
 
+		//ssdp Alive 스레드가 완전히 종료되기를 기다린다.
+		if (ssdptd)
+			pthread_join(ssdptd, NULL);
+
 		//종료시 네트워크의 모든 인터페이스로 ssdp byebye패킷을 보낸다.
 		for (i = 0; i < n_lan_addr; i++)
 		{
@@ -316,10 +321,6 @@ shutdown:
 			close(lan_addr[i].snotify);
 			dlog_print(DLOG_INFO, "tdlna", "send ByeBye");
 		}
-
-		//ssdp Alive 스레드가 완전히 종료되기를 기다린다.
-		if (ssdptd)
-			pthread_join(ssdptd, NULL);
 
 		upnpevents_removeSubscribers();
 

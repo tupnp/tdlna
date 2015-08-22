@@ -664,11 +664,11 @@ static void ProcessHttpQuery_upnphttp(struct upnphttp * h)
 			}
 			else
 			{
-				strcpy(filePath, HOME_DIR);
-				strcat(filePath, HttpUrl);
-				UrlDecode(filePath, filePath+strlen(filePath), filePath);
+				//strcpy(filePath, HOME_DIR);
+				//strcat(filePath, HttpUrl);
+				UrlDecode(HttpUrl, HttpUrl+strlen(HttpUrl), HttpUrl);
 
-				SendResp_dlnafile(h, filePath); //파일요청 처리
+				SendResp_dlnafile(h, HttpUrl); //파일요청 처리
 				dlog_print(DLOG_DEBUG, "tdlna_http", "파일 요청 %s (%s)", HttpUrl, inet_ntoa(h->clientaddr));
 			}
 		}
@@ -1299,8 +1299,14 @@ void SimpleGetMimeStr(char* mimeStr, char* path){
 		if(!strcmp(ext, ".xml")){
 			strcpy(mimeStr,"application/xml");
 		}
-		else if(!strcmp(ext, ".mp4")){
-			strcpy(mimeStr, "video/mp4");
+		else if(!strcmp(ext, ".mkv") || !strcmp(ext, ".mp4")){
+			strcpy(mimeStr, "video/mpeg");
+		}
+		else if(!strcmp(ext, ".avi")){
+			strcpy(mimeStr, "video/avi");
+		}
+		else if(!strcmp(ext, ".wmv")){
+			strcpy(mimeStr, "video/x-ms-wmv");
 		}
 		else if(!strcmp(ext, ".png")){
 			strcpy(mimeStr, "image/png");
@@ -1464,7 +1470,7 @@ static void SendResp_dlnafile(struct upnphttp *h, char *object)
 		captionfh = open(captionPath, O_RDONLY); //자막파일 존재여부 확인
 		if(!(captionfh < 0)){
 			dlog_print(DLOG_INFO, "tdlna_http", "♣ 자막파일 존재[%d] %s", captionfh, captionPath);
-			UrlEncode(captionPath+strlen(HOME_DIR)+1, captionPath); //자막주소 URL인코딩
+			UrlEncode(captionPath, captionPath); //자막주소 URL인코딩
 			strcatf(&str, "CaptionInfo.sec: http://%s:%d/%s\r\n", lan_addr[h->iface].str, runtime_vars.port, captionPath);
 			dlog_print(DLOG_INFO, "tdlna_http", "♣ 자막파일 존재[%d] %s", captionfh, captionPath);
 			close(captionfh);

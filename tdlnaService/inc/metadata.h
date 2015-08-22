@@ -5,12 +5,12 @@
 
 typedef struct meta_struct{
 	int 	type;			// 오디오(1), 비디오(2), 사진(3)
-	char	title[64];			// 제목
-	char	extension[8];		// 확장자
-	char 	artist[64];		// 아티스트
+	char	title[128];			// 제목
+	char	extension[10];		// 확장자
+	char 	artist[128];		// 아티스트
 	char 	path[512];			// 경로
 	char 	thumbnail_path[512];// 경로
-	unsigned int duration;		// 재생 시간
+	unsigned long duration;		// 재생 시간
 	unsigned int width;			// 넓이
 	unsigned int height;		// 높이
 	unsigned int bitrate;		// 품질 ex)오디오 비트레이트(192Kbps, 128Kbps..)
