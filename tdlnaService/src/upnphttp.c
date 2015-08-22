@@ -1,3 +1,5 @@
+#define _LARGEFILE_SOURCE
+#define _LARGEFILE64_SOURCE
 
 #include <stdlib.h>
 #include <unistd.h>
@@ -41,7 +43,7 @@ static void ProcessHttpQuery_upnphttp(struct upnphttp * h);
 static void ParseHttpHeaders(struct upnphttp * h);
 static void start_dlna_header(struct string_s *str, int respcode, const char *tmode, const char *mime);
 static int send_data(struct upnphttp * h, char * header, size_t size, int flags);
-static void send_file(struct upnphttp * h, int sendfd, off_t offset, off_t end_offset);
+static void send_file(struct upnphttp * h, int sendfd, off64_t offset, off64_t end_offset);
 static void sendXMLdesc(struct upnphttp * h, int mode);
 static void SendResp_icon(struct upnphttp * h);
 
@@ -1384,7 +1386,7 @@ static void SendResp_dlnafile(struct upnphttp *h, char *object)
 //	char buf[128];
 //	char **result;
 //	int rows, ret;
-	off_t total, offset, size;
+	off64_t total, offset, size;
 //	int64_t id;
 	int sendfh, captionfh;
 	uint32_t dlna_flags = DLNA_FLAG_DLNA_V1_5|DLNA_FLAG_HTTP_STALLING|DLNA_FLAG_TM_B;
@@ -1432,8 +1434,8 @@ static void SendResp_dlnafile(struct upnphttp *h, char *object)
 		dlog_print(DLOG_ERROR, "tdlna_http", "http로 요청한 파일을 로컬에서 열지못함 ㅠ %s", last_file.path);
 		goto error;
 	}
-	size = lseek(sendfh, 0, SEEK_END);
-	lseek(sendfh, 0, SEEK_SET); //파일사이즈 구하기
+	size = lseek64(sendfh, 0, SEEK_END);
+	lseek64(sendfh, 0, SEEK_SET); //파일사이즈 구하기
 	if(size < 0){
 		dlog_print(DLOG_ERROR, "tdlna_http", "fileSize: %jd", (intmax_t)size);
 		Send500(h);
@@ -1584,10 +1586,10 @@ send_data(struct upnphttp * h, char * header, size_t size, int flags)
 
 //파일 스트림에서 네트워크 스트림으로 기록
 static void
-send_file(struct upnphttp * h, int sendfd, off_t offset, off_t end_offset)
+send_file(struct upnphttp * h, int sendfd, off64_t offset, off64_t end_offset)
 {
-	off_t send_size;
-	off_t ret;
+	off64_t send_size;
+	off64_t ret;
 	char *buf = NULL;
 #if HAVE_SENDFILE
 	int try_sendfile = 1;
@@ -1600,7 +1602,7 @@ send_file(struct upnphttp * h, int sendfd, off_t offset, off_t end_offset)
 		if( !buf )
 			buf = malloc(MIN_BUFFER_SIZE);
 		send_size = (((end_offset - offset) < MIN_BUFFER_SIZE) ? (end_offset - offset + 1) : MIN_BUFFER_SIZE);
-		lseek(sendfd, offset, SEEK_SET);
+		lseek64(sendfd, offset, SEEK_SET);
 		ret = read(sendfd, buf, send_size);
 		if( ret == -1 ) {
 		//	DPRINTF(E_DEBUG, L_HTTP, "read error :: error no. %d [%s]\n", errno, strerror(errno));
