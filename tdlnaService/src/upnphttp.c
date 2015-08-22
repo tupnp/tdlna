@@ -22,10 +22,7 @@
 #include "upnpglobalvars.h"
 #include "upnpsoap.h"
 #include "upnpevents.h"
-
-//#define _LARGEFILE_SOURCE
-//#define _FILE_OFFSET_BITS 64
-
+#include "metadata.h"
 
 #define MAX_BUFFER_SIZE 2147483647
 #define MIN_BUFFER_SIZE 65536
@@ -163,6 +160,32 @@ char* UrlEncode(char *str, char *result){
 	strcpy(result, encstr);
 	return encstr;
 }
+
+//파일 확장명 비교
+static int FileExtCmp (char *filename, char *ext)
+{
+
+	int i, ext_len, filename_len, cnt=0;
+
+	ext_len = strlen(ext); //확장자 길이
+	filename_len = strlen(filename); //주어진 파일명 길이
+
+	//확장명이 파일명보다 길 경우 리턴
+	if(ext_len > filename_len)
+		return 0;
+
+	//파일명 끝에서 부터 확장명과 비교
+	for(i = ext_len-1; i > 0; i--){
+		if(ext[i] == filename[--filename_len])
+		cnt++;
+	}
+
+	if(cnt == ext_len-1)
+		return 1;
+	else
+		return 0;
+}
+
 
 void Process_upnphttp(struct upnphttp * h)
 {
@@ -628,23 +651,7 @@ static void ProcessHttpQuery_upnphttp(struct upnphttp * h)
 			{
 				dlog_print(DLOG_DEBUG, "tdlna_http", "ConnectionMgr.xml 요청 수신 (%s)", inet_ntoa(h->clientaddr));
 				sendXMLdesc(h, 2);
-			}/*
-			else if(strcmp(X_MS_MEDIARECEIVERREGISTRAR_PATH, HttpUrl) == 0)
-			{
-				sendXMLdesc(h, genX_MS_MediaReceiverRegistrar);
 			}
-			else if(strncmp(HttpUrl, "/Thumbnails/", 12) == 0)	//썸네일
-			{
-			//	SendResp_thumbnail(h, HttpUrl+12);
-			}
-			else if(strncmp(HttpUrl, "/AlbumArt/", 10) == 0)		//앨범 아트
-			{
-			//	SendResp_albumArt(h, HttpUrl+10);
-			}
-			else if(strncmp(HttpUrl, "/Resized/", 9) == 0)		//크기 조정
-			{
-			//	SendResp_resizedimg(h, HttpUrl+9);
-			}*/
 			else if(strncmp(HttpUrl, "/icons/", 7) == 0)			//아이콘
 			{
 				//strcpy(filePath, HOME_DIR);
@@ -653,17 +660,34 @@ static void ProcessHttpQuery_upnphttp(struct upnphttp * h)
 				SendResp_icon(h); //아이콘 데이터 보내기
 				dlog_print(DLOG_DEBUG, "tdlna_http", "아이콘 파일 요청처리 (%s)", HttpUrl, inet_ntoa(h->clientaddr));
 			}
-			/*else if(strncmp(HttpUrl, "/Captions/", 10) == 0)		//캡션
-			{
-			//	SendResp_caption(h, HttpUrl+10);
-			}
-			else if(strncmp(HttpUrl, "/status", 7) == 0)			//상태
-			{
-			//	SendResp_presentation(h);
-			}*/
 			else if(strcmp(HttpUrl, "/") == 0)
 			{
 				Send404(h);
+			}
+			else if(FileExtCmp(HttpUrl, "ALBUM")){ //mp3 앨범아트 요청시
+				_META* mData;
+				int mRet;
+				char* mPtr;
+
+				UrlDecode(HttpUrl, HttpUrl+strlen(HttpUrl), HttpUrl);
+				mPtr = strstr(HttpUrl, ".ALBUM");
+
+				if(mPtr == NULL){
+					Send404(h);
+					return;
+				}
+				*mPtr = '\0'; //확장자인 .ALBUM을 제거한다
+
+				mRet = Meta_Get_from_path(NULL, strcat(HttpUrl,"%"), 1, &mData); //파일명으로 미디어 메타정보를 가져온 후
+				dlog_print(DLOG_ERROR, "tdlna_http", "경로: %s", HttpUrl);
+				if(mRet < 1) {
+					free(mData);
+					Send404(h);
+				}else{
+					strcpy(HttpUrl, mData[0].thumbnail_path); //섬네일 이미지 경로로 파일을열어 보내준다.
+					SendResp_dlnafile(h, HttpUrl); //파일요청 처리
+					free(mData);
+				}
 			}
 			else
 			{
@@ -1265,6 +1289,7 @@ void BuildHeader_upnphttp(struct upnphttp * h, int respcode,
 	}
 }
 
+
 //확장자 대문자->소문자
 void strLwr(char* str){
 	int i;
@@ -1396,7 +1421,7 @@ static void SendResp_dlnafile(struct upnphttp *h, char *object)
 
 	sendfh = open(last_file.path, O_RDONLY); //로컬 파일을 여는부분
 	
-	SimpleGetMimeStr(last_file.mime, object); //mimetype구하기
+	SimpleGetMimeStr(last_file.mime, last_file.path); //mimetype구하기
 
 	dlog_print(DLOG_DEBUG, "tdlna_http", "HTTP MIME = %s", last_file.mime);
 	//strcpy(last_file.dlna,"DLNA.ORG_PN=AVC_MP4_HP_HD_AAC;");

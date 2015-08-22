@@ -544,7 +544,7 @@ set_filter_flags(char *filter, struct upnphttp *h)
 }
 
 //파일 확장명 비교
-int FileExtCmp (char *filename, char *ext)
+static int FileExtCmp (char *filename, char *ext)
 {
 
 	int i, ext_len, filename_len, cnt=0;
@@ -781,6 +781,8 @@ BrowseContentDirectory(struct upnphttp * h, const char * action)
 			//--- temp문자열에 각 파일의 xml요소 제작 -----
 			mUrlEncode(items[i].path, encodedFileName);
 			ProcessSpecialCharacter(items[i].title);
+			ProcessSpecialCharacter(items[i].genre);
+			ProcessSpecialCharacter(items[i].album_name);
 
 			//[duration] 시간 형식 /*재생시간 0:08:52.608*/
 			msec = items[i].duration % 1000;
@@ -799,6 +801,7 @@ BrowseContentDirectory(struct upnphttp * h, const char * action)
 					timeStr, /*재생시간 0:08:52.608*/
 					items[i].bitrate,   /*오디오 비트레이트*/
 					lan_addr[0].str, runtime_vars.port, encodedFileName, /*미디어주소*/
+					lan_addr[0].str, runtime_vars.port, items[i].thumbnail_path,  /*썸네일주소*/
 					lan_addr[0].str, runtime_vars.port, items[i].thumbnail_path); /*썸네일주소*/
 
 			strcat(str.data, temp); //각 파일에 대한 xml코드 이어붙임

@@ -65,6 +65,7 @@
 "&lt;upnp:class&gt;object.item.audioItem.musicTrack&lt;/upnp:class&gt;"\
 "&lt;res protocolInfo=\"http-get:*:audio/mpeg:DLNA.ORG_PN=MP3;DLNA.ORG_OP=01;DLNA.ORG_FLAGS=01500000000000000000000000000000\""\
 " size=\"%lld\" duration=\"%s\" bitrate=\"%d\" &gt;http://%s:%d%s&lt;/res&gt;"\
+"&lt;res protocolInfo=&quot;http-get:*:image/jpeg:DLNA.ORG_PN=JPEG_TN;DLNA.ORG_OP=01;DLNA.ORG_CI=1&quot; &gt;http://%s:%d%s&lt;/res&gt;"\
 "&lt;upnp:albumArtURI dlna:profileID=\"JPEG_TN\" xmlns:dlna=\"urn:schemas-dlna-org:metadata-1-0/\"&gt;http://%s:%d%s&lt;/upnp:albumArtURI&gt;"\
 "&lt;/item&gt;"
 
