@@ -10,217 +10,224 @@
 
 struct client_type_s client_types[] =
 {
-	{ 0,
-	  0,
-	  "Unknown",
-	  NULL,
-	  EMatchNone
-	},
+		{ 0,
+				0,
+				"Unknown",
+				NULL,
+				EMatchNone
+		},
 
-	{ EXbox,
-	  FLAG_MIME_AVI_AVI | FLAG_MS_PFS,
-	  "Xbox 360",
-	  "Xbox/",
-	  EUserAgent
-	},
+		{ EXbox,
+				FLAG_MIME_AVI_AVI | FLAG_MS_PFS,
+				"Xbox 360",
+				"Xbox/",
+				EUserAgent
+		},
 
-	{ EPS3,
-	  FLAG_DLNA | FLAG_MIME_AVI_DIVX,
-	  "PLAYSTATION 3",
-	  "PLAYSTATION",
-	  EUserAgent
-	},
+		{ EPS3,
+				FLAG_DLNA | FLAG_MIME_AVI_DIVX,
+				"PLAYSTATION 3",
+				"PLAYSTATION",
+				EUserAgent
+		},
 
-	{ EPS3,
-	  FLAG_DLNA | FLAG_MIME_AVI_DIVX,
-	  "PLAYSTATION 3",
-	  "PLAYSTATION 3",
-	  EXAVClientInfo
-	},
+		{ EPS3,
+				FLAG_DLNA | FLAG_MIME_AVI_DIVX,
+				"PLAYSTATION 3",
+				"PLAYSTATION 3",
+				EXAVClientInfo
+		},
 
-	/* Samsung Series [CDE] BDPs and TVs must be separated, or some of our
-	 * advertised extra features trigger a folder browsing bug on BDPs. */
-	/* User-Agent: DLNADOC/1.50 SEC_HHP_BD-D5100/1.0 */
-	{ ESamsungSeriesCDEBDP,
-	  FLAG_SAMSUNG | FLAG_DLNA | FLAG_NO_RESIZE,
-	  "Samsung Series [CDEF] BDP",
-	  "SEC_HHP_BD",
-	  EUserAgent
-	},
+		/* Samsung Series [CDE] BDPs and TVs must be separated, or some of our
+		 * advertised extra features trigger a folder browsing bug on BDPs. */
+		/* User-Agent: DLNADOC/1.50 SEC_HHP_BD-D5100/1.0 */
+		{ ESamsungSeriesCDEBDP,
+				FLAG_SAMSUNG | FLAG_DLNA | FLAG_NO_RESIZE,
+				"Samsung Series [CDEF] BDP",
+				"SEC_HHP_BD",
+				EUserAgent
+		},
 
-	/* User-Agent: DLNADOC/1.50 SEC_HHP_[TV]UE40D7000/1.0 */
-	/* User-Agent: DLNADOC/1.50 SEC_HHP_ Family TV/1.0 */
-	{ ESamsungSeriesCDE,
-	  FLAG_SAMSUNG | FLAG_DLNA | FLAG_NO_RESIZE,
-	  "Samsung Series [CDEF]",
-	  "SEC_HHP_",
-	  EUserAgent
-	},
+		/* User-Agent: DLNADOC/1.50 SEC_HHP_[TV]UE40D7000/1.0 */
+		/* User-Agent: DLNADOC/1.50 SEC_HHP_ Family TV/1.0 */
+		{ ESamsungSeriesCDE,
+				FLAG_SAMSUNG | FLAG_DLNA | FLAG_NO_RESIZE,
+				"Samsung Series [CDEF]",
+				"SEC_HHP_",
+				EUserAgent
+		},
 
-	{ ESamsungSeriesA,
-	  FLAG_SAMSUNG | FLAG_DLNA | FLAG_NO_RESIZE,
-	  "Samsung Series A",
-	  "SamsungWiselinkPro",
-	  EUserAgent
-	},
+		{ ESamsungSeriesA,
+				FLAG_SAMSUNG | FLAG_DLNA | FLAG_NO_RESIZE,
+				"Samsung Series A",
+				"SamsungWiselinkPro",
+				EUserAgent
+		},
 
-	{ ESamsungSeriesB,
-	  FLAG_SAMSUNG | FLAG_DLNA | FLAG_NO_RESIZE,
-	  "Samsung Series B",
-	  "Samsung DTV DMR",
-	  EModelName
-	},
+		{ ESamsungSeriesB,
+				FLAG_SAMSUNG | FLAG_DLNA | FLAG_NO_RESIZE,
+				"Samsung Series B",
+				"Samsung DTV DMR",
+				EModelName
+		},
 
-	/* User-Agent: Panasonic MIL DLNA CP UPnP/1.0 DLNADOC/1.50 */
-	{ EPanasonic,
-	  FLAG_DLNA | FLAG_FORCE_SORT,
-	  "Panasonic",
-	  "Panasonic",
-	  EUserAgent
-	},
+		/* User-Agent: Panasonic MIL DLNA CP UPnP/1.0 DLNADOC/1.50 */
+		{ EPanasonic,
+				FLAG_DLNA | FLAG_FORCE_SORT,
+				"Panasonic",
+				"Panasonic",
+				EUserAgent
+		},
 
-	/* User-Agent: IPI/1.0 UPnP/1.0 DLNADOC/1.50 */
-	{ ENetFrontLivingConnect,
-	  FLAG_DLNA | FLAG_FORCE_SORT | FLAG_CAPTION_RES,
-	  "NetFront Living Connect",
-	  "IPI/1",
-	  EUserAgent
-	},
+		/* User-Agent: IPI/1.0 UPnP/1.0 DLNADOC/1.50 */
+		{ ENetFrontLivingConnect,
+				FLAG_DLNA | FLAG_FORCE_SORT | FLAG_CAPTION_RES,
+				"NetFront Living Connect",
+				"IPI/1",
+				EUserAgent
+		},
 
-	{ EDenonReceiver,
-	  FLAG_DLNA,
-	  "Denon Receiver",
-	  "bridgeCo-DMP/3",
-	  EUserAgent
-	},
+		{ EDenonReceiver,
+				FLAG_DLNA,
+				"Denon Receiver",
+				"bridgeCo-DMP/3",
+				EUserAgent
+		},
 
-	{ EFreeBox,
-	  FLAG_RESIZE_THUMBS,
-	  "FreeBox",
-	  "fbxupnpav/",
-	  EUserAgent
-	},
+		{ EFreeBox,
+				FLAG_RESIZE_THUMBS,
+				"FreeBox",
+				"fbxupnpav/",
+				EUserAgent
+		},
 
-	{ EPopcornHour,
-	  FLAG_MIME_FLAC_FLAC,
-	  "Popcorn Hour",
-	  "SMP8634",
-	  EUserAgent
-	},
+		{ EPopcornHour,
+				FLAG_MIME_FLAC_FLAC,
+				"Popcorn Hour",
+				"SMP8634",
+				EUserAgent
+		},
 
-	/* X-AV-Client-Info: av=5.0; cn="Sony Corporation"; mn="Blu-ray Disc Player"; mv="2.0" */
-	/* X-AV-Client-Info: av=5.0; cn="Sony Corporation"; mn="BLU-RAY HOME THEATRE SYSTEM"; mv="2.0"; */
-	/* Sony SMP-100 needs the same treatment as their BDP-S370 */
-	/* X-AV-Client-Info: av=5.0; cn="Sony Corporation"; mn="Media Player"; mv="2.0" */
-	{ ESonyBDP,
-	  FLAG_DLNA,
-	  "Sony BDP",
-	  "mv=\"2.0\"",
-	  EXAVClientInfo
-	},
+		/* X-AV-Client-Info: av=5.0; cn="Sony Corporation"; mn="Blu-ray Disc Player"; mv="2.0" */
+		/* X-AV-Client-Info: av=5.0; cn="Sony Corporation"; mn="BLU-RAY HOME THEATRE SYSTEM"; mv="2.0"; */
+		/* Sony SMP-100 needs the same treatment as their BDP-S370 */
+		/* X-AV-Client-Info: av=5.0; cn="Sony Corporation"; mn="Media Player"; mv="2.0" */
+		{ ESonyBDP,
+				FLAG_DLNA,
+				"Sony BDP",
+				"mv=\"2.0\"",
+				EXAVClientInfo
+		},
 
-	/* User-Agent: Linux/2.6.31-1.0 UPnP/1.0 DLNADOC/1.50 INTEL_NMPR/2.0 LGE_DLNA_SDK/1.5.0 */
-	{ ELGDevice,
-	  FLAG_DLNA | FLAG_CAPTION_RES,
-	  "LG",
-	  "LGE_DLNA_SDK",
-	  EUserAgent
-	},
+		/* User-Agent: Linux/2.6.31-1.0 UPnP/1.0 DLNADOC/1.50 INTEL_NMPR/2.0 LGE_DLNA_SDK/1.5.0 */
+		{ ELGDevice,
+				FLAG_DLNA | FLAG_CAPTION_RES,
+				"LG",
+				"LGE_DLNA_SDK",
+				EUserAgent
+		},
 
-	/* X-AV-Client-Info: av=5.0; cn="Sony Corporation"; mn="BRAVIA KDL-40EX503"; mv="1.7"; */
-	{ ESonyBravia,
-	  FLAG_DLNA,
-	  "Sony Bravia",
-	  "BRAVIA",
-	  EXAVClientInfo
-	},
+		/* X-AV-Client-Info: av=5.0; cn="Sony Corporation"; mn="BRAVIA KDL-40EX503"; mv="1.7"; */
+		{ ESonyBravia,
+				FLAG_DLNA,
+				"Sony Bravia",
+				"BRAVIA",
+				EXAVClientInfo
+		},
 
-	/* X-AV-Client-Info: av=5.0; hn=""; cn="Sony Corporation"; mn="INTERNET TV NSX-40GT 1"; mv="0.1"; */
-	{ ESonyInternetTV,
-	  FLAG_DLNA,
-	  "Sony Internet TV",
-	  "INTERNET TV",
-	  EXAVClientInfo
-	},
+		/* X-AV-Client-Info: av=5.0; hn=""; cn="Sony Corporation"; mn="INTERNET TV NSX-40GT 1"; mv="0.1"; */
+		{ ESonyInternetTV,
+				FLAG_DLNA,
+				"Sony Internet TV",
+				"INTERNET TV",
+				EXAVClientInfo
+		},
 
-	{ ENetgearEVA2000,
-	  FLAG_MS_PFS | FLAG_RESIZE_THUMBS,
-	  "EVA2000",
-	  "Verismo,",
-	  EUserAgent
-	},
+		{ ENetgearEVA2000,
+				FLAG_MS_PFS | FLAG_RESIZE_THUMBS,
+				"EVA2000",
+				"Verismo,",
+				EUserAgent
+		},
 
-	{ EDirecTV,
-	  FLAG_RESIZE_THUMBS,
-	  "DirecTV",
-	  "DIRECTV ",
-	  EUserAgent
-	},
+		{ EDirecTV,
+				FLAG_RESIZE_THUMBS,
+				"DirecTV",
+				"DIRECTV ",
+				EUserAgent
+		},
 
-	{ EToshibaTV,
-	  FLAG_DLNA,
-	  "Toshiba TV",
-	  "UPnP/1.0 DLNADOC/1.50 Intel_SDK_for_UPnP_devices/1.2",
-	  EUserAgent
-	},
+		{ EToshibaTV,
+				FLAG_DLNA,
+				"Toshiba TV",
+				"UPnP/1.0 DLNADOC/1.50 Intel_SDK_for_UPnP_devices/1.2",
+				EUserAgent
+		},
 
-	{ ERokuSoundBridge,
-	  FLAG_MS_PFS | FLAG_AUDIO_ONLY | FLAG_MIME_WAV_WAV | FLAG_FORCE_SORT,
-	  "Roku SoundBridge",
-	  "Roku SoundBridge",
-	  EModelName
-	},
+		{ ERokuSoundBridge,
+				FLAG_MS_PFS | FLAG_AUDIO_ONLY | FLAG_MIME_WAV_WAV | FLAG_FORCE_SORT,
+				"Roku SoundBridge",
+				"Roku SoundBridge",
+				EModelName
+		},
 
-	{ EMarantzDMP,
-	  FLAG_DLNA | FLAG_MIME_WAV_WAV,
-	  "marantz DMP",
-	  "marantz DMP",
-	  EFriendlyNameSSDP
-	},
+		{ EMarantzDMP,
+				FLAG_DLNA | FLAG_MIME_WAV_WAV,
+				"marantz DMP",
+				"marantz DMP",
+				EFriendlyNameSSDP
+		},
 
-	{ EMediaRoom,
-	  FLAG_MS_PFS,
-	  "MS MediaRoom",
-	  "Microsoft-IPTV-Client",
-	  EUserAgent
-	},
+		{ EMediaRoom,
+				FLAG_MS_PFS,
+				"MS MediaRoom",
+				"Microsoft-IPTV-Client",
+				EUserAgent
+		},
 
-	{ ELifeTab,
-	  FLAG_MS_PFS,
-	  "LIFETAB",
-	  "LIFETAB",
-	  EFriendlyName
-	},
+		{ ELifeTab,
+				FLAG_MS_PFS,
+				"LIFETAB",
+				"LIFETAB",
+				EFriendlyName
+		},
 
-	{ EAsusOPlay,
-	  FLAG_DLNA | FLAG_MIME_AVI_AVI | FLAG_CAPTION_RES,
-	  "Asus OPlay Mini/Mini+",
-	  "O!Play",
-	  EUserAgent
-	},
+		{ EAsusOPlay,
+				FLAG_DLNA | FLAG_MIME_AVI_AVI | FLAG_CAPTION_RES,
+				"Asus OPlay Mini/Mini+",
+				"O!Play",
+				EUserAgent
+		},
 
-	{ EBubbleUPnP,
-	  FLAG_CAPTION_RES,
-	  "BubbleUPnP",
-	  "BubbleUPnP",
-	  EUserAgent
-	},
+		{ EBubbleUPnP,
+				FLAG_CAPTION_RES,
+				"BubbleUPnP",
+				"BubbleUPnP",
+				EUserAgent
+		},
 
-	{ EStandardDLNA150,
-	  FLAG_DLNA | FLAG_MIME_AVI_AVI,
-	  "Generic DLNA 1.5",
-	  "DLNADOC/1.50",
-	  EUserAgent
-	},
+		{ EWindowsMediaPlayer,//Windows-Media-Player
+				FLAG_MS_PFS,
+				"Windows-Media-Player",
+				"Windows-Media-Player",
+				EUserAgent
+		},
 
-	{ EStandardUPnP,
-	  0,
-	  "Generic UPnP 1.0",
-	  "UPnP/1.0",
-	  EUserAgent
-	},
+		{ EStandardDLNA150,
+				FLAG_DLNA | FLAG_MIME_AVI_AVI,
+				"Generic DLNA 1.5",
+				"DLNADOC/1.50",
+				EUserAgent
+		},
 
-	{ 0, 0, NULL, 0 }
+		{ EStandardUPnP,
+				0,
+				"Generic UPnP 1.0",
+				"UPnP/1.0",
+				EUserAgent
+		},
+
+		{ 0, 0, NULL, 0 }
 };
 
 struct client_cache_s clients[CLIENT_CACHE_SLOTS];
@@ -240,8 +247,8 @@ get_remote_mac(struct in_addr ip_addr, unsigned char *mac)
 	while (!feof(arp))
 	{
 		matches = fscanf(arp, "%15s 0x%8X 0x%8X %2hhx:%2hhx:%2hhx:%2hhx:%2hhx:%2hhx",
-		                      remote_ip, &hwtype, &flags,
-		                      &mac[0], &mac[1], &mac[2], &mac[3], &mac[4], &mac[5]);
+				remote_ip, &hwtype, &flags,
+				&mac[0], &mac[1], &mac[2], &mac[3], &mac[4], &mac[5]);
 		if (matches != 9)
 			continue;
 		inet_pton(AF_INET, remote_ip, &arp_ent);
@@ -275,8 +282,8 @@ SearchClientCache(struct in_addr addr, int quiet)
 				unsigned char mac[6];
 				if (get_remote_mac(addr, mac) == 0 && memcmp(mac, clients[i].mac, 6) == 0)
 				{
-//					 Same MAC as last time when we were able to identify the client,
-//					  so extend the timeout by another hour.
+					//					 Same MAC as last time when we were able to identify the client,
+					//					  so extend the timeout by another hour.
 					clients[i].age = time(NULL);
 				}
 				else
@@ -311,9 +318,9 @@ AddClientCache(struct in_addr addr, int type)
 		clients[i].type = &client_types[type];		// Client type
 		clients[i].age = time(NULL);				// Client time
 		printf("Added client [%s/%s/%02X:%02X:%02X:%02X:%02X:%02X] to cache slot %d.\n",
-					client_types[type].name, inet_ntoa(clients[i].addr),
-					clients[i].mac[0], clients[i].mac[1], clients[i].mac[2],
-					clients[i].mac[3], clients[i].mac[4], clients[i].mac[5], i);
+				client_types[type].name, inet_ntoa(clients[i].addr),
+				clients[i].mac[0], clients[i].mac[1], clients[i].mac[2],
+				clients[i].mac[3], clients[i].mac[4], clients[i].mac[5], i);
 		return &clients[i];
 	}
 

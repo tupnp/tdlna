@@ -7,11 +7,11 @@ typedef struct meta_struct{
 	int    type;            // 오디오(1), 비디오(2), 사진(3)
 	char   title[128];         // 제목
 	char   extension[10];      // 확장자
-	char    artist[64];         // 아티스트
+	char    artist[128];         // 아티스트
 	char    path[512];         // 경로
 	char    thumbnail_path[512];// 경로
-	char    album_name[64];      // 앨범 이름
-	char    genre[64];         // 장르
+	char    album_name[128];      // 앨범 이름
+	char    genre[128];         // 장르
 	char   date[7][5];         // 날짜 년/월/일/시/분/초
 	unsigned int duration;      // 재생 시간
 	unsigned int width;         // 넓이

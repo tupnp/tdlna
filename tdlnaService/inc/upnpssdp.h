@@ -6,8 +6,7 @@
 
 int OpenAndConfSSDPReceiveSocket(void);
 
-//int OpenAndConfSSDPNotifySocket(struct lan_addr_s *iface);
-int OpenAndConfSSDPNotifySocket(struct lan_addr_s *iface, sssdpr);
+int OpenAndConfSSDPNotifySocket(struct lan_addr_s *iface, int sssdpRcv);
 
 void SendSSDPNotifies(int s, const char *host, unsigned short port, unsigned int lifetime);
 

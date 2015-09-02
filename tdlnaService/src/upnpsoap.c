@@ -49,35 +49,35 @@ strcatf(struct string_s *str, const char *fmt, ...)
 	return ret;
 }
 
-/* Find the first occurrence of p in s, where s is terminated by t */
-static char* strstrc(const char *s, const char *p, const char t)
-{
-	char *endptr;
-	size_t slen, plen;
-
-
-	// strchr - 문자열에서 임의의 문자가 처음으로 발견된 위치를 구합니다.
-	// 문자를 못찾으면 null 반환
-	endptr = strchr(s, t);
-	if (!endptr)
-	{
-		return strstr(s, p);
-	}
-
-	plen = strlen(p);
-	slen = endptr - s;
-	while (slen >= plen)
-	{
-		if (*s == *p && strncmp(s+1, p+1, plen-1) == 0)
-		{
-			return (char*)s;
-		}
-		s++;
-		slen--;
-	}
-
-	return NULL;
-}
+///* Find the first occurrence of p in s, where s is terminated by t */
+//static char* strstrc(const char *s, const char *p, const char t)
+//{
+//	char *endptr;
+//	size_t slen, plen;
+//
+//
+//	// strchr - 문자열에서 임의의 문자가 처음으로 발견된 위치를 구합니다.
+//	// 문자를 못찾으면 null 반환
+//	endptr = strchr(s, t);
+//	if (!endptr)
+//	{
+//		return strstr(s, p);
+//	}
+//
+//	plen = strlen(p);
+//	slen = endptr - s;
+//	while (slen >= plen)
+//	{
+//		if (*s == *p && strncmp(s+1, p+1, plen-1) == 0)
+//		{
+//			return (char*)s;
+//		}
+//		s++;
+//		slen--;
+//	}
+//
+//	return NULL;
+//}
 
 //URL 문자열 인코딩
 char* mUrlEncode(char *str, char *encstr){
@@ -285,7 +285,6 @@ GetSearchCapabilities(struct upnphttp * h, const char * action)
 static void
 GetCurrentConnectionIDs(struct upnphttp * h, const char * action)
 {
-	///* TODO: Use real data. - JM
 	static const char resp[] =
 		"<u:%sResponse "
 		"xmlns:u=\"%s\">"
@@ -304,7 +303,6 @@ GetCurrentConnectionIDs(struct upnphttp * h, const char * action)
 static void
 GetCurrentConnectionInfo(struct upnphttp * h, const char * action)
 {
-	// TODO: Use real data. - JM 
 	static const char resp[] =
 		"<u:%sResponse "
 		"xmlns:u=\"%s\">"
@@ -543,35 +541,42 @@ set_filter_flags(char *filter, struct upnphttp *h)
 	return flags;
 }
 
-//파일 확장명 비교
-static int FileExtCmp (char *filename, char *ext)
-{
-
-	int i, ext_len, filename_len, cnt=0;
-
-	ext_len = strlen(ext); //확장자 길이
-	filename_len = strlen(filename); //주어진 파일명 길이
-
-	//확장명이 파일명보다 길 경우 리턴
-	if(ext_len > filename_len)
-		return 0;
-
-	//파일명 끝에서 부터 확장명과 비교
-	for(i = ext_len-1; i > 0; i--){
-		if(ext[i] == filename[--filename_len])
-		cnt++;
-	}
-
-	if(cnt == ext_len-1)
-		return 1;
-	else
-		return 0;
-}
+////파일 확장명 비교
+//static int FileExtCmp (char *filename, char *ext)
+//{
+//
+//	int i, ext_len, filename_len, cnt=0;
+//
+//	ext_len = strlen(ext); //확장자 길이
+//	filename_len = strlen(filename); //주어진 파일명 길이
+//
+//	//확장명이 파일명보다 길 경우 리턴
+//	if(ext_len > filename_len)
+//		return 0;
+//
+//	//파일명 끝에서 부터 확장명과 비교
+//	for(i = ext_len-1; i > 0; i--){
+//		if(ext[i] == filename[--filename_len])
+//		cnt++;
+//	}
+//
+//	if(cnt == ext_len-1)
+//		return 1;
+//	else
+//		return 0;
+//}
 
 //xml 특수문자 처리
 void ProcessSpecialCharacter(char* str1){
-	int i=0, j=0;
-	char str2[600]= {'\0',};
+	int i=0, j=0, size;
+	char* str2;
+
+	size = strlen(str1);
+	if(size < 1) return;
+	size *= 10;
+
+	str2 = (char*) malloc(size);
+	memset(str2, '\0', size);
 
 	while(str1[i] != '\0'){
 
@@ -596,11 +601,51 @@ void ProcessSpecialCharacter(char* str1){
 			j += 10;
 			i++;
 		}
-
 		str2[j++] = str1[i++];
 	}
 	str2[j] = '\0';
 	strcpy(str1, str2);
+	free(str2);
+}
+
+char *ReplaceAll(char *s, const char *olds, const char *news) {
+	char *result, *sr;
+	size_t i, count = 0;
+	size_t oldlen = strlen(olds); if (oldlen < 1) return s;
+	size_t newlen = strlen(news);
+
+	if (newlen != oldlen) {
+		for (i = 0; s[i] != '\0';) {
+			if (memcmp(&s[i], olds, oldlen) == 0) count++, i += oldlen;
+			else i++;
+		}
+	} else i = strlen(s);
+
+	result = (char *) malloc(i + 1 + count * (newlen - oldlen));
+	if (result == NULL) return NULL;
+
+	sr = result;
+	while (*s) {
+		if (memcmp(s, olds, oldlen) == 0) {
+			memcpy(sr, news, newlen);
+			sr += newlen;
+			s  += oldlen;
+		} else *sr++ = *s++;
+	}
+	*sr = '\0';
+
+	return result;
+}
+void DecodeSpecialCharacter(char* str1){
+	int size;
+	char* str2;
+
+	size = strlen(str1);
+	if(size < 1) return;
+
+	str2 = ReplaceAll(str1, "&amp;", "&");
+	strcpy(str1, str2);
+	free(str2);
 }
 
 static void
@@ -614,13 +659,13 @@ BrowseContentDirectory(struct upnphttp * h, const char * action)
 			CONTENT_DIRECTORY_SCHEMAS;
 
 	char* ptr;
-	char* timeStr[32];
+	char timeStr[32];
 	char temp[8192];
 
 	struct Response args;
 	struct string_s str;
 	int i, ret, hur, min, sec, msec;
-	int audioCnt=0, videoCnt=0, imageCnt=0;
+//	int audioCnt=0, videoCnt=0, imageCnt=0;
 	int totalMatches = 0;
 	const char *ObjectID, *BrowseFlag;
 	char *Filter, *SortCriteria;
@@ -644,7 +689,6 @@ BrowseContentDirectory(struct upnphttp * h, const char * action)
 	Filter = GetValueFromNameValueList(&data, "Filter");
 	BrowseFlag = GetValueFromNameValueList(&data, "BrowseFlag");
 	SortCriteria = GetValueFromNameValueList(&data, "SortCriteria");
-
 
 	if( (ptr = GetValueFromNameValueList(&data, "RequestedCount")) )
 		RequestedCount = atoi(ptr);
@@ -709,25 +753,87 @@ BrowseContentDirectory(struct upnphttp * h, const char * action)
 
 
 	//---- Audio Video Image 각각의 메인 폴더 보여주기 ------------
+	if(!strcmp(ObjectID, "1") || !strcmp(ObjectID, "2") || !strcmp(ObjectID, "3")){
+		//비디오의 폴더목록
+		char* BrowseRoot;
+		char split = '\n';
+		itemCount = 2;
 
-//	if(strcmp(ObjectID, "2") == 0){
-//		//비디오의 폴더목록
-//		char* BrowseRoot;
-//		BrowseRoot = malloc(2048);
-//		sprintf(BrowseRoot, BROWSE_VIDEO_ROOT);
-//		str.off = sprintf(str.data, "%s&gt;\n%s"
-//				"&lt;/DIDL-Lite&gt;</Result>\n"
-//				"<NumberReturned>%u</NumberReturned>\n"
-//				"<TotalMatches>%u</TotalMatches>\n"
-//				"<UpdateID>%u</UpdateID>"
-//				"</u:BrowseResponse>", resp0, BrowseRoot, 2, 2, updateID);
-//		free(BrowseRoot);
-//	}
-	//★★★ 모든 비디오
-	if(strcmp(ObjectID, "2") == 0 || strncmp(ObjectID, "2$", 2) == 0){
+		if(args.client == EWindowsMediaPlayer){
+			split = '\0';
+			itemCount = 1;
+			dlog_print(DLOG_ERROR, "tdlna", "미디어 플레이어 예외처리");
+		}
+
+		BrowseRoot = malloc(2048);
+		if(ObjectID[0] == '1') //Audio
+			sprintf(BrowseRoot, BROWSE_ROOT_ITEM,
+					"1$4", ObjectID[0], "모든 음악", split,
+					"1$14", ObjectID[0], "폴더별 음악");
+		else if(ObjectID[0] == '2') //Video
+			sprintf(BrowseRoot, BROWSE_ROOT_ITEM,
+					"2$8", ObjectID[0], "모든 동영상", split,
+					"2$15", ObjectID[0], "폴더별 동영상");
+		else if(ObjectID[0] == '3') //Image
+			sprintf(BrowseRoot, BROWSE_ROOT_ITEM,
+					"3$B", ObjectID[0], "모든 사진", split,
+					"3$16", ObjectID[0], "폴더별 사진");
+		else
+			goto browse_error;
+
+		str.off = sprintf(str.data, "%s&gt;%s", resp0, BrowseRoot);
+		free(BrowseRoot);
+	}
+	//폴더별 보기 처리
+	else if(!strcmp(ObjectID, "1$14") || !strcmp(ObjectID, "2$15") || !strcmp(ObjectID, "3$16"))
+	{
+		char* folderList;
+		char* fName = NULL;
+		int fNameLen = 0;
+		int folderCnt = 0;
+		int mediaType = 0;
+		char* tok;
+
+		mediaType = ObjectID[0] - '0';
+//		dlog_print(DLOG_WARN,"tdlna_soap", " 미디어타입: %d", mediaType);
+		folderCnt = mediaDirectory_folder(&folderList, mediaType);
+		ProcessSpecialCharacter(folderList);
+
+		tok = strtok(folderList, "|");
+
+		for(i=0; i<folderCnt; i++){
+			if(tok == NULL) break;
+
+			fNameLen = strlen(tok);
+			while(fNameLen--){
+				if(tok[fNameLen] == '/'){
+					fName = &tok[fNameLen+1]; //폴더 끝자리 자르기(최하위폴더명 가져오기)
+					break;
+				}
+			}
+
+			sprintf(temp, BROWSE_FOLDER_ITEM, ObjectID, tok, ObjectID, fName);
+			strcat(str.data, temp);
+
+			tok = strtok(NULL, "|");
+		}
+		itemCount = i;
+		free(folderList);
+	}
+	//★★★  비디오 아이템
+	else if(strncmp(ObjectID, "2$", 2) == 0){
 
 		_META* items;
-		itemCount = Meta_Get_from_path(ServiceAppData, "/%", 2, &items); //모든 폴더의 비디오를 구해온다.
+
+		if(!strncmp(ObjectID, "2$15$", 5))
+		{ //폴더별 보기시
+			char fullPathQury[512];
+			sprintf(fullPathQury, "%s%%", ObjectID+5);
+			DecodeSpecialCharacter(fullPathQury); //&같은 특수문자 폴더의 경우 변환되어있으므로 원래대로 치환후 쿼리
+			itemCount = Meta_Get_from_path(ServiceAppData, fullPathQury, 2, &items);
+		}
+		else //모든 비디오 (2$8)
+			itemCount = Meta_Get_from_path(ServiceAppData, "/%", 2, &items); //모든 폴더의 비디오를 구해온다.
 
 		for(i=0; i<itemCount; i++){
 
@@ -744,7 +850,7 @@ BrowseContentDirectory(struct upnphttp * h, const char * action)
 			sprintf(timeStr, "%d:%02d:%02d.%03d", hur,min,sec,msec);
 
 			sprintf(temp, BROWSE_VIDEO_ITEM,
-					i, items[i].title, items[i].artist,
+					ObjectID, i ,ObjectID, items[i].title, items[i].artist,
 					items[i].date[0], items[i].date[1], items[i].date[2], items[i].date[3], items[i].date[4], items[i].date[5], /*년월일시분초*/
 					items[i].file_size, /*파일크기*/
 					timeStr, /*재생시간 0:08:52.608*/
@@ -760,27 +866,29 @@ BrowseContentDirectory(struct upnphttp * h, const char * action)
 
 		}//for
 
-		sprintf(temp, "&lt;/DIDL-Lite&gt;</Result>\n"
-				"<NumberReturned>%u</NumberReturned>\n"
-				"<TotalMatches>%u</TotalMatches>\n"
-				"<UpdateID>%u</UpdateID>"
-				"</u:BrowseResponse>", itemCount, itemCount, updateID);
-
-		strcat(str.data, temp); //각 파일에 대한 xml코드 이어붙임
 		free(items);
 	}
 	//★★★ Audio
-	else if(strcmp(ObjectID, "1") == 0 || strncmp(ObjectID, "1$", 2) == 0){
+	else if(strncmp(ObjectID, "1$", 2) == 0){
 
 		_META* items;
-		itemCount = Meta_Get_from_path(ServiceAppData, "/%", 1, &items); //모든 폴더의 음악을 구한다.
-		dlog_print(DLOG_ERROR, "tdlna_soap", "itemCount %d", itemCount);
+
+		if(!strncmp(ObjectID, "1$14$", 5))
+		{ //폴더별 보기시
+			char fullPathQury[512];
+			sprintf(fullPathQury, "%s%%", ObjectID+5);
+			DecodeSpecialCharacter(fullPathQury);
+			itemCount = Meta_Get_from_path(ServiceAppData, fullPathQury, 1, &items);
+		}
+		else //모든 음악 (1$4)
+			itemCount = Meta_Get_from_path(ServiceAppData, "/%", 1, &items);
 
 		for(i=0; i<itemCount; i++){
 
 			//--- temp문자열에 각 파일의 xml요소 제작 -----
 			mUrlEncode(items[i].path, encodedFileName);
 			ProcessSpecialCharacter(items[i].title);
+			ProcessSpecialCharacter(items[i].artist);
 			ProcessSpecialCharacter(items[i].genre);
 			ProcessSpecialCharacter(items[i].album_name);
 
@@ -793,7 +901,7 @@ BrowseContentDirectory(struct upnphttp * h, const char * action)
 			sprintf(timeStr, "%d:%02d:%02d.%03d", hur,min,sec,msec);
 
 			sprintf(temp, BROWSE_AUDIO_ITEM,
-					i, items[i].title,items[i].artist, /*아티스트*/
+					ObjectID, i, ObjectID, items[i].title,items[i].artist, /*아티스트*/
 					items[i].date[0], items[i].date[1], items[i].date[2], items[i].date[3], items[i].date[4], items[i].date[5], /*년월일시분초*/
 					items[i].genre, /*장르*/
 					items[i].album_name, /*앨범명*/
@@ -806,30 +914,33 @@ BrowseContentDirectory(struct upnphttp * h, const char * action)
 
 			strcat(str.data, temp); //각 파일에 대한 xml코드 이어붙임
 
+			//dlog_print(DLOG_ERROR, "tdlna_soap", "오디오 xml제작중...[%d] %s",i, items[i].title);
 		}//for
 
-		sprintf(temp, "&lt;/DIDL-Lite&gt;</Result>\n"
-				"<NumberReturned>%u</NumberReturned>\n"
-				"<TotalMatches>%u</TotalMatches>\n"
-				"<UpdateID>%u</UpdateID>"
-				"</u:BrowseResponse>", itemCount, itemCount, updateID);
-
-		strcat(str.data, temp); //각 파일에 대한 xml코드 이어붙임
 		free(items);
 	}
 	//★★★ Image
-	else if(strcmp(ObjectID, "3") == 0 || strncmp(ObjectID, "3$", 2) == 0){
+	else if(strncmp(ObjectID, "3$", 2) == 0){
 
 		_META* items;
-		itemCount = Meta_Get_from_path(ServiceAppData, "/%", 3, &items); //모든 폴더의 사진을 구해온다.
-		dlog_print(DLOG_ERROR, "tdlna_soap", "itemCount %d", itemCount);
+
+		if(!strncmp(ObjectID, "3$16$", 5))
+		{ //폴더별 보기시
+			char fullPathQury[512];
+			sprintf(fullPathQury, "%s%%", ObjectID+5);
+			DecodeSpecialCharacter(fullPathQury);
+			itemCount = Meta_Get_from_path(ServiceAppData, fullPathQury, 3, &items);
+		}
+		else //모든 사진 (3$B)
+			itemCount = Meta_Get_from_path(ServiceAppData, "/%", 3, &items);
+
 		for(i=0; i<itemCount; i++){
 
 			mUrlEncode(items[i].path, encodedFileName);
 			ProcessSpecialCharacter(items[i].title);
 
 			sprintf(temp, BROWSE_IMAGE_ITEM,
-					i, items[i].title,
+					ObjectID, i, ObjectID, items[i].title,
 					items[i].date[0], items[i].date[1], items[i].date[2], items[i].date[3], items[i].date[4], items[i].date[5], /*년월일시분초*/
 					items[i].file_size, /*파일크기*/
 					items[i].width, items[i].height,  /*해상도 가로세로*/
@@ -840,13 +951,6 @@ BrowseContentDirectory(struct upnphttp * h, const char * action)
 			strcat(str.data, temp); //각 파일에 대한 xml코드 이어붙임
 		}//for
 
-		sprintf(temp, "&lt;/DIDL-Lite&gt;</Result>\n"
-				"<NumberReturned>%u</NumberReturned>\n"
-				"<TotalMatches>%u</TotalMatches>\n"
-				"<UpdateID>%u</UpdateID>"
-				"</u:BrowseResponse>", itemCount, itemCount, updateID);
-
-		strcat(str.data, temp); //각 파일에 대한 xml코드 이어붙임
 		free(items);
 	}
 	else
@@ -856,44 +960,45 @@ BrowseContentDirectory(struct upnphttp * h, const char * action)
 		char* BrowseRoot;
 		BrowseRoot = malloc(1024);
 
-		media_Count(&videoCnt, &imageCnt, &audioCnt, "/%");
-		sprintf(BrowseRoot, BROWSE_ROOT_RESULT, videoCnt, audioCnt, imageCnt); //동영상,음악,사진의 자식 아이템 갯수
+		//media_Count(&videoCnt, &imageCnt, &audioCnt, "/%");
+		sprintf(BrowseRoot, BROWSE_ROOT_DIR, 2, 2, 2); //동영상,음악,사진의 자식 아이템 갯수
 
-		//strcatf(&str, BROWSE_ROOT_RESULT, 0,0,1);
-		str.off = sprintf(str.data, "%s&gt;\n%s"
-				"&lt;/DIDL-Lite&gt;</Result>\n"
-				"<NumberReturned>%u</NumberReturned>\n"
-				"<TotalMatches>%u</TotalMatches>\n"
-				"<UpdateID>%u</UpdateID>"
-				"</u:BrowseResponse>", resp0, BrowseRoot, 3, 3, updateID); // 3, 3
+		str.off = sprintf(str.data, "%s&gt;\n%s", resp0, BrowseRoot);
 
-		//dlog_print(DLOG_DEBUG, "tdlna_soap", "%s", BrowseRoot);
-		dlog_print(DLOG_DEBUG, "tdlna_soap", "브라우즈루트 복사");
+		dlog_print(DLOG_DEBUG, "tdlna_soap", "Borwse Root List");
 
 		free(BrowseRoot);
-
 		//image audio video 3가지 항목
 		args.returned = 3;
 		totalMatches = 3;
+		itemCount = 3;
 	}
 
-			//파일디버깅!!!
-			FILE* dfp;
-			dfp = fopen("/opt/usr/media/tdlnaDbg.txt", "w+");
-			if(dfp == NULL){
-				dlog_print(DLOG_ERROR, "tdlna_soap", "디버그파일 실패");
-				goto browse_error;
-			}
-			fprintf(dfp, "%s", str.data);
-			fclose(dfp);
+
+	sprintf(temp, "&lt;/DIDL-Lite&gt;</Result>\n"
+			"<NumberReturned>%u</NumberReturned>\n"
+			"<TotalMatches>%u</TotalMatches>\n"
+			"<UpdateID>%u</UpdateID>"
+			"</u:BrowseResponse>", itemCount, itemCount, updateID);
+
+	strcat(str.data, temp); //각 파일에 대한 xml코드 이어붙임
+
+//			//파일디버깅!!!
+//			FILE* dfp;
+//			dfp = fopen("/opt/usr/media/tdlnaDbg.txt", "w+");
+//			if(dfp == NULL){
+//				dlog_print(DLOG_ERROR, "tdlna_soap", "디버그파일 실패");
+//				goto browse_error;
+//			}
+//			fprintf(dfp, "%s", str.data);
+//			fclose(dfp);
 
 	str.off = strlen(str.data);
-	dlog_print(DLOG_DEBUG, "tdlna_soap", "----- 최종 Borwse 응답\n%s\n---------------------------------", str.data);
+//	dlog_print(DLOG_DEBUG, "tdlna_soap", "----- 최종 Borwse 응답\n%s\n---------------------------------", str.data);
 
 	BuildSendAndCloseSoapResp(h, str.data, str.off);
 browse_error:
 	ClearNameValueList(&data);
-	//free(orderBy);
 	free(str.data);
 }
 

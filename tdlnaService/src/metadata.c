@@ -34,21 +34,21 @@ void media_Count(int *videoCount,int *imageCount,int *musicCount, char *path){
 	snprintf(buf, BUFLEN, "%s Like '%s' AND %s = %d",MEDIA_PATH, path, MEDIA_TYPE, MEDIA_CONTENT_TYPE_VIDEO);
 	//   snprintf(buf, BUFLEN, "%s Like %s", MEDIA_PATH,"'/opt/usr/media/DCIM/Camera/%'");
 	media_filter_set_condition(filter, buf, collate_type);
-	ret = media_info_get_media_count_from_db(filter, &videoCount);
+	ret = media_info_get_media_count_from_db(filter, videoCount);
 	check_returnValue(ret);
-	dlog_print(DLOG_INFO, "tdlna", "비디오 갯수: %d",videoCount);
+	dlog_print(DLOG_INFO, "tdlna", "비디오 갯수: %d", *videoCount);
 
 	snprintf(buf, BUFLEN, "%s Like '%s' AND %s = %d",MEDIA_PATH, path, MEDIA_TYPE, MEDIA_CONTENT_TYPE_IMAGE);
 	media_filter_set_condition(filter, buf, collate_type);
-	ret = media_info_get_media_count_from_db(filter,&imageCount);
+	ret = media_info_get_media_count_from_db(filter, imageCount);
 	//   check_returnValue(ret);
-	dlog_print(DLOG_INFO, "tdlna", "이미지 갯수: %d",imageCount);
+	dlog_print(DLOG_INFO, "tdlna", "이미지 갯수: %d", *imageCount);
 
 	snprintf(buf, BUFLEN, "%s Like '%s' AND %s = %d",MEDIA_PATH, path, MEDIA_TYPE,MEDIA_CONTENT_TYPE_MUSIC);
 	media_filter_set_condition(filter, buf, collate_type);
-	ret = media_info_get_media_count_from_db(filter,&musicCount);
+	ret = media_info_get_media_count_from_db(filter, musicCount);
 	//   check_returnValue(ret);
-	dlog_print(DLOG_INFO, "tdlna", "음악 갯수: %d",musicCount);
+	dlog_print(DLOG_INFO, "tdlna", "음악 갯수: %d", *musicCount);
 
 	media_content_disconnect();
 	media_filter_destroy(filter);

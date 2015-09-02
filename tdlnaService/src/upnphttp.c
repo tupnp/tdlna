@@ -876,6 +876,7 @@ static void ParseHttpHeaders(struct upnphttp * h)
 						break;
 					}
 				}
+//				dlog_print(DLOG_ERROR, "tdlna_http", "클라이언트: %s",  client_types[i].match);
 			}
 			else if(strncasecmp(line, "X-AV-Client-Info", 16)==0)
 			{
@@ -1024,13 +1025,13 @@ next_header:
 		// This is done because a lot of clients like to send a
 		// different User-Agent with different types of requests. /
 	//serch_client_cache
-//J		h->req_client = SearchClientCache(h->clientaddr, 0);
+		h->req_client = SearchClientCache(h->clientaddr, 0);
 
 	//--Add this client to the cache if it's not there already. /
 	//add_client_cache
 	if (!h->req_client)
 	{
-//J		h->req_client = AddClientCache(h->clientaddr, client);
+		h->req_client = AddClientCache(h->clientaddr, client);
 	}
 	else if (client)
 	{
