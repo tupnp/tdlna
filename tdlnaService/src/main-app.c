@@ -381,6 +381,7 @@ int sendFolder(void *data, char* dir){
 	//미디어 폴더(dir)를 웹앱으로 전달
 	app_data *appdata = data;
 	char sendingDirectory[275];
+	int videoCount=0,musicCount=0,imageCount=0;
 
 	sprintf(sendingDirectory, "%s%s", "folder:", dir);
 	dlog_print(DLOG_INFO, "tdlna", "sendFolder(폴더):%s", dir);
@@ -389,6 +390,21 @@ int sendFolder(void *data, char* dir){
 	RETVM_IF(bundle_add_str(resp_dir, "folder_path", sendingDirectory) != 0,
 			SVC_RES_FAIL, "Failed to add data by key to bundle");
 	_app_send_response(appdata, resp_dir);
+	bundle_free(resp_dir);
+	//폴더 전송 END
+
+	//폴더내 컨텐츠 갯수 전달
+	sprintf(sendingDirectory, "%s%s", dir, "/%");
+	dlog_print(DLOG_INFO, "tdlna", "컨텐츠용 sendFolder:%s", sendingDirectory);
+	media_Count(&videoCount,&imageCount,&musicCount,sendingDirectory);
+	sprintf(sendingDirectory, "%d%c%d%c%d", videoCount,'|',imageCount,'|',musicCount);
+	dlog_print(DLOG_INFO, "tdlna", "sendContents(폴더):%s", sendingDirectory);
+	resp_dir = bundle_create();
+	RETVM_IF(bundle_add_str(resp_dir, "folder_contents", sendingDirectory) != 0,
+			SVC_RES_FAIL, "Failed to add data by key to bundle");
+	_app_send_response(appdata, resp_dir);
+	bundle_free(resp_dir);
+	//컨텐츠 갯수 전달 END
 	return SVC_RES_OK;
 }
 

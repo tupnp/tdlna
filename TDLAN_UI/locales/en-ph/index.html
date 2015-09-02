@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+	<meta name="viewport" content="width=device-width,user-scalable=no"/>
+	<script src="./lib/jquery.js"></script>
+	<script type="text/javascript" src="./lib/tau/mobile/js/tau.js" data-build-remove="false"></script>
+	<link rel="stylesheet"  href="./lib/tau/mobile/theme/default/tau.css">
+
+	<script src="./js/main.js"></script>
+	
+	<title>TDLNA Web </title>
+	<link rel="stylesheet" type="text/css" href="./css/style.css"/>
+</head>
+
+<body>
+    <div data-role="page" id="main">
+        <div data-role="header" data-position="fixed">
+            <h1>T-DLNA</h1>
+        </div><!-- /header -->
+
+        <div data-role="content">
+            <div >
+                <h2>T-DLNA Service</h2>
+                <p>Start Sharing in tizen mobile</p>
+                <p>click the \"SETTING\" text to below, to turn on DLNA service.</p>
+            </div>
+            <div>                    
+                    <ul data-role="listview" style="border-top:1px solid rgba(198, 220, 247, 1);">
+                        <!-- <li><a onclick="serverClick()">SERVER</a></li> -->
+                        <li style="border-top:1px;border-bottom: 1px"><a onclick="settingClick()">SETTING</a></li>
+                    </ul>
+            </div>
+        </div><!-- /content -->
+    </div><!-- /page -->
+</body>
+</html>

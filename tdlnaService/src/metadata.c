@@ -31,8 +31,9 @@ void media_Count(int *videoCount,int *imageCount,int *musicCount, char *path){
 	media_filter_create(&filter);
 	media_content_connect();
 
+	dlog_print(DLOG_INFO, "tdlna", "폴더: %s", path);
 	snprintf(buf, BUFLEN, "%s Like '%s' AND %s = %d",MEDIA_PATH, path, MEDIA_TYPE, MEDIA_CONTENT_TYPE_VIDEO);
-	//   snprintf(buf, BUFLEN, "%s Like %s", MEDIA_PATH,"'/opt/usr/media/DCIM/Camera/%'");
+//	   snprintf(buf, BUFLEN, "%s Like %s", MEDIA_PATH,"'/opt/usr/media/DCIM/Camera/%'");
 	media_filter_set_condition(filter, buf, collate_type);
 	ret = media_info_get_media_count_from_db(filter, videoCount);
 	check_returnValue(ret);
@@ -171,7 +172,7 @@ bool _media_folder_db(media_folder_h folder,void *data){
 	int ret = 0;
 	ret = media_folder_get_folder_id(folder, &folder_id);
 	check_returnValue(ret);
-	dlog_print(DLOG_DEBUG,"tdlna","media_folder ID:%d",folder_id);
+	dlog_print(DLOG_DEBUG,"tdlna","media_folder ID:%s",folder_id);
 	ret = media_folder_get_path(folder,&_folder_path);
 	check_returnValue(ret);
 	dlog_print(DLOG_DEBUG,"tdlna","media Folder_path:%s",_folder_path);

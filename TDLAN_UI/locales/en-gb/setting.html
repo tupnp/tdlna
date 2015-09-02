@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=360, user-scalable=no" />
+<meta name="description" content="T-dlna description" />
+
+<title>T-DLNA Setting</title>
+<link rel="stylesheet" type="text/css"
+	href="./lib/tau/mobile/theme/default/tau.css" />
+<link rel="stylesheet" type="text/css" href="./css/style.css" />
+<script src="./lib/tau/mobile/js/jquery.min.js"></script>
+<script src="./lib/tau/mobile/js/tau.js"></script>
+<script src="./js/config.js"></script>
+<script src="./js/setting.js"></script>
+
+    
+</head>
+
+<body>
+	<div data-role="page" id="setting">
+		<div data-role="header" data-position="fixed">
+			<h1>T-DLNA</h1>
+		</div>
+		<!-- /header -->
+<div id="settingFooter" data-role="footer" style="display:none;" >
+		<div data-role="tabbar">
+			<ul>
+				<li><a onclick="btn_ok()">Save</a></li>
+				<li><a onclick="btn_cancel()">Cancel</a></li>
+			</ul>
+		</div>
+	</div>
+	<!-- /footer -->
+
+
+		<div data-role="content">
+			<div>
+				<ul data-role="listview">
+					<!-- <div data-role="list-divider" align="center">
+						ON/OFF
+					</div> -->
+					<div  data-role="list-divider" align="center" style="background-color:transparent;" >
+					<ul data-role="listview" style="border-bottom:1px solid rgba(198, 220, 247, 1); ">
+							<li style="padding:10pt;">DLNA<span style="float: right;"> 
+							<select	id="serverSwitch" data-role="toggleswitch"	onchange="serverOn(this)">
+										<option value="off"></option>
+										<option value="on"></option>
+								</select>
+							</span>
+							</li>
+						</ul>
+						<div style="min-height: 0px; max-height: 465px; overflow: auto; overflow-x: hidden;">
+						<ul  id="mainList" data-role="listview" style="max-width:360px;" >
+								<li style="line-height: 15px; padding-top:10px">
+									<div id="parent" style="margin-bottom: -5px;">
+										<div style="font-size: 15pt; color: rgba(0, 80, 179, 1); padding: 5px;">Device name</div>
+										<div id="diviceName"
+											style="font-size: 25pt; color: black; padding: 5px;"
+											onclick="changeName()" >name</div>
+
+									</div>
+
+								</li>
+								<!-- style="min-height: 520px; max-height: 420px; max-width: 380px; overflow-y: auto;" -->
+								<li id="folder_list" style="line-height: 15px; border-bottom:1px solid rgba(198, 220, 247, 1);">
+									<div
+										style="font-size: 15pt; color: rgba(0, 80, 179, 1); margin-bottom: -5px; margin-top: -10px; padding: 5px;">Shared folders</div>
+								</li>
+								<!-- <li><a href="setting.html">Section 2</a></li> -->
+						</ul>
+						<ul  id="listParent" data-role="listview" style="max-width:360px;" >
+						</ul>
+						</div>
+					</div>
+					<!-- Server 스위치 listview -->
+
+				</ul>
+			</div>
+			
+</body>
+</html>

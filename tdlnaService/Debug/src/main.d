@@ -1,6 +1,6 @@
 src/main.d: ../src/main.c \
-  C:\Users\Taehyeong\git\tdlna\tdlnaService\inc\main-app.h \
-  C:\Users\Taehyeong\git\tdlna\tdlnaService\inc/metadata.h \
+  C:\Users\smg22_000\git\tdlna_0902\tdlna\tdlnaService\inc\main-app.h \
+  C:\Users\smg22_000\git\tdlna_0902\tdlna\tdlnaService\inc/metadata.h \
   D:/tizen-sdk/tools/smart-build-interface/../../platforms/mobile-2.3/rootstraps/mobile-2.3-device.core/usr/include/media-content\media_content.h \
   D:/tizen-sdk/tools/smart-build-interface/../../platforms/mobile-2.3/rootstraps/mobile-2.3-device.core/usr/include/media-content\media_audio.h \
   D:/tizen-sdk/tools/smart-build-interface/../../platforms/mobile-2.3/rootstraps/mobile-2.3-device.core/usr/include/media-content\media_content_type.h \
@@ -16,9 +16,9 @@ src/main.d: ../src/main.c \
   D:/tizen-sdk/tools/smart-build-interface/../../platforms/mobile-2.3/rootstraps/mobile-2.3-device.core/usr/include/media\metadata_extractor.h \
   D:/tizen-sdk/tools/smart-build-interface/../../platforms/mobile-2.3/rootstraps/mobile-2.3-device.core/usr/include/media\metadata_extractor_type.h
 
-C:\Users\Taehyeong\git\tdlna\tdlnaService\inc\main-app.h:
+C:\Users\smg22_000\git\tdlna_0902\tdlna\tdlnaService\inc\main-app.h:
 
-C:\Users\Taehyeong\git\tdlna\tdlnaService\inc/metadata.h:
+C:\Users\smg22_000\git\tdlna_0902\tdlna\tdlnaService\inc/metadata.h:
 
 D:/tizen-sdk/tools/smart-build-interface/../../platforms/mobile-2.3/rootstraps/mobile-2.3-device.core/usr/include/media-content\media_content.h:
 
