@@ -742,11 +742,11 @@ BrowseContentDirectory(struct upnphttp * h, const char * action)
 	args.str = &str;
 
 	dlog_print(DLOG_WARN,"tdlna_soap", " ObjectID: %s", ObjectID);
-	dlog_print(DLOG_WARN,"tdlna_soap", " RequestedCount: %d", RequestedCount);
-	dlog_print(DLOG_WARN,"tdlna_soap", " StartingIndex: %d", StartingIndex);
-	dlog_print(DLOG_WARN,"tdlna_soap", " BrowseFlag: %s", BrowseFlag);
-	dlog_print(DLOG_WARN,"tdlna_soap", " Filter: %s", Filter);
-	//dlog_print(DLOG_INFO,"tdlna_soap", " SortCriteria: %s", SortCriteria);
+//	dlog_print(DLOG_WARN,"tdlna_soap", " RequestedCount: %d", RequestedCount);
+//	dlog_print(DLOG_WARN,"tdlna_soap", " StartingIndex: %d", StartingIndex);
+//	dlog_print(DLOG_WARN,"tdlna_soap", " BrowseFlag: %s", BrowseFlag);
+//	dlog_print(DLOG_WARN,"tdlna_soap", " Filter: %s", Filter);
+//	//dlog_print(DLOG_INFO,"tdlna_soap", " SortCriteria: %s", SortCriteria);
 
 	//=========================================== Browse Xml 빌드 ==================================
 	strcat(str.data, "&gt;");
@@ -762,7 +762,7 @@ BrowseContentDirectory(struct upnphttp * h, const char * action)
 		if(args.client == EWindowsMediaPlayer){
 			split = '\0';
 			itemCount = 1;
-			dlog_print(DLOG_ERROR, "tdlna", "미디어 플레이어 예외처리");
+			dlog_print(DLOG_DEBUG, "tdlna_soap", "미디어 플레이어 예외처리");
 		}
 
 		BrowseRoot = malloc(2048);

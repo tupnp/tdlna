@@ -85,12 +85,14 @@ bool _media_type_folder_db(media_folder_h folder,char *retPath){
 
 	strcat(retPath, folder_path);
 	strcat(retPath, "|");
+
+	return true;
 }
 
 int mediaDirectory_folder(char** path,int mediaType){//타입별 폴더 리턴
 	filter_h filter = NULL;
-	media_info_h _media_handle;
-	media_folder_h _media_folder;
+//	media_info_h _media_handle;
+//	media_folder_h _media_folder;
 	int ret = 0,mediaCount=0 ;
 	char buf[BUFLEN] = { '\0' };
 	media_content_collation_e collate_type = MEDIA_CONTENT_COLLATE_NOCASE;
@@ -106,17 +108,17 @@ int mediaDirectory_folder(char** path,int mediaType){//타입별 폴더 리턴
 	case 1:
 		snprintf(buf, BUFLEN, "%s = %d", MEDIA_TYPE, MEDIA_CONTENT_TYPE_MUSIC);
 		media_filter_set_condition(filter, buf, collate_type);
-		ret = media_folder_foreach_folder_from_db(filter,_media_type_folder_db,mPath);//DB 검색후 폴더 콜백 호출
+		ret = media_folder_foreach_folder_from_db(filter,(void*)_media_type_folder_db, mPath);//DB 검색후 폴더 콜백 호출
 		break;
 	case 2:
 		snprintf(buf, BUFLEN, "%s = %d", MEDIA_TYPE, MEDIA_CONTENT_TYPE_VIDEO);
 		media_filter_set_condition(filter, buf, collate_type);
-		ret = media_folder_foreach_folder_from_db(filter,_media_type_folder_db,mPath);//DB 검색후 폴더 콜백 호출
+		ret = media_folder_foreach_folder_from_db(filter,(void*)_media_type_folder_db, mPath);//DB 검색후 폴더 콜백 호출
 		break;
 	case 3:
 		snprintf(buf, BUFLEN, "%s = %d", MEDIA_TYPE, MEDIA_CONTENT_TYPE_IMAGE);
 		media_filter_set_condition(filter, buf, collate_type);
-		ret = media_folder_foreach_folder_from_db(filter,_media_type_folder_db,mPath);//DB 검색후 폴더 콜백 호출
+		ret = media_folder_foreach_folder_from_db(filter,(void*)_media_type_folder_db ,mPath);//DB 검색후 폴더 콜백 호출
 		break;
 	default:
 		dlog_print(DLOG_ERROR, "tdlna", "media_Directory ERROR!");
@@ -130,8 +132,8 @@ int mediaDirectory_folder(char** path,int mediaType){//타입별 폴더 리턴
 
 int mediaDirectory_count(int mediaType){//미디어 타입 별 폴더 갯수 리턴
 	filter_h filter = NULL;
-	media_info_h _media_handle;
-	media_folder_h _media_folder;
+//	media_info_h _media_handle;
+//	media_folder_h _media_folder;
 	char buf[BUFLEN] = { '\0' };
 	media_content_collation_e collate_type = MEDIA_CONTENT_COLLATE_NOCASE;
 	media_filter_create(&filter);
@@ -167,7 +169,7 @@ bool _media_folder_db(media_folder_h folder,void *data){
 	char* folder_id;
 	char *_folder_path;
 	int ret = 0;
-	ret = media_folder_get_folder_id(folder, folder_id);
+	ret = media_folder_get_folder_id(folder, &folder_id);
 	check_returnValue(ret);
 	dlog_print(DLOG_DEBUG,"tdlna","media_folder ID:%d",folder_id);
 	ret = media_folder_get_path(folder,&_folder_path);
@@ -179,13 +181,14 @@ bool _media_folder_db(media_folder_h folder,void *data){
 	strcpy(path,_folder_path);
 	sendFolder(data,path);
 	free(path);
+	return true;
 }
 
 void media_Directory(void* data){
 	//미디어 파일이 존재하는 폴더 검색
 	filter_h filter = NULL;
-	media_info_h _media_handle;
-	media_folder_h _media_folder;
+//	media_info_h _media_handle;
+//	media_folder_h _media_folder;
 	int ret = 0 ;
 	char buf[BUFLEN] = { '\0' };
 	media_content_collation_e collate_type = MEDIA_CONTENT_COLLATE_NOCASE;
@@ -469,6 +472,6 @@ int Meta_Get_from_path(void *appData, char *folderPath,int mediaType, _META** re
 		}// END i
 
 		*result = metaList;
-		return media_count;
 	}
+	return media_count;
 }

@@ -74,41 +74,41 @@ static inline void strncpyt(char *dst, const char *src, size_t len)
 	strncpy(dst, src, len);
 	dst[len-1] = '\0';
 }
-
-static char* strstrc(const char *s, const char *p, const char t)
-{
-	char *endptr;
-	size_t slen, plen;
-
-
-	// strchr - 문자열에서 임의의 문자가 처음으로 발견된 위치를 구합니다.
-	// 문자를 못찾으면 null 반환
-	endptr = strchr(s, t);
-	if (!endptr)
-	{
-		return strstr(s, p);
-	}
-
-	plen = strlen(p);
-	slen = endptr - s;
-	while (slen >= plen)
-	{
-		if (*s == *p && strncmp(s+1, p+1, plen-1) == 0)
-		{
-			return (char*)s;
-		}
-		s++;
-		slen--;
-	}
-
-	return NULL;
-}
+//
+//static char* strstrc(const char *s, const char *p, const char t)
+//{
+//	char *endptr;
+//	size_t slen, plen;
+//
+//
+//	// strchr - 문자열에서 임의의 문자가 처음으로 발견된 위치를 구합니다.
+//	// 문자를 못찾으면 null 반환
+//	endptr = strchr(s, t);
+//	if (!endptr)
+//	{
+//		return strstr(s, p);
+//	}
+//
+//	plen = strlen(p);
+//	slen = endptr - s;
+//	while (slen >= plen)
+//	{
+//		if (*s == *p && strncmp(s+1, p+1, plen-1) == 0)
+//		{
+//			return (char*)s;
+//		}
+//		s++;
+//		slen--;
+//	}
+//
+//	return NULL;
+//}
 
 int get_uuid_string(char *buf)
 {
-	unsigned char uuid[16];
-
 	/*
+	char uuid[16];
+
 	if( generate_uuid(uuid) != 0 )
 		return -1;
 
@@ -117,7 +117,7 @@ int get_uuid_string(char *buf)
 	        uuid[9], uuid[10], uuid[11], uuid[12], uuid[13], uuid[14], uuid[15]);
 	buf[36] = '\0';
 	*/
-	sprintf(buf, "12345678-0000-0000-0000-00000000abcd");
+	sprintf(buf, "12345678-0000-0000-0000-00000000abcd"); //default
 	return 0;
 }
 
@@ -265,7 +265,7 @@ error:
 		close(obj->s);
 	free(obj);
 }
-
+/*
 static void
 upnp_event_notify_connect(struct upnp_event_notify * obj)
 {
@@ -282,7 +282,7 @@ upnp_event_notify_connect(struct upnp_event_notify * obj)
 		return;
 	}
 	p = obj->sub->callback;
-	p += 7;	/* http:// */
+	p += 7;	// http://
 	while(*p != '/' && *p != ':' && i < (sizeof(obj->addrstr)-1))
 		obj->addrstr[i++] = *(p++);
 	obj->addrstr[i] = '\0';
@@ -317,7 +317,7 @@ upnp_event_notify_connect(struct upnp_event_notify * obj)
 		}
 	}
 }
-
+*/
 /*
 static void upnp_event_prepare(struct upnp_event_notify * obj)
 {
@@ -424,46 +424,47 @@ upnp_event_process_notify(struct upnp_event_notify * obj)
 		printf("upnp_event_process_notify: unknown state\n");
 	}
 }
-
-void upnpevents_selectfds(fd_set *readset, fd_set *writeset, int * max_fd)
-{
-	struct upnp_event_notify * obj;
-	for(obj = notifylist.lh_first; obj != NULL; obj = obj->entries.le_next)
-	{
-
-		dlog_print(DLOG_INFO, "tdlna","◆◆ upnpevents_selectfds: %p %d %d\n", obj, obj->state, obj->s);
-		if(obj->s >= 0) {
-			switch(obj->state) {
-			case ECreated:
-				upnp_event_notify_connect(obj);
-				dlog_print(DLOG_INFO, "tdlna", "◆◆ upnp_event_notify_connect(obj) - %d", (int)obj->state);
-				/*
-				 enum { ECreated=1,
-	       	   	   EConnecting,
-					   ESending,
-					   EWaitingForResponse,
-					   EFinished,
-					   EError } state;
-				 */
-				if(obj->state != EConnecting)
-					break;
-			case EConnecting:
-			case ESending:
-				FD_SET(obj->s, writeset);
-				if(obj->s > *max_fd)
-					*max_fd = obj->s;
-				break;
-			case EWaitingForResponse:
-				FD_SET(obj->s, readset);
-				if(obj->s > *max_fd)
-					*max_fd = obj->s;
-				break;
-			default:
-				break;
-			}
-		}
-	}
-}
+//
+//void upnpevents_selectfds(fd_set *readset, fd_set *writeset, int * max_fd)
+//{
+//	struct upnp_event_notify * obj;
+//	for(obj = notifylist.lh_first; obj != NULL; obj = obj->entries.le_next)
+//	{
+//
+//		dlog_print(DLOG_INFO, "tdlna","◆◆ upnpevents_selectfds: %p %d %d\n", obj, obj->state, obj->s);
+//		if(obj->s >= 0) {
+//			switch(obj->state) {
+//			case ECreated:
+//				upnp_event_notify_connect(obj);
+//				dlog_print(DLOG_INFO, "tdlna", "◆◆ upnp_event_notify_connect(obj) - %d", (int)obj->state);
+//
+////				enum { ECreated=1,
+////						EConnecting,
+////						ESending,
+////						EWaitingForResponse,
+////						EFinished,
+////						EError } state;
+//
+//				if(obj->state != EConnecting){
+//					break;
+//				}
+//			case EConnecting:
+//			case ESending:
+//				FD_SET(obj->s, writeset);
+//				if(obj->s > *max_fd)
+//					*max_fd = obj->s;
+//				break;
+//			case EWaitingForResponse:
+//				FD_SET(obj->s, readset);
+//				if(obj->s > *max_fd)
+//					*max_fd = obj->s;
+//				break;
+//			default:
+//				break;
+//			}
+//		}
+//	}
+//}
 
 void upnpevents_processfds(fd_set *readset, fd_set *writeset)
 {

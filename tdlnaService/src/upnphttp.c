@@ -160,7 +160,7 @@ char* UrlEncode(char *str, char *result){
 	}
 	encstr[j] = '\0';
 	strcpy(result, encstr);
-	return encstr;
+	return result;
 }
 
 //파일 확장명 비교
@@ -491,7 +491,6 @@ static void ProcessHttpQuery_upnphttp(struct upnphttp * h)
 {
 	char HttpCommand[16];
 	char HttpUrl[512];
-	char filePath[512];
 	char * HttpVer;
 	char * p;
 	int i;
@@ -1170,7 +1169,7 @@ sendXMLdesc(struct upnphttp * h, int mode)
 		break;
 	}
 
-	if(desc < 1)
+	if(len < 1)
 	{
 		dlog_print(DLOG_DEBUG, "tdlna_http", "Failed to generate XML description");
 		Send500(h);
@@ -1461,7 +1460,7 @@ static void SendResp_dlnafile(struct upnphttp *h, char *object)
 		{
 			h->req_RangeEnd = size - 1;
 		}
-		if( (h->req_RangeStart > h->req_RangeEnd) || (h->req_RangeStart < 0) )
+		if( (h->req_RangeStart > h->req_RangeEnd))
 		{
 		//	DPRINTF(E_WARN, L_HTTP, "Specified range was invalid!\n");
 			Send400(h);

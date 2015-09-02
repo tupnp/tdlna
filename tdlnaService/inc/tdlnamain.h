@@ -8,7 +8,4 @@ void setDeviceProperty(void* data);
 void* tdlnamain(void* data);
 void* ssdpAlive(void* data);
 
-static int OpenAndConfHTTPSocket(unsigned short port);
-static void reload_ifaces(int force_notify, int sssdpr);
-
 #endif

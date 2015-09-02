@@ -36,8 +36,8 @@ int serviceOn(void* data){
 	app_data *ad = data;
 	int r;
 
-	if(ad->tdlna_td != NULL){
-		dlog_print(DLOG_ERROR,"tdlna", "이전 실행된 서비스가 정상적으로 종료되지 않았습니다.");
+	if(ad->tdlna_td != 0){
+		dlog_print(DLOG_ERROR,"tdlna", "이전 실행된 서비스가 정상적으로 종료되지 않았습니다. %d", ad->tdlna_td);
 		return 0;
 	}
 
@@ -58,7 +58,7 @@ int serviceOff(void* data){
 
 	if(ad->tdlna_td){
 		r = pthread_join(ad->tdlna_td,  (void *)&status);
-		ad->tdlna_td = NULL;
+		ad->tdlna_td = 0;
 	}
 
 	dlog_print(DLOG_INFO,"tdlna","tdlna 스레드 종료: %d", r);
@@ -69,8 +69,8 @@ void setUUID()
 {
 	   struct ifreq ifr;
 	   int fd;
-	   unsigned char mac[6];
-	   unsigned char buf[13];
+	   char mac[6];
+	   char buf[13];
 	   fd = socket(AF_INET, SOCK_DGRAM, 0);      //소켓 생성
 	   strncpy(ifr.ifr_name, "wlan0", IFNAMSIZ);   //interface의 eth0 등록.
 	   ioctl(fd, SIOCGIFHWADDR, &ifr);            //연결시도.
@@ -126,8 +126,153 @@ void* ssdpAlive(void* data){
 
 	dlog_print(DLOG_INFO, "tdlna", "(Thread) GoodBye~ (ssdp) %d", ad->run_tdlna);
 	SendSSDPGoodbyes(lan_addr[0].snotify);
+
+	return NULL;
 }
 
+
+// http 접속 소켓을 설정한다.
+ static int OpenAndConfHTTPSocket(unsigned short port)
+{
+	int s;
+	int i = 1;
+	struct sockaddr_in listenname;
+
+	// 클라이언트 초기화 및 할당
+	memset(&clients, 0, sizeof(struct client_cache_s));
+
+	s = socket(PF_INET, SOCK_STREAM, 0);
+	if (s < 0)
+	{
+		dlog_print(DLOG_ERROR, "tdlna", "socket(http) error");
+		return -1;
+	}
+
+	if (setsockopt(s, SOL_SOCKET, SO_REUSEADDR, &i, sizeof(i)) < 0)
+	dlog_print(DLOG_ERROR, "tdlna", "setsockopt(http, SO_REUSEADDR): error");
+
+	memset(&listenname, 0, sizeof(struct sockaddr_in));
+	listenname.sin_family = AF_INET;
+	listenname.sin_port = htons(port); //포트설정
+	listenname.sin_addr.s_addr = htonl(INADDR_ANY); //모든 IP로 부터 수신
+
+	if (bind(s, (struct sockaddr *)&listenname, sizeof(struct sockaddr_in)) < 0)
+	{
+		dlog_print(DLOG_ERROR, "tdlna", "bind(http): error\n");
+		close(s);
+		return -1;
+	}
+
+	if (listen(s, 6) < 0)
+	{
+		dlog_print(DLOG_ERROR, "tdlna", "listen(http): error\n");
+		close(s);
+		return -1;
+	}
+
+	return s;
+}
+
+
+//네트워크 인터페이스 설정
+static int getifaddr(const char *ifname, int sssdpr)
+{
+	int s = socket(PF_INET, SOCK_STREAM, 0);
+	struct sockaddr_in addr;
+	struct ifconf ifc;
+	struct ifreq *ifr;
+	char buf[8192];
+	int i, n;
+
+	memset(&ifc, '\0', sizeof(ifc));
+	ifc.ifc_buf = buf;
+	ifc.ifc_len = sizeof(buf);
+
+	if (ioctl(s, SIOCGIFCONF, &ifc) < 0)
+	{
+		dlog_print(DLOG_INFO, "tdlna", "SIOCGIFCONF: %s\n", strerror(errno));
+		close(s);
+		return -1;
+	}
+
+	n = ifc.ifc_len / sizeof(struct ifreq);
+	for (i = 0; i < n; i++)
+	{
+		ifr = &ifc.ifc_req[i];
+		if (ifname && strcmp(ifr->ifr_name, ifname) != 0)
+			continue;
+		if (!ifname &&
+		    (ioctl(s, SIOCGIFFLAGS, ifr) < 0 || (ifr->ifr_ifru.ifru_flags & IFF_LOOPBACK)))
+			continue;
+		if (ioctl(s, SIOCGIFADDR, ifr) < 0)
+			continue;
+		memcpy(&addr, &(ifr->ifr_addr), sizeof(addr));
+		memcpy(&lan_addr[n_lan_addr].addr, &addr.sin_addr, sizeof(lan_addr[n_lan_addr].addr));
+		if (!inet_ntop(AF_INET, &addr.sin_addr, lan_addr[n_lan_addr].str, sizeof(lan_addr[0].str)))
+		{
+			dlog_print(DLOG_INFO, "tdlna", "inet_ntop(): %s\n", strerror(errno));
+			close(s);
+			continue;
+		}
+		if (ioctl(s, SIOCGIFNETMASK, ifr) < 0)
+			continue;
+		memcpy(&addr, &(ifr->ifr_addr), sizeof(addr));
+		memcpy(&lan_addr[n_lan_addr].mask, &addr.sin_addr, sizeof(addr));
+		lan_addr[n_lan_addr].ifindex = if_nametoindex(ifr->ifr_name);
+		lan_addr[n_lan_addr].snotify = OpenAndConfSSDPNotifySocket(&lan_addr[n_lan_addr], sssdpr);
+		if (lan_addr[n_lan_addr].snotify >= 0)
+			n_lan_addr++;
+		if (ifname || n_lan_addr >= MAX_LAN_ADDR)
+			break;
+	}
+	close(s);
+	if (ifname && i == n)
+	{
+		dlog_print(DLOG_ERROR, "tdlna", "Network interface %s not found\n", ifname);
+		return -1;
+	}
+
+	return n_lan_addr;
+}
+
+//인터페이스 초기화
+static void reload_ifaces(int force_notify, int sssdpr)
+{
+	struct in_addr old_addr[4];
+	int i, j;
+
+	memset(&old_addr, 0xFF, sizeof(old_addr));
+	for (i = 0; i < n_lan_addr; i++)
+	{
+		memcpy(&old_addr[i], &lan_addr[i].addr, sizeof(struct in_addr));
+		close(lan_addr[i].snotify);
+	}
+	n_lan_addr = 0;
+
+	i = 0;
+	do {
+		getifaddr(runtime_vars.ifaces[i], sssdpr);
+		i++;
+	} while (runtime_vars.ifaces[i]);
+
+	for (i = 0; i < n_lan_addr; i++)
+	{
+		for (j = 0; j < MAX_LAN_ADDR; j++)
+		{
+			if (memcmp(&lan_addr[i].addr, &old_addr[j], sizeof(struct in_addr)) == 0)
+				break;
+		}
+		//초기 ssdp 패킷을 보낼때 모든 네트워크로 ssdp byebye를 먼저 보낸 후
+		// ssdi alive notifiy를 보낸다.
+		if (force_notify || j == MAX_LAN_ADDR)
+		{
+			dlog_print(DLOG_DEBUG, "tdlna", "Enabling interface %s/%s\n",
+					lan_addr[i].str, inet_ntoa(lan_addr[i].mask));
+			SendSSDPGoodbyes(lan_addr[i].snotify);
+			SendSSDPNotifies(lan_addr[i].snotify, lan_addr[i].str, runtime_vars.port, runtime_vars.notify_interval);
+		}
+	}
+}
 
 //  upnp server main
 void* tdlnamain(void* data)
@@ -220,7 +365,7 @@ void* tdlnamain(void* data)
 			ret = select(max_fd+1, &readset, &writeset, 0, &timeout);
 			if (ret < 0)
 			{
-				//	if(quitting) goto shutdown;
+				if(!ad->run_tdlna) goto shutdown;
 				if(errno == EINTR) continue;
 			}
 
@@ -328,148 +473,5 @@ shutdown:
 		return 0;
 }
 
-
-// http 접속 소켓을 설정한다.
- static int OpenAndConfHTTPSocket(unsigned short port)
-{
-	int s;
-	int i = 1;
-	struct sockaddr_in listenname;
-
-	// 클라이언트 초기화 및 할당
-	memset(&clients, 0, sizeof(struct client_cache_s));
-
-	s = socket(PF_INET, SOCK_STREAM, 0);
-	if (s < 0)
-	{
-		dlog_print(DLOG_ERROR, "tdlna", "socket(http) error");
-		return -1;
-	}
-
-	if (setsockopt(s, SOL_SOCKET, SO_REUSEADDR, &i, sizeof(i)) < 0)
-	dlog_print(DLOG_ERROR, "tdlna", "setsockopt(http, SO_REUSEADDR): error");
-
-	memset(&listenname, 0, sizeof(struct sockaddr_in));
-	listenname.sin_family = AF_INET;
-	listenname.sin_port = htons(port); //포트설정
-	listenname.sin_addr.s_addr = htonl(INADDR_ANY); //모든 IP로 부터 수신
-
-	if (bind(s, (struct sockaddr *)&listenname, sizeof(struct sockaddr_in)) < 0)
-	{
-		dlog_print(DLOG_ERROR, "tdlna", "bind(http): error\n");
-		close(s);
-		return -1;
-	}
-
-	if (listen(s, 6) < 0)
-	{
-		dlog_print(DLOG_ERROR, "tdlna", "listen(http): error\n");
-		close(s);
-		return -1;
-	}
-
-	return s;
-}
-
-
-//네트워크 인터페이스 설정
-static int getifaddr(const char *ifname, int sssdpr)
-{
-	int s = socket(PF_INET, SOCK_STREAM, 0);
-	struct sockaddr_in addr;
-	struct ifconf ifc;
-	struct ifreq *ifr;
-	char buf[8192];
-	int i, n;
-
-	memset(&ifc, '\0', sizeof(ifc));
-	ifc.ifc_buf = buf;
-	ifc.ifc_len = sizeof(buf);
-
-	if (ioctl(s, SIOCGIFCONF, &ifc) < 0)
-	{
-		dlog_print(DLOG_INFO, "tdlna", "SIOCGIFCONF: %s\n", strerror(errno));
-		close(s);
-		return -1;
-	}
-
-	n = ifc.ifc_len / sizeof(struct ifreq);
-	for (i = 0; i < n; i++)
-	{
-		ifr = &ifc.ifc_req[i];
-		if (ifname && strcmp(ifr->ifr_name, ifname) != 0)
-			continue;
-		if (!ifname &&
-		    (ioctl(s, SIOCGIFFLAGS, ifr) < 0 || ifr->ifr_ifru.ifru_flags & IFF_LOOPBACK))
-			continue;
-		if (ioctl(s, SIOCGIFADDR, ifr) < 0)
-			continue;
-		memcpy(&addr, &(ifr->ifr_addr), sizeof(addr));
-		memcpy(&lan_addr[n_lan_addr].addr, &addr.sin_addr, sizeof(lan_addr[n_lan_addr].addr));
-		if (!inet_ntop(AF_INET, &addr.sin_addr, lan_addr[n_lan_addr].str, sizeof(lan_addr[0].str)))
-		{
-			dlog_print(DLOG_INFO, "tdlna", "inet_ntop(): %s\n", strerror(errno));
-			close(s);
-			continue;
-		}
-		if (ioctl(s, SIOCGIFNETMASK, ifr) < 0)
-			continue;
-		memcpy(&addr, &(ifr->ifr_addr), sizeof(addr));
-		memcpy(&lan_addr[n_lan_addr].mask, &addr.sin_addr, sizeof(addr));
-		lan_addr[n_lan_addr].ifindex = if_nametoindex(ifr->ifr_name);
-		lan_addr[n_lan_addr].snotify = OpenAndConfSSDPNotifySocket(&lan_addr[n_lan_addr], sssdpr);
-		if (lan_addr[n_lan_addr].snotify >= 0)
-			n_lan_addr++;
-		if (ifname || n_lan_addr >= MAX_LAN_ADDR)
-			break;
-	}
-	close(s);
-	if (ifname && i == n)
-	{
-		dlog_print(DLOG_ERROR, "tdlna", "Network interface %s not found\n", ifname);
-		return -1;
-	}
-
-	return n_lan_addr;
-}
-
-//인터페이스 초기화
-static void reload_ifaces(int force_notify, int sssdpr)
-{
-	struct in_addr old_addr[4];
-	int i, j;
-
-	memset(&old_addr, 0xFF, sizeof(old_addr));
-	for (i = 0; i < n_lan_addr; i++)
-	{
-		memcpy(&old_addr[i], &lan_addr[i].addr, sizeof(struct in_addr));
-		close(lan_addr[i].snotify);
-	}
-	n_lan_addr = 0;
-
-	i = 0;
-	do {
-		getifaddr(runtime_vars.ifaces[i], sssdpr);
-		i++;
-	} while (runtime_vars.ifaces[i]);
-
-	for (i = 0; i < n_lan_addr; i++)
-	{
-		for (j = 0; j < MAX_LAN_ADDR; j++)
-		{
-			if (memcmp(&lan_addr[i].addr, &old_addr[j], sizeof(struct in_addr)) == 0)
-				break;
-		}
-		//초기 ssdp 패킷을 보낼때 모든 네트워크로 ssdp byebye를 먼저 보낸 후
-		// ssdi alive notifiy를 보낸다.
-		if (force_notify || j == MAX_LAN_ADDR)
-		{
-			dlog_print(DLOG_DEBUG, "tdlna", "Enabling interface %s/%s\n",
-				lan_addr[i].str, inet_ntoa(lan_addr[i].mask));
-			SendSSDPGoodbyes(lan_addr[i].snotify);
-			SendSSDPNotifies(lan_addr[i].snotify, lan_addr[i].str, runtime_vars.port, runtime_vars.notify_interval);
-		}
-	}
-}
 
 

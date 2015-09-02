@@ -552,9 +552,9 @@ void ProcessSSDPRequest(int s, unsigned short port)
 				(strncmp(nt, "urn:schemas-upnp-org:device:MediaRenderer", 41) != 0))
 			return;
 		loc[loc_len] = '\0';
-		if ((strncmp(srv, "Allegro-Software-RomPlug", 24) == 0) || //* Roku
-				(strstr(loc, "SamsungMRDesc.xml") != NULL)/* || //* Samsung TV
-		    (strstrc(srv, "DigiOn DiXiM", '\r') != NULL)*/) //* Marantz Receiver
+		if ((strncmp(srv, "Allegro-Software-RomPlug", 24) == 0) ||
+			(strstr(loc, "SamsungMRDesc.xml") != NULL) || // Samsung TV
+		    (strstr(srv, "DigiOn DiXiM") != NULL))   // Marantz Receiver
 		{
 			//Check if the client is already in cache 
 			struct client_cache_s *client = SearchClientCache(sendername.sin_addr, 1);

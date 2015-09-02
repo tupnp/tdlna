@@ -24,6 +24,7 @@
 
 #include <service_app.h>
 #include <stdlib.h>
+#include <stdio.h>
 #include <dlog.h>
 
 #include <system_settings.h>
@@ -40,10 +41,10 @@ static int _app_send_response(app_data *app, bundle *const msg);
 static int _app_execute_operation(app_data *appdata, req_operation operation_type);
 static int _app_process_received_message(bundle *rec_msg, bundle *resp_msg, req_operation *req_oper);
 static int _on_proxy_client_msg_received_cb(void *data, bundle *const rec_msg);
-static void _media_search_completed_cb(media_content_error_e error,void* user_data);
+//static void _media_search_completed_cb(media_content_error_e error,void* user_data);
 static void get_DeviceID();
 
-char deviceName[33],shared_folder[512];
+char deviceName[64], shared_folder[512];
 
 app_data *app_create()
 {
@@ -174,7 +175,7 @@ static int _app_init(app_data *app)
 
     //tldna 서비스 appdata초기화
     app->run_tdlna = false;
-    app->tdlna_td = NULL;
+    app->tdlna_td = 0;
     get_DeviceID();//기본 기기 아이디값 가져오기
     strcpy(app->deviceName,deviceName);
     return SVC_RES_OK;
@@ -278,7 +279,7 @@ static int _app_execute_operation(app_data *appdata, req_operation operation_typ
     {
 		case REQ_OPER_STATE:
 			dlog_print(DLOG_INFO, "tdlna", "현재 상태 얻기");
-			if ((appdata->run_tdlna) == NULL) {
+			if ((appdata->run_tdlna) == 0) {
 				// 서비스가 꺼져있는 상태라면
 				dlog_print(DLOG_INFO, "tdlna", "서비스 상태 조회 %d", appdata->run_tdlna);
 				resp_key_val = "STATE:OFF";
@@ -317,7 +318,7 @@ static int _app_execute_operation(app_data *appdata, req_operation operation_typ
 
         	if(!(appdata->run_tdlna)){
         		// 서비스가 꺼져있는 상태라면
-        		if(appdata->tdlna_td != NULL){
+        		if(appdata->tdlna_td != 0){
         				dlog_print(DLOG_ERROR,"tdlna", "이전 실행된 서비스가 정상적으로 종료되지 않았습니다.");
         				return 0;
         			}
@@ -347,11 +348,11 @@ static int _app_execute_operation(app_data *appdata, req_operation operation_typ
 			break;
         case REQ_OPER_DEVICE_ID://tDlnaName 주기
 			if(deviceName){
-				strcpy(appdata->deviceName,deviceName);
+				strcpy(appdata->deviceName, deviceName);
 				setDeviceProperty(appdata);//tdlnamain으로 전달
-				sprintf(respStr,"%s%s","tDlnaName/",deviceName);
+				sprintf(respStr, "%s%s", "tDlnaName/", deviceName);
 			}else
-				sprintf(respStr,"%s%s","tDlnaName/","nameError!");
+				sprintf(respStr, "%s%s", "tDlnaName/", "nameError!");
 			resp_key_val = respStr;
 			dlog_print(DLOG_INFO, "tdlna", "resp_key_val값 가져오기 %s",resp_key_val);
 			break;
@@ -393,12 +394,12 @@ int sendFolder(void *data, char* dir){
 
 static void get_DeviceID()
 {
-   char *string_ret[5];
+   char* string_ret[5];
    int ret;
-   ret = system_settings_get_value_string((system_settings_key_e)SYSTEM_SETTINGS_KEY_DEVICE_NAME, &string_ret);
+   ret = system_settings_get_value_string((system_settings_key_e)SYSTEM_SETTINGS_KEY_DEVICE_NAME, &(string_ret[0]));
    dlog_print(DLOG_INFO, "tdlna","%d", ret);
    dlog_print(DLOG_INFO, "tdlna","%s", string_ret[0]);
-   strcpy(deviceName,string_ret[0]);//디바이스 ID
+   strcpy(deviceName, string_ret[0]);//디바이스 ID
 }
 
 
