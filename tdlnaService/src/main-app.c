@@ -31,6 +31,7 @@
 #include <metadata_extractor.h>
 #include <media_content.h>
 
+#define FOLDER_COUNT 1000 //공유폴더 최대 갯수
 // app event callbacks
 static bool _on_create_cb(void *user_data);
 static void _on_terminate_cb(void *user_data);
@@ -45,6 +46,8 @@ static int _on_proxy_client_msg_received_cb(void *data, bundle *const rec_msg);
 static void get_DeviceID();
 
 char deviceName[64], shared_folder[512];
+char sharing_folders[FOLDER_COUNT][512];
+int folder_length=0;
 
 app_data *app_create()
 {
@@ -190,10 +193,13 @@ static int _app_process_received_message(bundle *rec_msg,
     RETVM_IF(!resp_msg, SVC_RES_FAIL,"Response message is NULL");
 
     const char *resp_key_val = NULL;
-    char *rec_key_val = NULL,*rec_share_folder = NULL;
+    char *rec_key_val = NULL,*rec_share_folder = NULL,*rec_unshare_folder = NULL;
+    int res_shared = 0;
+    bool reciveOK = false;
 
-    int res_shared = bundle_get_str(rec_msg, "shared", &rec_share_folder);
-    if (rec_share_folder != NULL) {//폴더수신
+	res_shared = bundle_get_str(rec_msg, "shared", &rec_share_folder);
+    if (res_shared == BUNDLE_ERROR_NONE) {//공유 폴더 수신
+    	reciveOK = true;
     	RETVM_IF(res_shared != BUNDLE_ERROR_NONE, SVC_RES_FAIL, "Failed to get string from shared_bundle");
 		dlog_print(DLOG_INFO ,"tdlna", "공유폴더 수신: %s",rec_share_folder);
 		resp_key_val = "(공유폴더) 수신";
@@ -202,11 +208,25 @@ static int _app_process_received_message(bundle *rec_msg,
 		strcat(shared_folder,"\%");
 		dlog_print(DLOG_INFO ,"tdlna", "공유폴더 저장: %s",shared_folder);
 	}
-    else{
-		int res = bundle_get_str(rec_msg, "command", &rec_key_val);
+
+
+	res_shared = bundle_get_str(rec_msg, "unshared", &rec_unshare_folder);
+	if (res_shared == BUNDLE_ERROR_NONE) {//공유 취소 폴더수신
+		reciveOK = true;
+		RETVM_IF(res_shared != BUNDLE_ERROR_NONE, SVC_RES_FAIL, "Failed to get string from unshared_bundle");
+		dlog_print(DLOG_INFO ,"tdlna", "공유취소폴더 수신: %s",rec_unshare_folder);
+		resp_key_val = "(공유취소폴더) 수신";
+		*req_oper = REQ_UNSHARED_FOLDER;
+		strcpy(shared_folder,rec_unshare_folder+7);
+		strcat(shared_folder,"\%");
+		dlog_print(DLOG_INFO ,"tdlna", "공유취소폴더 저장: %s",rec_unshare_folder);
+	}
+
+    int res = bundle_get_str(rec_msg, "command", &rec_key_val);
+    if (res == BUNDLE_ERROR_NONE){
+    	reciveOK = true;
 		RETVM_IF(res != BUNDLE_ERROR_NONE, SVC_RES_FAIL, "Failed to get string from bundle");
 		dlog_print(DLOG_INFO,"tdlna","웹앱으로 부터 서비스 수신:%s",rec_key_val);
-
 
 		if (strcmp(rec_key_val, "server state") == 0) {//현재 상태 확인 요청
 			dlog_print(DLOG_INFO ,"tdlna", "서비스 상태확인요청");
@@ -254,17 +274,54 @@ static int _app_process_received_message(bundle *rec_msg,
 			resp_key_val = "(getDeviceId)수신";
 			*req_oper = REQ_OPER_DEVICE_ID;
 		}
-		else
-		{
-			resp_key_val = "unsupported";
-			*req_oper = REQ_OPER_NONE;
-		}
     }
+  	if(!reciveOK)
+	{
+    	dlog_print(DLOG_ERROR ,"tdlna", "처리를 못하는 명령");
+		resp_key_val = "unsupported";
+		*req_oper = REQ_OPER_NONE;
+	}
+
     RETVM_IF(bundle_add_str(resp_msg, "server", resp_key_val) != 0, SVC_RES_FAIL, "Failed to add data by key to bundle");
 
     return SVC_RES_OK;
 }
-
+void insertSharingList(){//공유 폴더 리스트 추가
+	//중복 파일 확인
+	//폴더 추가
+	strcpy(sharing_folders[folder_length],shared_folder);
+	folder_length++;
+	if(folder_length > FOLDER_COUNT ){//공유 폴더 갯수 초과시 오류
+		dlog_print(DLOG_ERROR,"tdlna","sharing folder count error!");
+		folder_length--;
+		return;
+	}
+	dlog_print(DLOG_INFO,"tdlna","inserted SharingFolder[%d] : %s",folder_length-1,sharing_folders[folder_length-1]);
+}
+void deleteSharingList(){//공유 폴더 리스트 삭제
+	//탐색
+	int index=0;
+	bool delete_ok=false;
+	for(index = 0 ; index < folder_length ; index++){
+		if(strcmp(sharing_folders[index],shared_folder) == 0 ){
+			delete_ok = true;
+			//폴더 삭제
+			dlog_print(DLOG_INFO,"tdlna","finded folder[%d] : %s",index,sharing_folders[index]);
+			int update_index = 0;
+			for(update_index = index; update_index < folder_length - 1; update_index++ ){
+				//지울 인덱스 부터 값이 저장되어있는 마지막 인덱스 앞 까지
+				//하나씩 위로 땡긴다
+				strcpy(sharing_folders[update_index],sharing_folders[update_index+1]);
+			}
+			strcpy(sharing_folders[folder_length-1],"\0");//마지막것은 삭제
+			folder_length--;
+		}
+	}
+	if(!delete_ok){//삭제 실패
+		dlog_print(DLOG_ERROR,"tdlna","Don't find delete folder : %s",shared_folder);
+		return;
+	}
+}
 static int _app_execute_operation(app_data *appdata, req_operation operation_type)
 {
 	dlog_print(DLOG_INFO ,"tdlna", "_app_execute_operation 실행");
@@ -359,13 +416,20 @@ static int _app_execute_operation(app_data *appdata, req_operation operation_typ
         case REQ_SHARED_FOLDER:
 			resp_key_val = "공유폴더!";
 			dlog_print(DLOG_INFO, "tdlna", "%s 폴더 공유 실행",shared_folder);
-			_META *test;
-			int testC=0;
-			testC= Meta_Get_from_path(appdata,shared_folder,2,&test);
-			dlog_print(DLOG_INFO, "tdlna", "리스트갯수:%d",testC);
-			dlog_print(DLOG_INFO, "tdlna", "리스트 1 :%s",test[1].path);
-			free(test);
+			insertSharingList();
+//			_META *test;
+//			int testC=0;
+//			testC= Meta_Get_from_path(appdata,shared_folder,2,&test);
+//			dlog_print(DLOG_INFO, "tdlna", "리스트갯수:%d",testC);
+//			dlog_print(DLOG_INFO, "tdlna", "리스트 1 :%s",test[1].path);
+//			free(test);
         	break;
+        case REQ_UNSHARED_FOLDER:
+         	resp_key_val = "공유해제 폴더!";
+			dlog_print(DLOG_INFO, "tdlna", "%s 폴더 공유 해제 실행",shared_folder);
+			deleteSharingList();
+         	//공유 해제 폴더 처리 @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+			break;
         default:
             DBG("Unknown request id");
             return SVC_RES_FAIL;

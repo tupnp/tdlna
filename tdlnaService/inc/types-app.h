@@ -33,7 +33,8 @@ typedef enum
     REQ_OPER_STATE,
     REQ_OPER_FOLDER,
     REQ_OPER_DEVICE_ID,
-    REQ_SHARED_FOLDER
+    REQ_SHARED_FOLDER,
+    REQ_UNSHARED_FOLDER
 } req_operation;
 
 #endif /* __TYPES_APP_H__ */
