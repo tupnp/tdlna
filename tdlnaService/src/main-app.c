@@ -322,6 +322,18 @@ void deleteSharingList(){//공유 폴더 리스트 삭제
 		return;
 	}
 }
+bool stateSharingList(char* f_path){//공유 폴더 리스트 삭제
+	//탐색
+	dlog_print(DLOG_INFO,"tdlna","공유 폴더 인지 조회! %s",f_path);
+	int index=0;
+	for(index = 0 ; index < folder_length ; index++){
+		if(strcmp(sharing_folders[index],f_path) == 0 ){
+			dlog_print(DLOG_INFO,"tdlna","finded folder[%d] : %s",index,sharing_folders[index]);
+			return true;//공유중임
+		}
+	}
+	return false;//공유하고 있지 않음
+}
 static int _app_execute_operation(app_data *appdata, req_operation operation_type)
 {
 	dlog_print(DLOG_INFO ,"tdlna", "_app_execute_operation 실행");
@@ -445,9 +457,15 @@ int sendFolder(void *data, char* dir){
 	//미디어 폴더(dir)를 웹앱으로 전달
 	app_data *appdata = data;
 	char sendingDirectory[275];
+	sprintf(sendingDirectory, "%s%s", dir, "%");//공유폴더배열 에 저장시 % 포함되어있음
 	int videoCount=0,musicCount=0,imageCount=0;
-
-	sprintf(sendingDirectory, "%s%s", "folder:", dir);
+	//현재 공유중인 폴더인지 조회
+	if(stateSharingList(sendingDirectory)){//공유 상태임
+		sprintf(sendingDirectory, "%s%s", "*folder:", dir);
+	}else{
+		sprintf(sendingDirectory, "%s%s", "folder:", dir);
+	}
+	//공유폴더 조회 END
 	dlog_print(DLOG_INFO, "tdlna", "sendFolder(폴더):%s", dir);
 	bundle *resp_dir = bundle_create();
 

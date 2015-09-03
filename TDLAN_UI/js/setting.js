@@ -16,6 +16,8 @@
 
 /*jslint devel:true*/
 /*global $, tizen, window, document, history*/
+//X0OmcPEKY7.tdlnaservice 
+//org.tizen.tdlnaservice
 var gServiceAppId = 'X0OmcPEKY7.tdlnaservice',
     gServicePortName = 'SAMPLE_PORT',
     gLocalMessagePortName = 'SAMPLE_PORT_REPLY',
@@ -111,14 +113,21 @@ function addFolder(folder_path){
 	//미디어 경로를 화면에 추가한다
 	'use strict';
 
-	var string = folder_path;
-	var strArray = string.split('/');
-	var listArray = document.getElementsByName("checkFolderLi");
-	var listIndex = listArray.length;
+	var string = folder_path,
+	 	strArray = string.split('/'),
+	 	listArray = document.getElementsByName("checkFolderLi"),
+	 	listIndex = listArray.length,
+	 	imageVal = "false",
+	 	imageSRC = "./lib/tau/mobile/theme/default/images/controls/core_check_bg.png";
 	
+	if(string[0] == "*"){//공유중인것
+		folder_path = string.substring(string.length,1);
+		imageSRC = "./lib/tau/mobile/theme/default/images/controls/core_check_icon.png";
+		imageVal = "true";
+	}
 	var str = 
 		'<li name="folderLi" style="overflow: hidden; min-height: 65px;max-height: 75px; max-width: inherit; padding:5pt;" onclick="chkTrigger(\'checkInputbox'+listIndex+'\',\''+folder_path+'\')">'+
-		'<input id="checkInputbox'+listIndex+'" type="image" value="false" src="./lib/tau/mobile/theme/default/images/controls/core_check_bg.png" class="checkFolder" name="checkFolderLi" onclick="sendShareFolder(this,\''+folder_path+'\')" style="width:20px; padding-bottom:30px;padding-right:5px;">'+
+		'<input id="checkInputbox'+listIndex+'" type="image" value="'+imageVal+'" src="'+imageSRC+'" class="checkFolder" name="checkFolderLi" onclick="sendShareFolder(this,\''+folder_path+'\')" style="width:20px; padding-bottom:30px;padding-right:5px;">'+
 		'<span style="display:inline-block; width:310px; color:black;">'+
 		'<span style="display:inline-block; min-width:160px;max-width:160px">'+
 		'<a style="max-width: inherit; margin: 0px; padding-top: -10px; padding-bottom: -10px;">'+strArray[strArray.length - 1]+'</a></span>'+
