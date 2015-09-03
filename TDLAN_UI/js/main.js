@@ -17,11 +17,6 @@ var init = function () {
 
 $(document).bind( 'pageinit', init );
 
-function click_box(){
-	alert("test");
-	$( ".checked-value" ).text( $( "#checkbox-1" ).prop( "checked" ) );
-}
-
 function serverClick() {
 	window.location.href = "server.html";
 }

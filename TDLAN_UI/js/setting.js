@@ -16,7 +16,7 @@
 
 /*jslint devel:true*/
 /*global $, tizen, window, document, history*/
-var gServiceAppId = 'org.tizen.tdlnaservice',
+var gServiceAppId = 'X0OmcPEKY7.tdlnaservice',
     gServicePortName = 'SAMPLE_PORT',
     gLocalMessagePortName = 'SAMPLE_PORT_REPLY',
     gLocalMessagePort,
@@ -110,21 +110,17 @@ function addFolderContents(count_v,count_i,count_a){
 function addFolder(folder_path){
 	//미디어 경로를 화면에 추가한다
 	'use strict';
-	
-//	var str = '<div style="font-size: 15pt; color: #000000; margin: -10px; padding: 5px;">' + folder_path +'</div>';
-//	$('#folder_list').append(str).listview('refresh');
+
 	var string = folder_path;
 	var strArray = string.split('/');
-//	alert(strArray[strArray.length - 1]);
 	var listArray = document.getElementsByName("checkFolderLi");
 	var listIndex = listArray.length;
-	var str = '<li name="folderLi" style="overflow: hidden; min-height: 65px;max-height: 75px; max-width: inherit; padding:5pt;" onclick="chkTrigger(\'checkInputbox'+listIndex+'\',\''+folder_path+'\')">'+
-	'<input id="checkInputbox'+listIndex+'" type="checkbox"  class="checkFolder" name="checkFolderLi" onclick="sendShareFolder(this,\''+folder_path+'\')">'+'<label for="checkInputbox'+listIndex+'">'+
-//		'<input type="checkbox" name="checkbox-1" id="checkbox-1" onchange="click_box()"/>'+
-//		'<label for="checkbox-1">'+strArray[strArray.length - 1]+'</label>';
-//		'<li name="folderLi" style="overflow: hidden; min-height: 65px;max-height: 75px; max-width: inherit; padding:0px; padding-left:5px;">'+
-		'<span style="display:inline-block; width:330px; color:black;">'+
-		'<span style="display:inline-block; min-width:180px;max-width:180px">'+
+	
+	var str = 
+		'<li name="folderLi" style="overflow: hidden; min-height: 65px;max-height: 75px; max-width: inherit; padding:5pt;" onclick="chkTrigger(\'checkInputbox'+listIndex+'\',\''+folder_path+'\')">'+
+		'<input id="checkInputbox'+listIndex+'" type="image" value="false" src="./lib/tau/mobile/theme/default/images/controls/core_check_bg.png" class="checkFolder" name="checkFolderLi" onclick="sendShareFolder(this,\''+folder_path+'\')" style="width:20px; padding-bottom:30px;padding-right:5px;">'+
+		'<span style="display:inline-block; width:310px; color:black;">'+
+		'<span style="display:inline-block; min-width:160px;max-width:160px">'+
 		'<a style="max-width: inherit; margin: 0px; padding-top: -10px; padding-bottom: -10px;">'+strArray[strArray.length - 1]+'</a></span>'+
 		'<span id="contentsID'+listIndex+'" style="display:inline-block;text-align:right;min-width:150px;max-width:150px;"><a class="vedio">v:1</a>'+
 		'<a class="image"> i:1</a>'+
@@ -135,36 +131,19 @@ function addFolder(folder_path){
 	$('#listParent').append(str).listview('refresh');
 }
 
-//function click_box(){
-//	alert($( "#checkbox-1" ).prop( "checked" ));
-////	$( ".checked-value" ).text( $( "#checkbox-1" ).prop( "checked" ) );
-//}
-
-function chkTrigger(ID,path){
-//	var flag;
-//	 if($("input:checkbox[id='"+ID+"']").prop("checked")){//체크되어있다면
-//		 alert("li 클릭true id:"+ID);
-//		 $("input:checkbox[id='"+ID+"']").attr("checked", false);
-//		 gRemoteMessagePort.sendMessage([{ key: 'unshared', value: path }],gLocalMessagePort);
-//	 }else if(!$("input:checkbox[id='"+ID+"']").prop("checked")){
-//		 alert("li 클릭false id :"+ID);
-//		 $("input:checkbox[id='"+ID+"']").attr("checked", true);
-//		 gRemoteMessagePort.sendMessage([{ key: 'shared', value: path }],gLocalMessagePort);
-//	 }
-
-	
-//	 document.getElementById(ID).src = document.getElementById(ID).src;
-}
 
 function sendShareFolder(chkbox,shareFolder){
 	'use strict';
-//	alert(shareFolder.text);
-//	var folder = shareFolder.text;
 	var folder = shareFolder;
-	if(chkbox.checked==true){
+	var check = chkbox.value;
+	if(check=="false"){
 		gRemoteMessagePort.sendMessage([{ key: 'shared', value: folder }],gLocalMessagePort);
+		chkbox.setAttribute( "src", "./lib/tau/mobile/theme/default/images/controls/core_check_icon.png" );
+		chkbox.setAttribute( "value", "true" );
 	}else{
 		gRemoteMessagePort.sendMessage([{ key: 'unshared', value: folder }],gLocalMessagePort);
+		chkbox.setAttribute( "src", "./lib/tau/mobile/theme/default/images/controls/core_check_bg.png" );
+		chkbox.setAttribute( "value", "false" );
 	}
 }
 
