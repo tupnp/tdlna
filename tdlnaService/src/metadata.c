@@ -254,7 +254,7 @@ int Meta_Get_from_path(void *appData, char *folderPath, int mediaType, _META** r
 	_META* metaList = NULL;
 	filter_h filter = NULL;
 	media_content_collation_e collate_type = MEDIA_CONTENT_COLLATE_NOCASE;
-	media_content_order_e order_type = MEDIA_CONTENT_ORDER_DESC;
+	media_content_order_e order_type = MEDIA_CONTENT_ORDER_ASC;
 
 	media_filter_create(&filter);
 
@@ -346,7 +346,7 @@ int Meta_Get_from_path(void *appData, char *folderPath, int mediaType, _META** r
 				continue;
 			}
 
-			ret = media_info_get_display_name(media_handle, &media_name);
+			ret = media_info_get_title(media_handle, &media_name);
 			if(ret == MEDIA_CONTENT_ERROR_NONE){
 				strcpy(metaData.title,media_name);
 			}

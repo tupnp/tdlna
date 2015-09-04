@@ -18,7 +18,7 @@
 /*global $, tizen, window, document, history*/
 //X0OmcPEKY7.tdlnaservice 
 //org.tizen.tdlnaservice
-var gServiceAppId = 'X0OmcPEKY7.tdlnaservice',
+var gServiceAppId = 'org.tizen.tdlnaservice',
     gServicePortName = 'SAMPLE_PORT',
     gLocalMessagePortName = 'SAMPLE_PORT_REPLY',
     gLocalMessagePort,

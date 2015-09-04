@@ -457,10 +457,9 @@ int sendFolder(void *data, char* dir){
 	//미디어 폴더(dir)를 웹앱으로 전달
 	app_data *appdata = data;
 	char sendingDirectory[275];
-	sprintf(sendingDirectory, "%s%s", dir, "%");//공유폴더배열 에 저장시 % 포함되어있음
 	int videoCount=0,musicCount=0,imageCount=0;
 	//현재 공유중인 폴더인지 조회
-	if(stateSharingList(sendingDirectory)){//공유 상태임
+	if(stateSharingList(dir)){//공유 상태임
 		sprintf(sendingDirectory, "%s%s", "*folder:", dir);
 	}else{
 		sprintf(sendingDirectory, "%s%s", "folder:", dir);
