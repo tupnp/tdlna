@@ -104,6 +104,7 @@ static inline void strncpyt(char *dst, const char *src, size_t len)
 //	return NULL;
 //}
 
+//임의의 uuid 리턴
 int get_uuid_string(char *buf)
 {
 	/*
@@ -113,12 +114,12 @@ int get_uuid_string(char *buf)
 		return -1;
 
 	sprintf(buf, "%02x%02x%02x%02x-%02x%02x-%02x%02x-%02x%02x-%02x%02x%02x%02x%02x%02x",
-	        uuid[0], uuid[1], uuid[2], uuid[3], uuid[4], uuid[5], uuid[6], uuid[7], uuid[8], 
+	        uuid[0], uuid[1], uuid[2], uuid[3], uuid[4], uuid[5], uuid[6], uuid[7], uuid[8],
 	        uuid[9], uuid[10], uuid[11], uuid[12], uuid[13], uuid[14], uuid[15]);
 	buf[36] = '\0';
 	*/
 	sprintf(buf, "12345678-0000-0000-0000-00000000abcd"); //default
-	return 0;
+	return -1;
 }
 
 // 새로운 subscriber 생성

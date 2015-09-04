@@ -16,6 +16,7 @@
 
 #ifndef __MAIN_APP_H__
 #define __MAIN_APP_H__
+#define FOLDER_COUNT 1000 //공유폴더 최대 갯수
 
 #include <pthread.h>
 #include <stdbool.h>
@@ -58,6 +59,9 @@ void app_destroy(app_data *app);
  * @param[in]   argv    argv parameter received in main
  */
 int app_run(app_data *app, int argc, char **argv);
+
+extern char sharing_folders[FOLDER_COUNT][512];
+extern int folder_length;
 
 #endif /* __MAIN_APP_H__ */
 

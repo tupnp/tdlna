@@ -31,7 +31,7 @@
 #include <metadata_extractor.h>
 #include <media_content.h>
 
-#define FOLDER_COUNT 1000 //공유폴더 최대 갯수
+
 // app event callbacks
 static bool _on_create_cb(void *user_data);
 static void _on_terminate_cb(void *user_data);
@@ -205,7 +205,7 @@ static int _app_process_received_message(bundle *rec_msg,
 		resp_key_val = "(공유폴더) 수신";
 		*req_oper = REQ_SHARED_FOLDER;
 		strcpy(shared_folder,rec_share_folder+7);
-		strcat(shared_folder,"\%");
+//		strcat(shared_folder,"\%");
 		dlog_print(DLOG_INFO ,"tdlna", "공유폴더 저장: %s",shared_folder);
 	}
 
@@ -218,7 +218,7 @@ static int _app_process_received_message(bundle *rec_msg,
 		resp_key_val = "(공유취소폴더) 수신";
 		*req_oper = REQ_UNSHARED_FOLDER;
 		strcpy(shared_folder,rec_unshare_folder+7);
-		strcat(shared_folder,"\%");
+//		strcat(shared_folder,"\%");
 		dlog_print(DLOG_INFO ,"tdlna", "공유취소폴더 저장: %s",rec_unshare_folder);
 	}
 
@@ -388,15 +388,15 @@ static int _app_execute_operation(app_data *appdata, req_operation operation_typ
         	if(!(appdata->run_tdlna)){
         		// 서비스가 꺼져있는 상태라면
         		if(appdata->tdlna_td != 0){
-        				dlog_print(DLOG_ERROR,"tdlna", "이전 실행된 서비스가 정상적으로 종료되지 않았습니다.");
-        				return 0;
-        			}
+        			dlog_print(DLOG_ERROR,"tdlna", "이전 실행된 서비스가 정상적으로 종료되지 않았습니다.");
+        			return 0;
+        		}
         		if(serviceOn(appdata)){
-            		dlog_print(DLOG_INFO,"tdlna","★ 서비스 ON ★ %d", appdata->run_tdlna);
-            		resp_key_val = "실행 성공!";
+        			dlog_print(DLOG_INFO,"tdlna","★ 서비스 ON ★ %d", appdata->run_tdlna);
+        			resp_key_val = "실행 성공!";
         		}else{
-            		dlog_print(DLOG_INFO,"tdlna","★ 이미 실행중 ★ %d", appdata->run_tdlna);
-            		resp_key_val = "이미 실행중!";
+        			dlog_print(DLOG_INFO,"tdlna","★ 이미 실행중 ★ %d", appdata->run_tdlna);
+        			resp_key_val = "이미 실행중!";
         		}
         	}
         	else{

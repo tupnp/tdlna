@@ -7,5 +7,5 @@ void setUUID();
 void setDeviceProperty(void* data);
 void* tdlnamain(void* data);
 void* ssdpAlive(void* data);
-
+int WifiState();
 #endif

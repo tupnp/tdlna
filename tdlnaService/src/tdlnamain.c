@@ -21,6 +21,7 @@
 #include <dlog.h>
 #include <pthread.h>
 #include <system_settings.h>   //serUUID (getMAC Addr)
+#include <wifi.h>
 
 #include "upnphttp.h"
 #include "upnpglobalvars.h"
@@ -35,6 +36,13 @@
 int serviceOn(void* data){
 	app_data *ad = data;
 	int r;
+
+
+	if(!WifiState())
+	{
+		dlog_print(DLOG_ERROR,"tdlna_wifi", "WIFI 실행이 안되어 있습니다. 종료합니다. %d", ad->tdlna_td);
+		return 0;
+	}
 
 	if(ad->tdlna_td != 0){
 		dlog_print(DLOG_ERROR,"tdlna", "이전 실행된 서비스가 정상적으로 종료되지 않았습니다. %d", ad->tdlna_td);
@@ -473,5 +481,54 @@ shutdown:
 		return 0;
 }
 
+// WIFI state
+int WifiState()
+{
+   wifi_connection_state_e connection_state;
+   int error_code = 0;
+   wifi_ap_h ap;
 
+   // wifi 초기화
+   error_code = wifi_initialize();
+   if (error_code != WIFI_ERROR_NONE)
+   {
+      dlog_print(DLOG_DEBUG, "tdlna_wifi", "wifi_Initialize_not");
+   }
 
+   error_code = wifi_get_connection_state(&connection_state);
+      if(error_code != WIFI_ERROR_NONE)
+   {
+      dlog_print(DLOG_DEBUG, "tdlna_wifi", "WIFI _ 1");
+      return 0;
+   }
+    else if(connection_state == WIFI_CONNECTION_STATE_CONNECTED)
+    {
+      error_code = wifi_get_connected_ap(&ap);
+      if(error_code != WIFI_ERROR_NONE)
+      {
+         wifi_ap_destroy(ap);
+         return 0;
+      }
+
+      error_code = wifi_ap_get_connection_state(ap, &connection_state);
+      if(error_code == WIFI_ERROR_NONE && connection_state == WIFI_CONNECTION_STATE_CONNECTED)
+      {
+         wifi_ap_destroy(ap);
+         return 1;
+      }
+
+      if(connection_state == WIFI_CONNECTION_STATE_CONNECTED)
+      {
+         return 1;
+      }
+      wifi_ap_destroy(ap);
+   }
+
+    if(connection_state == 3)
+    {
+       return 1;
+    }else
+    {
+      return 0;
+    }
+}

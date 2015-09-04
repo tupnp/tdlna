@@ -74,8 +74,8 @@ src/metadata.d: ../src/metadata.c \
   D:/tizen-sdk/tools/smart-build-interface/../../platforms/mobile-2.3/rootstraps/mobile-2.3-device.core/usr/include/glib-2.0\glib/deprecated/gmain.h \
   D:/tizen-sdk/tools/smart-build-interface/../../platforms/mobile-2.3/rootstraps/mobile-2.3-device.core/usr/include/glib-2.0\glib/deprecated/grel.h \
   D:/tizen-sdk/tools/smart-build-interface/../../platforms/mobile-2.3/rootstraps/mobile-2.3-device.core/usr/include/glib-2.0\glib/deprecated/gthread.h \
-  C:\Users\smg22_000\git\tdlna_0902\tdlna\tdlnaService\inc\main-app.h \
-  C:\Users\smg22_000\git\tdlna_0902\tdlna\tdlnaService\inc/metadata.h \
+  C:\Users\Taehyeong\git\tdlna_20150904\tdlna\tdlnaService\inc\main-app.h \
+  C:\Users\Taehyeong\git\tdlna_20150904\tdlna\tdlnaService\inc/metadata.h \
   D:/tizen-sdk/tools/smart-build-interface/../../platforms/mobile-2.3/rootstraps/mobile-2.3-device.core/usr/include/media-content\media_content.h \
   D:/tizen-sdk/tools/smart-build-interface/../../platforms/mobile-2.3/rootstraps/mobile-2.3-device.core/usr/include/media-content\media_audio.h \
   D:/tizen-sdk/tools/smart-build-interface/../../platforms/mobile-2.3/rootstraps/mobile-2.3-device.core/usr/include/media-content\media_content_type.h \
@@ -242,9 +242,9 @@ D:/tizen-sdk/tools/smart-build-interface/../../platforms/mobile-2.3/rootstraps/m
 
 D:/tizen-sdk/tools/smart-build-interface/../../platforms/mobile-2.3/rootstraps/mobile-2.3-device.core/usr/include/glib-2.0\glib/deprecated/gthread.h:
 
-C:\Users\smg22_000\git\tdlna_0902\tdlna\tdlnaService\inc\main-app.h:
+C:\Users\Taehyeong\git\tdlna_20150904\tdlna\tdlnaService\inc\main-app.h:
 
-C:\Users\smg22_000\git\tdlna_0902\tdlna\tdlnaService\inc/metadata.h:
+C:\Users\Taehyeong\git\tdlna_20150904\tdlna\tdlnaService\inc/metadata.h:
 
 D:/tizen-sdk/tools/smart-build-interface/../../platforms/mobile-2.3/rootstraps/mobile-2.3-device.core/usr/include/media-content\media_content.h:
 

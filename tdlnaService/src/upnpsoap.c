@@ -863,7 +863,7 @@ BrowseContentDirectory(struct upnphttp * h, const char * action)
 					lan_addr[0].str, runtime_vars.port, items[i].thumbnail_path); /*썸네일주소*/
 
 			strcat(str.data, temp); //각 파일에 대한 xml코드 이어붙임
-
+//			dlog_print(DLOG_DEBUG, "tdlna_soap", "아이템 %s,  %s", items[i].title, temp);
 		}//for
 
 		free(items);
@@ -878,6 +878,7 @@ BrowseContentDirectory(struct upnphttp * h, const char * action)
 			char fullPathQury[512];
 			sprintf(fullPathQury, "%s%%", ObjectID+5);
 			DecodeSpecialCharacter(fullPathQury);
+			dlog_print(DLOG_DEBUG, "tdlna_soap", "풀 페스 쿼리: %s", fullPathQury);
 			itemCount = Meta_Get_from_path(ServiceAppData, fullPathQury, 1, &items);
 		}
 		else //모든 음악 (1$4)

@@ -680,7 +680,6 @@ static void ProcessHttpQuery_upnphttp(struct upnphttp * h)
 				*mPtr = '\0'; //확장자인 .ALBUM을 제거한다
 
 				mRet = Meta_Get_from_path(NULL, strcat(HttpUrl,"%"), 1, &mData); //파일명으로 미디어 메타정보를 가져온 후
-				dlog_print(DLOG_ERROR, "tdlna_http", "경로: %s", HttpUrl);
 				if(mRet < 1) {
 					free(mData);
 					Send404(h);

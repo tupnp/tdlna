@@ -9,7 +9,6 @@
 
 #define BUFLEN 200
 
-
 bool gallery_media_item_cb(media_info_h media, void *user_data) {
 	media_info_h new_media = NULL;
 	media_info_clone(&new_media, media);
@@ -78,23 +77,27 @@ void check_returnValue(int ret){
 bool _media_type_folder_db(media_folder_h folder,char *retPath){
 	dlog_print(DLOG_INFO, "tdlna", "_media_type_folder_db 실행");
 	char *folder_path;
-	int ret = 0;
+	int ret = 0, ii = 0;
 
 	ret = media_folder_get_path(folder,&folder_path);
 	check_returnValue(ret);
 	dlog_print(DLOG_DEBUG,"tdlna","media Folder_path:%s",folder_path);
 
-	strcat(retPath, folder_path);
-	strcat(retPath, "|");
-
+	for(ii=0; ii< folder_length; ii++){
+		//공유폴더 체크한것만 연결
+		if(strcmp(folder_path, sharing_folders[ii]) == 0){
+			strcat(retPath, folder_path);
+			strcat(retPath, "|");
+			break;
+		}
+	}
 	return true;
 }
 
 int mediaDirectory_folder(char** path,int mediaType){//타입별 폴더 리턴
 	filter_h filter = NULL;
-//	media_info_h _media_handle;
-//	media_folder_h _media_folder;
-	int ret = 0,mediaCount=0 ;
+
+	int ret = 0, mediaCount=0, ii;
 	char buf[BUFLEN] = { '\0' };
 	media_content_collation_e collate_type = MEDIA_CONTENT_COLLATE_NOCASE;
 	media_filter_create(&filter);
@@ -105,6 +108,7 @@ int mediaDirectory_folder(char** path,int mediaType){//타입별 폴더 리턴
 
 	mPath[0] = '\0';
 	*path = mPath;
+
 	switch (mediaType) {
 	case 1:
 		snprintf(buf, BUFLEN, "%s = %d", MEDIA_TYPE, MEDIA_CONTENT_TYPE_MUSIC);
@@ -126,6 +130,12 @@ int mediaDirectory_folder(char** path,int mediaType){//타입별 폴더 리턴
 		return 0;
 		break;
 	}
+
+	mediaCount = 0;
+	for(ii=0; mPath[ii] != '\0'; ii++){
+		if(mPath[ii] == '|') mediaCount++;
+	}
+
 	media_content_disconnect();
 	media_filter_destroy(filter);
 	return mediaCount;
@@ -208,7 +218,7 @@ void media_Directory(void* data){
 }
 
 
-int Meta_Get_from_path(void *appData, char *folderPath,int mediaType, _META** result) {// data : app_data, folderPath : 폴더경로,
+int Meta_Get_from_path(void *appData, char *folderPath, int mediaType, _META** result) {// data : app_data, folderPath : 폴더경로,
 	// 오디오(1), 비디오(2), 사진(3)
 	dlog_print(DLOG_INFO, "tdlna", "Meta_Get_from_path(%s) mediaType:%d",folderPath,mediaType);
 	//   app_data *appdata = appData;
@@ -222,6 +232,7 @@ int Meta_Get_from_path(void *appData, char *folderPath,int mediaType, _META** re
 	char buf[BUFLEN] = { '\0' };
 	int ret = MEDIA_CONTENT_ERROR_NONE;
 	int media_count = 0;
+	int media_count2 = 0;
 	unsigned long long media_size = 0;
 
 	//meta type list
@@ -233,6 +244,10 @@ int Meta_Get_from_path(void *appData, char *folderPath,int mediaType, _META** re
 
 	time_t timer;
 	struct tm *t;
+
+	//폴더경로에서 /갯수 카운트
+	int sCount1, sCount2, sIdx;
+
 	timer = time(NULL); // 현재 시각을 초 단위로 얻기
 	t = localtime(&timer); // 초 단위의 시간을 분리하여 구조체에 넣기
 
@@ -278,7 +293,7 @@ int Meta_Get_from_path(void *appData, char *folderPath,int mediaType, _META** re
 		dlog_print(DLOG_INFO, "tdlna","media_info_foreach_media_from_db failed: %d", ret);
 		media_filter_destroy(filter);
 	} else {//-------------------------------------------------------------------------------------
-		int i, j;
+		int i, j, k;
 		media_count =g_list_length(all_item_list);
 		dlog_print(DLOG_INFO, "tdlna","media_count: %d", media_count);
 
@@ -293,14 +308,49 @@ int Meta_Get_from_path(void *appData, char *folderPath,int mediaType, _META** re
 			media_handle = (media_info_h) g_list_nth_data(all_item_list, i);
 			media_info_get_media_id(media_handle, &media_id);
 			media_info_get_media_type(media_handle, &media_type);
+
+			ret = media_info_get_file_path(media_handle, &media_path); //미디어 경로를 구해온다.
+			if(ret == MEDIA_CONTENT_ERROR_NONE){
+				strcpy(metaData.path,media_path);
+			}
+
+			//체크박스 선택한 폴더만 통과시킴
+			sIdx = 0;
+			for(k=0; k < folder_length; k++){
+				//체크박스에 체크한 경로들과 미디어 아이템의 부분 경로를 비교한다
+				if(strncmp(media_path, sharing_folders[k], strlen(sharing_folders[k])) == 0){
+					//체크한 경로가 포함되는 경우 나머지 경로에 /가 1개 이상 나오는지 체크 (하위폴더 미포함)
+					if( strchr( (char*) media_path+strlen(sharing_folders[k]) + 1  , '/') == NULL ){
+						sIdx = 1;
+						break;
+					}
+				}
+			}
+			if(sIdx == 0) {
+				free(media_path);
+				continue;
+			}
+
+			//경로에서 /갯수를 카운트하여 비교 (하위폴더 미포함하기위함)
+			sCount1 = sCount2 = sIdx = 0;
+			while(folderPath[sIdx]) if(folderPath[sIdx++]=='/') sCount1++; //원래 설정한 경로
+			sIdx = 0;
+			while(media_path[sIdx]) if(media_path[sIdx++]=='/') sCount2++; //미디어 경로
+
+			sCount1++;
+//			dlog_print(DLOG_DEBUG, "tdlna", " 슬래시 카운트 %d == %d 아이템 경로: %s", sCount1, sCount2, media_path);
+
+			if(sCount1 < sCount2 && sCount1 != 2) {
+				// 슬래시 /갯수가 다르면 표시하지 않음
+				free(media_path);
+				continue;
+			}
+
 			ret = media_info_get_display_name(media_handle, &media_name);
 			if(ret == MEDIA_CONTENT_ERROR_NONE){
 				strcpy(metaData.title,media_name);
 			}
-			ret = media_info_get_file_path(media_handle, &media_path);
-			if(ret == MEDIA_CONTENT_ERROR_NONE){
-				strcpy(metaData.path,media_path);
-			}
+
 			ret = media_info_get_thumbnail_path(media_handle,&thumbnail_path);
 			if(ret == MEDIA_CONTENT_ERROR_NONE && thumbnail_path != NULL){
 				strcpy(metaData.thumbnail_path, thumbnail_path);
@@ -467,12 +517,15 @@ int Meta_Get_from_path(void *appData, char *folderPath,int mediaType, _META** re
 			if(album) free(album);
 			if(genre) free(genre);
 			if(datetaken) free(datetaken);
-			if(Temp) free(Temp);
+			if(media_path) free(media_path);
+			if(thumbnail_path) free(thumbnail_path);
 
-			memcpy(&metaList[i],&metaData,sizeof(_META));
-		}// END i
+			memcpy(&metaList[media_count2++], &metaData,sizeof(_META)); //값 복사
+		}// END i for
 
 		*result = metaList;
 	}
-	return media_count;
+
+	dlog_print(DLOG_DEBUG, "tdlna", " 미디어 아이템 갯수 %d", media_count2);
+	return media_count2;
 }

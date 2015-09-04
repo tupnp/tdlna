@@ -1,15 +1,16 @@
 src/tdlnamain.d: ../src/tdlnamain.c \
   D:/tizen-sdk/tools/smart-build-interface/../../platforms/mobile-2.3/rootstraps/mobile-2.3-device.core/usr/include/dlog\dlog.h \
   D:/tizen-sdk/tools/smart-build-interface/../../platforms/mobile-2.3/rootstraps/mobile-2.3-device.core/usr/include/system\system_settings.h \
-  C:\Users\smg22_000\git\tdlna_0902\tdlna\tdlnaService\inc\upnphttp.h \
-  C:\Users\smg22_000\git\tdlna_0902\tdlna\tdlnaService\inc/comm_types.h \
-  C:\Users\smg22_000\git\tdlna_0902\tdlna\tdlnaService\inc\upnpglobalvars.h \
-  C:\Users\smg22_000\git\tdlna_0902\tdlna\tdlnaService\inc/clients.h \
-  C:\Users\smg22_000\git\tdlna_0902\tdlna\tdlnaService\inc\upnpevents.h \
-  C:\Users\smg22_000\git\tdlna_0902\tdlna\tdlnaService\inc\upnpssdp.h \
-  C:\Users\smg22_000\git\tdlna_0902\tdlna\tdlnaService\inc\upnpsoap.h \
-  C:\Users\smg22_000\git\tdlna_0902\tdlna\tdlnaService\inc\main-app.h \
-  C:\Users\smg22_000\git\tdlna_0902\tdlna\tdlnaService\inc/metadata.h \
+  D:/tizen-sdk/tools/smart-build-interface/../../platforms/mobile-2.3/rootstraps/mobile-2.3-device.core/usr/include/network\wifi.h \
+  C:\Users\Taehyeong\git\tdlna_20150904\tdlna\tdlnaService\inc\upnphttp.h \
+  C:\Users\Taehyeong\git\tdlna_20150904\tdlna\tdlnaService\inc/comm_types.h \
+  C:\Users\Taehyeong\git\tdlna_20150904\tdlna\tdlnaService\inc\upnpglobalvars.h \
+  C:\Users\Taehyeong\git\tdlna_20150904\tdlna\tdlnaService\inc/clients.h \
+  C:\Users\Taehyeong\git\tdlna_20150904\tdlna\tdlnaService\inc\upnpevents.h \
+  C:\Users\Taehyeong\git\tdlna_20150904\tdlna\tdlnaService\inc\upnpssdp.h \
+  C:\Users\Taehyeong\git\tdlna_20150904\tdlna\tdlnaService\inc\upnpsoap.h \
+  C:\Users\Taehyeong\git\tdlna_20150904\tdlna\tdlnaService\inc\main-app.h \
+  C:\Users\Taehyeong\git\tdlna_20150904\tdlna\tdlnaService\inc/metadata.h \
   D:/tizen-sdk/tools/smart-build-interface/../../platforms/mobile-2.3/rootstraps/mobile-2.3-device.core/usr/include/media-content\media_content.h \
   D:/tizen-sdk/tools/smart-build-interface/../../platforms/mobile-2.3/rootstraps/mobile-2.3-device.core/usr/include/media-content\media_audio.h \
   D:/tizen-sdk/tools/smart-build-interface/../../platforms/mobile-2.3/rootstraps/mobile-2.3-device.core/usr/include/media-content\media_content_type.h \
@@ -24,29 +25,31 @@ src/tdlnamain.d: ../src/tdlnamain.c \
   D:/tizen-sdk/tools/smart-build-interface/../../platforms/mobile-2.3/rootstraps/mobile-2.3-device.core/usr/include/media-content\media_bookmark.h \
   D:/tizen-sdk/tools/smart-build-interface/../../platforms/mobile-2.3/rootstraps/mobile-2.3-device.core/usr/include/media\metadata_extractor.h \
   D:/tizen-sdk/tools/smart-build-interface/../../platforms/mobile-2.3/rootstraps/mobile-2.3-device.core/usr/include/media\metadata_extractor_type.h \
-  C:\Users\smg22_000\git\tdlna_0902\tdlna\tdlnaService\inc\tdlnamain.h
+  C:\Users\Taehyeong\git\tdlna_20150904\tdlna\tdlnaService\inc\tdlnamain.h
 
 D:/tizen-sdk/tools/smart-build-interface/../../platforms/mobile-2.3/rootstraps/mobile-2.3-device.core/usr/include/dlog\dlog.h:
 
 D:/tizen-sdk/tools/smart-build-interface/../../platforms/mobile-2.3/rootstraps/mobile-2.3-device.core/usr/include/system\system_settings.h:
 
-C:\Users\smg22_000\git\tdlna_0902\tdlna\tdlnaService\inc\upnphttp.h:
+D:/tizen-sdk/tools/smart-build-interface/../../platforms/mobile-2.3/rootstraps/mobile-2.3-device.core/usr/include/network\wifi.h:
 
-C:\Users\smg22_000\git\tdlna_0902\tdlna\tdlnaService\inc/comm_types.h:
+C:\Users\Taehyeong\git\tdlna_20150904\tdlna\tdlnaService\inc\upnphttp.h:
 
-C:\Users\smg22_000\git\tdlna_0902\tdlna\tdlnaService\inc\upnpglobalvars.h:
+C:\Users\Taehyeong\git\tdlna_20150904\tdlna\tdlnaService\inc/comm_types.h:
 
-C:\Users\smg22_000\git\tdlna_0902\tdlna\tdlnaService\inc/clients.h:
+C:\Users\Taehyeong\git\tdlna_20150904\tdlna\tdlnaService\inc\upnpglobalvars.h:
 
-C:\Users\smg22_000\git\tdlna_0902\tdlna\tdlnaService\inc\upnpevents.h:
+C:\Users\Taehyeong\git\tdlna_20150904\tdlna\tdlnaService\inc/clients.h:
 
-C:\Users\smg22_000\git\tdlna_0902\tdlna\tdlnaService\inc\upnpssdp.h:
+C:\Users\Taehyeong\git\tdlna_20150904\tdlna\tdlnaService\inc\upnpevents.h:
 
-C:\Users\smg22_000\git\tdlna_0902\tdlna\tdlnaService\inc\upnpsoap.h:
+C:\Users\Taehyeong\git\tdlna_20150904\tdlna\tdlnaService\inc\upnpssdp.h:
 
-C:\Users\smg22_000\git\tdlna_0902\tdlna\tdlnaService\inc\main-app.h:
+C:\Users\Taehyeong\git\tdlna_20150904\tdlna\tdlnaService\inc\upnpsoap.h:
 
-C:\Users\smg22_000\git\tdlna_0902\tdlna\tdlnaService\inc/metadata.h:
+C:\Users\Taehyeong\git\tdlna_20150904\tdlna\tdlnaService\inc\main-app.h:
+
+C:\Users\Taehyeong\git\tdlna_20150904\tdlna\tdlnaService\inc/metadata.h:
 
 D:/tizen-sdk/tools/smart-build-interface/../../platforms/mobile-2.3/rootstraps/mobile-2.3-device.core/usr/include/media-content\media_content.h:
 
@@ -76,4 +79,4 @@ D:/tizen-sdk/tools/smart-build-interface/../../platforms/mobile-2.3/rootstraps/m
 
 D:/tizen-sdk/tools/smart-build-interface/../../platforms/mobile-2.3/rootstraps/mobile-2.3-device.core/usr/include/media\metadata_extractor_type.h:
 
-C:\Users\smg22_000\git\tdlna_0902\tdlna\tdlnaService\inc\tdlnamain.h:
+C:\Users\Taehyeong\git\tdlna_20150904\tdlna\tdlnaService\inc\tdlnamain.h:
