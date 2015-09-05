@@ -18,7 +18,7 @@
 /*global $, tizen, window, document, history*/
 //X0OmcPEKY7.tdlnaservice 
 //org.tizen.tdlnaservice
-var gServiceAppId = 'org.tizen.tdlnaservice',
+var gServiceAppId = 'X0OmcPEKY7.tdlnaservice',
     gServicePortName = 'SAMPLE_PORT',
     gLocalMessagePortName = 'SAMPLE_PORT_REPLY',
     gLocalMessagePort,
@@ -117,7 +117,7 @@ function addFolder(folder_path){
 //	 	imageSRC = "./lib/tau/mobile/theme/default/images/controls/core_check_bg.png";
 	 	imageSRC = "./check_empty.png";
 	
-	if(string[0] == "*"){//공유중인것
+	if(string[0] === "*"){//공유중인것
 		folder_path = string.substring(string.length,1);
 //		imageSRC = "./lib/tau/mobile/theme/default/images/controls/core_check_icon.png";
 		imageSRC = "./check_checked.png";
@@ -185,7 +185,7 @@ function checkFolder(){
 }
 
 function failedStart(){
-	alert("실패!!");
+	alert("Service start failed!\nPlease check network.");
 	$('.ui-toggle-switch').trigger('click');
 }
 

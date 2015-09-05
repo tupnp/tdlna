@@ -18,6 +18,7 @@
     <tizen:privilege name="http://tizen.org/privilege/network.get"/>
     <tizen:privilege name="http://tizen.org/privilege/systemsettings"/>
     <tizen:privilege name="http://tizen.org/privilege/internet"/>
+    <tizen:privilege name="http://tizen.org/privilege/display"/>
     <tizen:privilege name="http://tizen.org/privilege/externalstorage"/>
     <tizen:profile name="mobile"/>
     <tizen:setting screen-orientation="portrait" context-menu="disable" background-support="disable" encryption="disable" install-location="auto" hwkey-event="enable"/>
