@@ -4,11 +4,11 @@
 <SignatureMethod Algorithm="http://www.w3.org/2001/04/xmldsig-more#rsa-sha256"></SignatureMethod>
 <Reference URI="bin%2Ftdlnaservice">
 <DigestMethod Algorithm="http://www.w3.org/2001/04/xmlenc#sha256"></DigestMethod>
-<DigestValue>Neu4bJZ0KULEui6OxI5UpgnLhY+/mxxZcjI8OAcbYoU=</DigestValue>
+<DigestValue>vFraIyGyE8iqxM5Kf9rmSlbW0cPrZ9PowiK5WAvkS0k=</DigestValue>
 </Reference>
 <Reference URI="config.xml">
 <DigestMethod Algorithm="http://www.w3.org/2001/04/xmlenc#sha256"></DigestMethod>
-<DigestValue>nLbIlnC5DUNI173bA8Zp7tVCgsjS2fr+uB/iHade4h0=</DigestValue>
+<DigestValue>GVh1eWlYEgeLDr4oc+R+68a5o73oPBw8UgTPwamcqa8=</DigestValue>
 </Reference>
 <Reference URI="res%2Fwgt%2Fconfig.xml">
 <DigestMethod Algorithm="http://www.w3.org/2001/04/xmlenc#sha256"></DigestMethod>
@@ -40,7 +40,7 @@
 </Reference>
 <Reference URI="res%2Fwgt%2Fjs%2Fsetting.js">
 <DigestMethod Algorithm="http://www.w3.org/2001/04/xmlenc#sha256"></DigestMethod>
-<DigestValue>aCP9tP9T0PEIzeK0elsxHpf6MzGkAhI1dz7Gom3ArOk=</DigestValue>
+<DigestValue>4CeJAH1pyOo6sVgpwBATUoV0tjBLg+uBXMv6EsllUIk=</DigestValue>
 </Reference>
 <Reference URI="res%2Fwgt%2Flib%2Fjquery.js">
 <DigestMethod Algorithm="http://www.w3.org/2001/04/xmlenc#sha256"></DigestMethod>
@@ -2215,11 +2215,11 @@
 </Reference>
 </SignedInfo>
 <SignatureValue>
-DIFCIcLgrJcJGM75/vOPe2wEuA3yOqkHjUYGO36TF06JuclpH0uJxsE32dyLr2wJTYKvi3G5KlQo
-GcJhVmx7enq1N781qFWSM7p+/TYtmVTEN6W2UaqHwekFwCQiANwsKwgqsEicFsTx9kWHOaylCJrV
-kSLuAVtogcMCc+rgknWkjKsTek+MzCdkE55yHIHegy4bSnkKyVxFqBC/BHyLcVY7fTDgpJwmaRcF
-RrABPKA6iM+AJIsNLq9F0Yevhzrn1a2/ZpHVUee8AosKN2+T1kD6WdYH32BzZa3tm4mTbIP6+eaw
-TeO8qX0YYXR0kzMuiwcizM8WbO0v6MY+kFJ+AQ==
+EFw1D/8MpbbX552463qXKajOhC4hOyi4oLNJ7SSEYKees0OQZu5HyrCICLjmDiH6FTgtPk9fdBer
+32MbWw+ldC3sBMAWKAAJOAch1bAvTKTDrIZ4ZWOlfjtmVgDuiU23MiSS7aB/M5pBUzQxnqnKJFla
+VKDZms+VhhA1xTixa6wwAVk2OmS2zOqnWgzOJ4/pR6rIwUsaPT2pO0smulxaYommwT71th4eY6Ui
+imUwGWLP9VAweNiBg2ecOwlzxw78rhNNplkGgDVsiGLncpSuRtARKRcXEs8XVuGd0RYjJtM4FVnK
+RpMdRhO/u6x3rgLuis//YBghcpflKlSIutgcxA==
 </SignatureValue>
 <KeyInfo>
 <X509Data>
