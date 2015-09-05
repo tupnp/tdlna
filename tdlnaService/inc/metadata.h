@@ -27,7 +27,7 @@ _META* meta_create();
 void media_Count(int *videoCount,int *imageCount,int *musicCount,char *path);
 // 오디오(1), 비디오(2), 사진(3)
 void check_returnValue(int ret);
-void media_Directory(void *data);
+bool media_Directory(void *data);
 int mediaDirectory_folder(char** path,int mediaType);//타입별 폴더 찾기
 int mediaDirectory_count(int mediaType);//타입별 폴더 갯수 리턴
 bool _media_type_folder_db(media_folder_h folder,char *retPath);//타입별 폴더 경로 리턴

@@ -4,15 +4,15 @@
 <SignatureMethod Algorithm="http://www.w3.org/2001/04/xmldsig-more#rsa-sha256"></SignatureMethod>
 <Reference URI="author-signature.xml">
 <DigestMethod Algorithm="http://www.w3.org/2001/04/xmlenc#sha256"></DigestMethod>
-<DigestValue>AjwNMfvTL6PNdoMplcsctueO5EOxPWAGVW+WZ184t6g=</DigestValue>
+<DigestValue>8daGkqQXc7ZJ4Zhu+oLeCpp06MVoO2uS00t5fFPhvBg=</DigestValue>
 </Reference>
 <Reference URI="bin%2Ftdlnaservice">
 <DigestMethod Algorithm="http://www.w3.org/2001/04/xmlenc#sha256"></DigestMethod>
-<DigestValue>DVrCB3Lhmz2BQ/KOl5IXNXkmUpT4HTft5ULd40lWPkI=</DigestValue>
+<DigestValue>M2bctf4qmE8Q2WjXOmLRRnFkTFbTNGwGOik/z+atTz8=</DigestValue>
 </Reference>
 <Reference URI="tizen-manifest.xml">
 <DigestMethod Algorithm="http://www.w3.org/2001/04/xmlenc#sha256"></DigestMethod>
-<DigestValue>7gOQv8u0Zk6sZjnud2jwwNLhupt7eO3IRrsaG8vmr3E=</DigestValue>
+<DigestValue>fx7SRvHmj4YpE+qwbGSa6blKYpWfQEfvthELLw9082Q=</DigestValue>
 </Reference>
 <Reference URI="#prop">
 <Transforms>
@@ -23,11 +23,11 @@
 </Reference>
 </SignedInfo>
 <SignatureValue>
-WXNPi0RH1D4+LeKKZAJs8uUEprb1JeQwPlb565twl+YGaMRJoAedeb3OCy3r/PXbZzDV9jDr6Di0
-O1N8A64afk4z6u7N6x/aKaOZ3zB3YshoFIp/LNRAwLHVoz7QRVzqBlVcm5qYSHXS9Lfe2L7lLNiT
-LI2pGVYh8GWFyTrZAqxq9fFv5kVgW0akJURcVvIHTHr4aoHxgYMA8O2+2x3q8ZOJC8duArvNWqhG
-ljka9kmhjRXQCU1WnbdjqvcoOSksM4DqXGDNsY6rQ/5ULr/8pOLKtkVOaBqvyTwG6XFZ1q6PbzjT
-z3xWQPKfYefRHXb6zhssQG/agloOTUI2tMCooQ==
+FBD0itGj9YCy+9ZX2soQynnhIzBRxQ1evOFrckXZx5QyvWotMQeesFiYIQ2Z61ER+3p+LRpQx63I
+JuBGdyVdXyJMLze5R7wIkyyhjhL4znxUG0s8dxZIe4ZNQBe6pp9eB6I9MpqYdcO+ijLzWdjiJPyr
+iMGvtmFV3/W7n69irareFG+Io4vpd2YSnh3c2aykXwK8QFBfw1HXuRQVjicz2H+1zBuja93OSMs4
+atBhInYX7eKuUb9L1X3A1B4EqzNRJkl6FzitXA9L/4zxd44csfCpRLLyxn4efHxoIc4a1tF1Jbwa
+GwdXF8mD4fnhL0BZfOx5nRh2VXiPrB4nxy3LkA==
 </SignatureValue>
 <KeyInfo>
 <X509Data>
@@ -35,19 +35,19 @@ z3xWQPKfYefRHXb6zhssQG/agloOTUI2tMCooQ==
 MIIDeDCCAmCgAwIBAgIBZTANBgkqhkiG9w0BAQsFADCBnjELMAkGA1UEBhMCS1IxFDASBgNVBAgM
 C1NvdXRoIEtvcmVhMQ4wDAYDVQQHDAVTdXdvbjEmMCQGA1UECgwdU2Ftc3VuZyBFbGVjdHJvbmlj
 cyBDby4sIEx0ZC4xDzANBgNVBAsMBk1vYmlsZTEwMC4GA1UEAwwnU2Ftc3VuZyBUaXplbiBERVZF
-TE9QRVIgUHVibGljIENBIENsYXNzMB4XDTE1MDgyMjA1MDgyOFoXDTE2MDgyMTA1MDgyOFowRDEg
+TE9QRVIgUHVibGljIENBIENsYXNzMB4XDTE1MDgxMjE1NTkyMloXDTE2MDgxMTE1NTkyMlowRDEg
 MB4GA1UEAwwXU2Ftc3VuZyBUaXplbiBEZXZlbG9wZXIxIDAeBgkqhkiG9w0BCQEWEXNtZzIyNTJA
-bmF2ZXIuY29tMIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEApleIrGXzP7v68q6yGYR1
-MzW2CrXS6lKep+K7gAF0X64emOMl/1QwrEVZKjkPA5uyThp3ahavl6xPY0Xq0aXFvOwKr1WUUexD
-etR3Tp7nUP1HYUWb89oFdd0DqSk/eDzqnLcNv2nSbdQhQvciCDkKkEGL5L2cvKD86fMzD9aKcaBW
-zJwB7KxRe1UHmKuBq/amcCkWU0k4WoO/JhAlXE1ByTFQ9+RFkwDA2Xtsen5k8+Z7Q3a4/oc/Miea
-5b9xNAbr/mkoF+R394vPLkbEZRUfIM5m2+SIO3GtaGmyYYXDlbV1GRUHYGPFpcatwS40svYgQWs6
-tsaTWBxzCEPI2j0BXwIDAQABoxowGDAJBgNVHRMEAjAAMAsGA1UdDwQEAwIHgDANBgkqhkiG9w0B
-AQsFAAOCAQEAKD/z+Ez0VoryzOAr+kVfJp5BxTZu71dR5AMbC7vTdg0NhIi4BPB7DelTQuu0MLK+
-EWhHDiDoWaegLNZV4o+nBWXnR590xu7XOqGjjvVYFelKq6weZCvZljaslLk4n9i5bZPwVipab41W
-LrPcRmfzmb25TxMTBDHhP931mrFOmMoEyFCQk6w9Lee1jvkBMmFl9maMAH15iak5hVUzE0lekI8C
-DlaWcRzqi5khFZBqixMO0wsXqno2n148UKeAjh2vdPlcqxAsQ1VM0xRujlb3x9bI+Fz+ulD7kbsh
-89UsHMuL2enasdMNNqBOB3GM6myOIQORF+Ut3pUTDR0X2RjqLg==
+bmF2ZXIuY29tMIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEA0xXByFka3YPosSJHXGHM
+4Qh/6BVB1vfwiPZy8Z7jBPxt9VApo+VHgnWAdKGNBGMgKKTDd4cMPlcWOPLP5vxMfD4opl7T659T
+nwIJ+BqI2GumEeqNHy9u8sgHnN/Ilav/KwHslgK3FeR86L2f3AtMVWV4wFZa2+rC9yB1BMy0S53L
+NL2DyxzzfXfU4n5ZhU9jLurV7vjK1nL1doMrpR6TIblwoRtbwROlp1aeohk2WRzt4Y3KEw84XL4z
+cf6cDUcZAwxmPlUhOXGYZmk4i4lmKEBNzbHwe+LTawFSj/r/RwU6FRCdbNEzo4zCFKyAdQNf6JAO
+KRskUgMgvetH9yLOCwIDAQABoxowGDAJBgNVHRMEAjAAMAsGA1UdDwQEAwIHgDANBgkqhkiG9w0B
+AQsFAAOCAQEAQvPVtFUzCxoJgb4hTWkmTNucohDjubs6xc2jdbaARjskIQyC+QzTAAQ/cIcgma6G
+EwwCun8U898mBQathkDhug+szuWoJzeboEQtT2ogfQtYHpQB8CFmWLfLAMnin0KV9CWv+AsBKeZP
+gsZu7CIx+ibmDvvmNZl2A/aqz7tT/U22Stv7e99ZKy8jwlFk3SCJ5bSRAeFxavSUJ5sEfx/zfAiJ
+/7pp1/gbw+M8on3jdkmEfg6BZ4GNIo6SkDIKAMgna/fDk2jLwLNckveY/W+R29+I/ZN3/E9TEuUC
+18lX6j53X6BKNK0S82bzVCzNobKCXvBhByvIubYoTGPepZwIKg==
 </X509Certificate>
 <X509Certificate>
 MIIDuzCCAqOgAwIBAgICL+cwDQYJKoZIhvcNAQELBQAwgY8xCzAJBgNVBAYTAktSMRQwEgYDVQQI

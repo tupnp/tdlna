@@ -675,7 +675,7 @@ BrowseContentDirectory(struct upnphttp * h, const char * action)
 	int StartingIndex = 0;
 	int itemCount = 0;
 
-	char encodedFileName[512];
+	char encodedFileName[576];
 
 
 	dlog_print(DLOG_INFO,"tdlna_soap", "★★★  Browse 액션 처리중 ★★★");
@@ -878,7 +878,7 @@ BrowseContentDirectory(struct upnphttp * h, const char * action)
 			char fullPathQury[512];
 			sprintf(fullPathQury, "%s%%", ObjectID+5);
 			DecodeSpecialCharacter(fullPathQury);
-			dlog_print(DLOG_DEBUG, "tdlna_soap", "풀 페스 쿼리: %s", fullPathQury);
+//			dlog_print(DLOG_DEBUG, "tdlna_soap", "풀 페스 쿼리: %s", fullPathQury);
 			itemCount = Meta_Get_from_path(ServiceAppData, fullPathQury, 1, &items);
 		}
 		else //모든 음악 (1$4)
@@ -892,6 +892,8 @@ BrowseContentDirectory(struct upnphttp * h, const char * action)
 			ProcessSpecialCharacter(items[i].artist);
 			ProcessSpecialCharacter(items[i].genre);
 			ProcessSpecialCharacter(items[i].album_name);
+
+//			dlog_print(DLOG_DEBUG, "tdlna_soap", "아이템[%d]: %s", i, encodedFileName);
 
 			//[duration] 시간 형식 /*재생시간 0:08:52.608*/
 			msec = items[i].duration % 1000;

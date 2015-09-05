@@ -195,7 +195,7 @@ bool _media_folder_db(media_folder_h folder,void *data){
 	return true;
 }
 
-void media_Directory(void* data){
+bool media_Directory(void* data){
 	//미디어 파일이 존재하는 폴더 검색
 	filter_h filter = NULL;
 //	media_info_h _media_handle;
@@ -215,6 +215,7 @@ void media_Directory(void* data){
 	check_returnValue(ret);
 	media_content_disconnect();
 	media_filter_destroy(filter);
+	return true;
 }
 
 

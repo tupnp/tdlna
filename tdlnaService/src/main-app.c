@@ -44,10 +44,12 @@ static int _app_process_received_message(bundle *rec_msg, bundle *resp_msg, req_
 static int _on_proxy_client_msg_received_cb(void *data, bundle *const rec_msg);
 //static void _media_search_completed_cb(media_content_error_e error,void* user_data);
 static void get_DeviceID();
+static int sendResponMessage(void *data);
 
 char deviceName[64], shared_folder[512];
 char sharing_folders[FOLDER_COUNT][512];
 int folder_length=0;
+char send_folders[513000] = {'\0',};
 
 app_data *app_create()
 {
@@ -360,7 +362,12 @@ static int _app_execute_operation(app_data *appdata, req_operation operation_typ
 
 		case REQ_OPER_FOLDER:
 			dlog_print(DLOG_INFO, "tdlna", "미디어 정보 얻기");
-			media_Directory(appdata);//미디어 폴더 경로를 sendFolder함수로 전달해줌
+			send_folders[0] = '\0';//초기화
+			if(media_Directory(appdata)){//미디어 폴더 경로를 sendFolder함수로 전달해줌
+				//폴더검색후
+				sendResponMessage(appdata);
+	        	dlog_print(DLOG_INFO,"tdlna","미디어 폴더 전송:%s",send_folders);
+			}
 			resp_key_val = "미디어 폴더 요청";
 
 		break;
@@ -393,25 +400,25 @@ static int _app_execute_operation(app_data *appdata, req_operation operation_typ
         		}
         		if(serviceOn(appdata)){
         			dlog_print(DLOG_INFO,"tdlna","★ 서비스 ON ★ %d", appdata->run_tdlna);
-        			resp_key_val = "실행 성공!";
+        			resp_key_val = "DLNA:ON";
         		}else{
-        			dlog_print(DLOG_INFO,"tdlna","★ 이미 실행중 ★ %d", appdata->run_tdlna);
-        			resp_key_val = "이미 실행중!";
+					dlog_print(DLOG_INFO,"tdlna","★ 실행 실패! ★ %d", appdata->run_tdlna);
+					resp_key_val = "DLNA:Failed";
         		}
         	}
         	else{
-        		resp_key_val = "이미 실행중!";
+        		resp_key_val = "DLNA:RUNNING";
         		dlog_print(DLOG_INFO,"tdlna","★ 이미 실행중 ★ %d", appdata->run_tdlna);
         	}
         	break;
 
         case REQ_OPER_DLNA_APP_OFF://종료 요청시
 			if (!(appdata->run_tdlna)) {// 서비스가 꺼져있는 상태라면
-				resp_key_val = "종료 되어있음!";
+				resp_key_val = "DLNA:OFF";
 				dlog_print(DLOG_INFO, "tdlna", "★ 이미 종료상태★ %d",appdata->run_tdlna);
 			} else {
 				serviceOff(appdata);
-				resp_key_val = "종료 성공!";
+				resp_key_val = "DLNA:OFF";
 				dlog_print(DLOG_INFO, "tdlna", "★ 서비스 OFF ★ %d",appdata->run_tdlna);
 			}
 			break;
@@ -453,11 +460,22 @@ static int _app_execute_operation(app_data *appdata, req_operation operation_typ
     return SVC_RES_OK;
 }
 
+static int sendResponMessage(void *data){
+	app_data *appdata = data;
+	bundle *resp_dir = bundle_create();
+
+	RETVM_IF(bundle_add_str(resp_dir, "folder_path", send_folders) != 0,
+			SVC_RES_FAIL, "Failed to add data by key to bundle");
+	_app_send_response(appdata, resp_dir);
+	bundle_free(resp_dir);
+	return SVC_RES_OK;
+}
+
 int sendFolder(void *data, char* dir){
 	//미디어 폴더(dir)를 웹앱으로 전달
-	app_data *appdata = data;
-	char sendingDirectory[275];
-	int videoCount=0,musicCount=0,imageCount=0;
+//	app_data *appdata = data;
+	char sendingDirectory[512];
+//	int videoCount=0,musicCount=0,imageCount=0;
 	//현재 공유중인 폴더인지 조회
 	if(stateSharingList(dir)){//공유 상태임
 		sprintf(sendingDirectory, "%s%s", "*folder:", dir);
@@ -465,26 +483,30 @@ int sendFolder(void *data, char* dir){
 		sprintf(sendingDirectory, "%s%s", "folder:", dir);
 	}
 	//공유폴더 조회 END
-	dlog_print(DLOG_INFO, "tdlna", "sendFolder(폴더):%s", dir);
-	bundle *resp_dir = bundle_create();
+	strcat(send_folders,sendingDirectory);
+	strcat(send_folders,"|");
+	dlog_print(DLOG_INFO, "tdlna", "send_folders(폴더):%s", send_folders);
 
-	RETVM_IF(bundle_add_str(resp_dir, "folder_path", sendingDirectory) != 0,
-			SVC_RES_FAIL, "Failed to add data by key to bundle");
-	_app_send_response(appdata, resp_dir);
-	bundle_free(resp_dir);
+
+//	bundle *resp_dir = bundle_create();
+//
+//	RETVM_IF(bundle_add_str(resp_dir, "folder_path", sendingDirectory) != 0,
+//			SVC_RES_FAIL, "Failed to add data by key to bundle");
+//	_app_send_response(appdata, resp_dir);
+//	bundle_free(resp_dir);
 	//폴더 전송 END
 
 	//폴더내 컨텐츠 갯수 전달
-	sprintf(sendingDirectory, "%s%s", dir, "/%");
-	dlog_print(DLOG_INFO, "tdlna", "컨텐츠용 sendFolder:%s", sendingDirectory);
-	media_Count(&videoCount,&imageCount,&musicCount,sendingDirectory);
-	sprintf(sendingDirectory, "%d%c%d%c%d", videoCount,'|',imageCount,'|',musicCount);
-	dlog_print(DLOG_INFO, "tdlna", "sendContents(폴더):%s", sendingDirectory);
-	resp_dir = bundle_create();
-	RETVM_IF(bundle_add_str(resp_dir, "folder_contents", sendingDirectory) != 0,
-			SVC_RES_FAIL, "Failed to add data by key to bundle");
-	_app_send_response(appdata, resp_dir);
-	bundle_free(resp_dir);
+//	sprintf(sendingDirectory, "%s%s", dir, "/%");
+//	dlog_print(DLOG_INFO, "tdlna", "컨텐츠용 sendFolder:%s", sendingDirectory);
+//	media_Count(&videoCount,&imageCount,&musicCount,sendingDirectory);
+//	sprintf(sendingDirectory, "%d%c%d%c%d", videoCount,'|',imageCount,'|',musicCount);
+//	dlog_print(DLOG_INFO, "tdlna", "sendContents(폴더):%s", sendingDirectory);
+//	resp_dir = bundle_create();
+//	RETVM_IF(bundle_add_str(resp_dir, "folder_contents", sendingDirectory) != 0,
+//			SVC_RES_FAIL, "Failed to add data by key to bundle");
+//	_app_send_response(appdata, resp_dir);
+//	bundle_free(resp_dir);
 	//컨텐츠 갯수 전달 END
 	return SVC_RES_OK;
 }
