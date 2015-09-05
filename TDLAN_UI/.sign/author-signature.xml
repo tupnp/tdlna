@@ -10,6 +10,14 @@
 <DigestMethod Algorithm="http://www.w3.org/2001/04/xmlenc#sha256"></DigestMethod>
 <DigestValue>zWOxjPoWeE/26FMUypabdhf46xUDn5WhNCHsbKLbibI=</DigestValue>
 </Reference>
+<Reference URI="res%2Fwgt%2Fcheck_checked.png">
+<DigestMethod Algorithm="http://www.w3.org/2001/04/xmlenc#sha256"></DigestMethod>
+<DigestValue>LiD9/1zg8MPRe5G+prz17wd9plhkZ4ICIWyaq0COImQ=</DigestValue>
+</Reference>
+<Reference URI="res%2Fwgt%2Fcheck_empty.png">
+<DigestMethod Algorithm="http://www.w3.org/2001/04/xmlenc#sha256"></DigestMethod>
+<DigestValue>An3VdL/myI5NgEUVpV3qJEN4L+2dOdL3cvMuDgG/GCc=</DigestValue>
+</Reference>
 <Reference URI="res%2Fwgt%2Fconfig.xml">
 <DigestMethod Algorithm="http://www.w3.org/2001/04/xmlenc#sha256"></DigestMethod>
 <DigestValue>GVu3r5aU5K7+Q7jOAb1A+AtdAouDg5LS8+lRWCcwSEQ=</DigestValue>
@@ -24,7 +32,7 @@
 </Reference>
 <Reference URI="res%2Fwgt%2Findex.html">
 <DigestMethod Algorithm="http://www.w3.org/2001/04/xmlenc#sha256"></DigestMethod>
-<DigestValue>6l7ChMaseZrxCfpuKDJN/PIBfUfa/oG/ZlKGABeBgPI=</DigestValue>
+<DigestValue>KLcoMrdGEYrc2Sc1vPlYriUdQbnzhOOvIhObv7vCNtw=</DigestValue>
 </Reference>
 <Reference URI="res%2Fwgt%2Fjs%2Fconfig.js">
 <DigestMethod Algorithm="http://www.w3.org/2001/04/xmlenc#sha256"></DigestMethod>
@@ -32,15 +40,11 @@
 </Reference>
 <Reference URI="res%2Fwgt%2Fjs%2Fmain.js">
 <DigestMethod Algorithm="http://www.w3.org/2001/04/xmlenc#sha256"></DigestMethod>
-<DigestValue>UPiIrHsQan2KZyPJ7NXIm7rtEboPMbbbESseN7RyN1c=</DigestValue>
-</Reference>
-<Reference URI="res%2Fwgt%2Fjs%2Fserver.js">
-<DigestMethod Algorithm="http://www.w3.org/2001/04/xmlenc#sha256"></DigestMethod>
-<DigestValue>MpODtnJmDUoHg3Mx7uwr3Wf4bbZsNEhcn9xDZ96Iy0I=</DigestValue>
+<DigestValue>B6EcwTMNnHhetQWIErwXKEM6Yno0e7R1WXb5tu/x19U=</DigestValue>
 </Reference>
 <Reference URI="res%2Fwgt%2Fjs%2Fsetting.js">
 <DigestMethod Algorithm="http://www.w3.org/2001/04/xmlenc#sha256"></DigestMethod>
-<DigestValue>+OAvTSe6x5z1oqUuJ/LoftE6hjavXGjJg8NagwJLXTs=</DigestValue>
+<DigestValue>VwXeqy+/Qrj8QJPU5U+uip2lP/xdnwmcH/Yc2e4nqVA=</DigestValue>
 </Reference>
 <Reference URI="res%2Fwgt%2Flib%2Fjquery.js">
 <DigestMethod Algorithm="http://www.w3.org/2001/04/xmlenc#sha256"></DigestMethod>
@@ -2190,10 +2194,6 @@
 <DigestMethod Algorithm="http://www.w3.org/2001/04/xmlenc#sha256"></DigestMethod>
 <DigestValue>nfcBG6Dx7NQ9oc4VnPEde0Qk1F2nuz3mkZ4iFU6ZXtg=</DigestValue>
 </Reference>
-<Reference URI="res%2Fwgt%2Fserver.html">
-<DigestMethod Algorithm="http://www.w3.org/2001/04/xmlenc#sha256"></DigestMethod>
-<DigestValue>avc2HPyJEZtiTuPHZWPAgdccp3/wfZXLgTl4tmLK6FU=</DigestValue>
-</Reference>
 <Reference URI="res%2Fwgt%2Fsetting.html">
 <DigestMethod Algorithm="http://www.w3.org/2001/04/xmlenc#sha256"></DigestMethod>
 <DigestValue>myhJtMwuPqVWSw+jON2rFRlOXP0AjAjvXyn66KkzzRA=</DigestValue>
@@ -2215,11 +2215,11 @@
 </Reference>
 </SignedInfo>
 <SignatureValue>
-HBasAV7ufN7zy4mGombzVTtu5tOVIsLMb1QrSbIQCBjF64f5HtNaN/+8MzPh8r/ySdj2XDSU7g7d
-5m8hJj6tsWCHqlhtQ7GAZwzvRaCiJRjZZNfBXCF3vJOXCfuu6oVMTdKGeWQ5g4VIcrQCM1VwGm7R
-e3bntfvCUyI4elcvYNYiTpVd/ZOCg4GthYPw/R37eSicXTgqNosys558lbCJ18g5zUnpvXBur0M6
-G/GncSEnbYG8hJpSsIezfTUoWL8cIG0xOKDI2EwkE+i4pHyvfV5L46Lpt0NI+cjiGG8hJM8yjNT8
-Ca8BHRBrIhHMfiTs6OprT+I4tHnv7QKSUTKE3Q==
+oNnXXd8wFnj5MJSoUdl+tdNaDEbWV1l/PqAoWsKBhCyTinWQ7utLg+haKuGHXeadPOP8iSFZs81V
+fiQ0oo9wd7Y32I7ur/ppDn3wttyrx9UfIAffmjtUemOSsJB5lsF90zd6ylaFtO1A3XNhDSHz3Q4+
+pB7uGVcz6I71guClP9L0NEoyykV9pJ/Fn7Fkp86gQSaC9FCF/w/SkW/rhUbJ812IF8pLB2FayvDp
+0PJa/pvh0QGbn2l5LbJYooEIXMeKhmIgeiDAwez5Ilm7L+o3s1J/BeRttCL8D9ImK2zm061scUqK
+h7sIXZzuc2wExb52GibyOuS5wB/xqnBrkyKjDg==
 </SignatureValue>
 <KeyInfo>
 <X509Data>

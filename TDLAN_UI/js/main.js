@@ -17,9 +17,6 @@ var init = function () {
 
 $(document).bind( 'pageinit', init );
 
-function serverClick() {
-	window.location.href = "server.html";
-}
 function settingClick(){
 	window.location.href = "setting.html";
 }

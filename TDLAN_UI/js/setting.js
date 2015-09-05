@@ -96,6 +96,7 @@ function uncheckListOFF(){
 		console.log(alllist.childNodes[listIndex].getElementsByTagName("input")[0].getAttribute("value"));
 		if(alllist.childNodes[listIndex].getElementsByTagName("input")[0].getAttribute("value") === "true"){
 			alllist.childNodes[listIndex].getElementsByTagName("input")[0].setAttribute("disabled", "disabled");
+			alllist.childNodes[listIndex].getElementsByTagName("a")[0].setAttribute("onclick", "");
 			listIndex++;
 		}
 		else{
@@ -113,18 +114,22 @@ function addFolder(folder_path){
 	 	listArray = document.getElementsByName("checkFolderLi"),
 	 	listIndex = listArray.length,
 	 	imageVal = "false",
-	 	imageSRC = "./lib/tau/mobile/theme/default/images/controls/core_check_bg.png";
+//	 	imageSRC = "./lib/tau/mobile/theme/default/images/controls/core_check_bg.png";
+	 	imageSRC = "./check_empty.png";
 	
 	if(string[0] == "*"){//공유중인것
 		folder_path = string.substring(string.length,1);
-		imageSRC = "./lib/tau/mobile/theme/default/images/controls/core_check_icon.png";
+//		imageSRC = "./lib/tau/mobile/theme/default/images/controls/core_check_icon.png";
+		imageSRC = "./check_checked.png";
 		imageVal = "true";
 	}
+	$('#'+'contentsID'+listIndex).empty();
+	$('#'+'checkInputbox'+listIndex).trigger('click');
 	var str = 
 		'<li id="folderLine'+listIndex+'" name="folderLi" style="overflow: hidden; min-height: 65px;max-height: 75px; max-width: inherit; padding:5pt;"> '+
 		'<input id="checkInputbox'+listIndex+'" type="image" value="'+imageVal+'" src="'+imageSRC+'" class="checkFolder" name="checkFolderLi" onclick="sendShareFolder(this,\''+folder_path+'\')" style="width:20px; padding-right:5px;">'+
 		'<span class="folderTittle" >'+
-		'<a style="max-width: inherit; margin: 0px; padding-top: -10px; padding-bottom: -10px;">'+strArray[strArray.length - 1]+'</a></span>'+
+		'<a style="max-width: inherit; margin: 0px; padding-top: -10px; padding-bottom: -10px;" onclick="$('+'\'#'+'checkInputbox'+listIndex+'\').trigger('+'\'click\''+')">'+strArray[strArray.length - 1]+'</a></span>'+
 		'<br><span class="folderDescribe" style="display:inline-block; text-overflow: ellipsis; width: 340px;	white-space: nowrap; overflow: hidden;">'+
 		'<a style="font-size: 10pt; max-width:310px; max-hight:24px; margin: 0px; padding-bottom: 10px; padding-left: 20px;">'+folder_path +'</a>'+
 		'</span></span></li>';
@@ -138,11 +143,11 @@ function sendShareFolder(chkbox,shareFolder){
 	var check = chkbox.value;
 	if(check=="false"){
 		gRemoteMessagePort.sendMessage([{ key: 'shared', value: folder }],gLocalMessagePort);
-		chkbox.setAttribute( "src", "./lib/tau/mobile/theme/default/images/controls/core_check_icon.png" );
+		chkbox.setAttribute( "src", "./check_checked.png" );
 		chkbox.setAttribute( "value", "true" );
 	}else{
 		gRemoteMessagePort.sendMessage([{ key: 'unshared', value: folder }],gLocalMessagePort);
-		chkbox.setAttribute( "src", "./lib/tau/mobile/theme/default/images/controls/core_check_bg.png" );
+		chkbox.setAttribute( "src", "./check_empty.png" );
 		chkbox.setAttribute( "value", "false" );
 	}
 }
@@ -251,7 +256,7 @@ function checkState(){
 function checkName(name){
 	  // 특수문자 제거
 	console.log("1:"+name);
-	var val = name,str,pattern = /[^(a-zA-Z0-9ㄱ-ㅎㅏ-ㅣ가-힣)]/gi;
+	var val = name,str,pattern = /[^(a-zA-Z0-9ㄱ-ㅎㅏ-ㅣ가-힣\s)]/gi;
 	if(pattern.test(name)){
 		name = val.replace(pattern,"");
 	}
