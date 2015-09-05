@@ -1,2 +1,23 @@
 body {
+	
+}
+.checkFolder {
+	width:20px; padding-right:5px;
+}
+.folderTittle { 
+	/* style="display:inline-block; color:black; text-overflow: ellipsis; width: 320px;	white-space: nowrap; overflow: hidden;" */
+	display:inline-block; 
+	color:black; 
+	text-overflow: ellipsis; 
+	width: 320px;	
+	white-space: nowrap; 
+	overflow: hidden;
+}
+.folderDescribe { 
+	/*style="display:inline-block; text-overflow: ellipsis; width: 340px;	white-space: nowrap; overflow: hidden;"*/
+	display:inline-block; 
+	text-overflow: ellipsis; 
+	width: 340px;	
+	white-space: nowrap; 
+	overflow: hidden;
 }

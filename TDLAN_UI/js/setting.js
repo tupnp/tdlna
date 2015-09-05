@@ -76,14 +76,8 @@ function postNotification(msg){
 
 function changeSwitch(state){
 	'use strict';
-	/*if(state.indexOf("OFF") >= 0){
-		$('#btn-test-div-text').text('S_ON');
-	}else{
-		$('#btn-test-div-text').text('S_OFF');
-	}*/
 	if(state.indexOf("OFF") >= 0){
 		console.log('state: OFF');
-		/*$('#serverSwitch').val('off');*/
 	}else{
 		console.log('state: ON');
 		$('.ui-toggle-switch').trigger('click');
@@ -97,9 +91,9 @@ function removeFolder(){
 function addFolderContents(count_v,count_i,count_a){
 	//폴더내 미디어 갯수를 출력한다 비디오/이미지/오디오
 	'use strict';
-	var listArray = document.getElementsByName("checkFolderLi");
-	var listIndex = listArray.length - 1;
-	var listID = "contentsID"+listIndex;
+	var listArray = document.getElementsByName("checkFolderLi"),
+	 listIndex = listArray.length - 1,
+	 listID = "contentsID"+listIndex;
 	$('#'+'contentsID'+listIndex).empty();
 	
 	var str = '<a class="vedio">v:'+count_v+'</a>'+
@@ -107,6 +101,45 @@ function addFolderContents(count_v,count_i,count_a){
 	'<a class="audio"> m:'+count_a+'</a>';
 	
 	$('#'+'contentsID'+listIndex).append(str);
+}
+
+function buttonOFF(){
+	var alllist = document.getElementById("listParent");   // Get the <ul> element with id="myList"
+	var listArray = document.getElementsByName("checkFolderLi"), listIndex = 0, listCount = 0, nodelete = 0;
+	console.log(listArray.length + " : 라인 갯수");
+	listCount = listArray.length;
+	while(1){
+		console.log(listIndex + " : listIndex");
+		if(listIndex === listArray.length){
+			break;
+		}
+		console.log(alllist.childNodes[listIndex].getElementsByTagName("input")[0].getAttribute("value"));
+		if(alllist.childNodes[listIndex].getElementsByTagName("input")[0].getAttribute("value") === "true"){
+			alllist.childNodes[listIndex].getElementsByTagName("input")[0].setAttribute("disabled", "disabled");
+			listIndex++;
+		}
+		else{
+			alllist.removeChild(alllist.childNodes[listIndex]);	
+		}
+	}
+//	for(listIndex = 0 ; listIndex < listCount ; listIndex++){
+//		console.log('#'+'checkInputbox'+listIndex + "버튼 확인");
+////		if($('#'+'checkInputbox'+listIndex).value == "true"){
+//		if(alllist.childNodes[listIndex].value == "true"){
+//			//체크한것
+////			$('#'+'folderLine'+listIndex).attr("src",".icon.png");
+////			$('#'+'checkInputbox'+listIndex).attr("disabled","true");
+//			nodelete++;
+//			console.log()
+//		}else{
+//			alllist.removeChild(alllist.childNodes[nodelete]);// Remove <ul>'s first child node (index 0)
+//			//체크안한것
+////			$('#'+'folderLine'+listIndex).empty();
+////			$('#'+'checkInputbox'+listIndex).attr("src",".icon.png");
+////			$('#'+'checkInputbox'+listIndex).attr("disabled","true");
+//		}
+//		
+//	}
 }
 
 function addFolder(folder_path){
@@ -126,16 +159,12 @@ function addFolder(folder_path){
 		imageVal = "true";
 	}
 	var str = 
-		'<li name="folderLi" style="overflow: hidden; min-height: 65px;max-height: 75px; max-width: inherit; padding:5pt;" onclick="chkTrigger(\'checkInputbox'+listIndex+'\',\''+folder_path+'\')">'+
-		'<input id="checkInputbox'+listIndex+'" type="image" value="'+imageVal+'" src="'+imageSRC+'" class="checkFolder" name="checkFolderLi" onclick="sendShareFolder(this,\''+folder_path+'\')" style="width:20px; padding-bottom:30px;padding-right:5px;">'+
-		'<span style="display:inline-block; width:310px; color:black;">'+
-		'<span style="display:inline-block; min-width:160px;max-width:160px">'+
+		'<li id="folderLine'+listIndex+'" name="folderLi" style="overflow: hidden; min-height: 65px;max-height: 75px; max-width: inherit; padding:5pt;"> '+
+		'<input id="checkInputbox'+listIndex+'" type="image" value="'+imageVal+'" src="'+imageSRC+'" class="checkFolder" name="checkFolderLi" onclick="sendShareFolder(this,\''+folder_path+'\')" style="width:20px; padding-right:5px;">'+
+		'<span class="folderTittle" >'+
 		'<a style="max-width: inherit; margin: 0px; padding-top: -10px; padding-bottom: -10px;">'+strArray[strArray.length - 1]+'</a></span>'+
-		'<span id="contentsID'+listIndex+'" style="display:inline-block;text-align:right;min-width:150px;max-width:150px;"><a class="vedio">v:1</a>'+
-		'<a class="image"> i:1</a>'+
-		'<a class="audio"> m:1</a></span>'+
-		'<br><span>'+
-		'<a style="font-size: 10pt; max-width: inherit; margin: 0px; padding-top: -10px; padding-bottom: 10px;">'+folder_path +'</a>'+
+		'<br><span class="folderDescribe" style="display:inline-block; text-overflow: ellipsis; width: 340px;	white-space: nowrap; overflow: hidden;">'+
+		'<a style="font-size: 10pt; max-width:310px; max-hight:24px; margin: 0px; padding-bottom: 10px; padding-left: 20px;">'+folder_path +'</a>'+
 		'</span></span></li>';
 	$('#listParent').append(str).listview('refresh');
 }
@@ -182,6 +211,11 @@ function sendCommand(command) {
 //테스트  alert('Sending: ' + command);
 }
 
+function checkFolder(){
+	console.log("미디어 폴더목록 조회");
+	sendCommand('media folder');
+}
+
 function onReceive(data) {
     'use strict';
     var message, i , state;
@@ -216,7 +250,7 @@ function onReceive(data) {
 		}
         else if (data.hasOwnProperty(i) && data[i].key === 'folder_contents') {
 			var contents = data[i].value.split('|');
-			addFolderContents(contents[0], contents[1], contents[2]);
+			//addFolderContents(contents[0], contents[1], contents[2]); -- 폴더별 컨텐츠 갯수 (사용안함)
 		}
         else{
         	alert('hybrid ERROR! : Please retry');
@@ -311,6 +345,7 @@ function onGetAppsContextSuccess(contexts) {
     }
     checkState();//현재 on/off 상태 가져오기
     sendCommand('getDeviceId|');//디바이스 아이디 가져오기
+    checkFolder();
 }
 
 function onGetAppsContextError(err) {
@@ -365,13 +400,16 @@ function serverOn(selectObject){
 	if(state.indexOf('on') >= 0){//전원 On
 		console.log("서버켜");
 		sendCommand('dlna on');	
-	    checkFolder();//미디어 폴더 가져오기
+	    //checkFolder();//미디어 폴더 가져오기 -- 서버 켜기부터 가져오는걸로 변경
 		postNotification("T-DLNA ON");
+		buttonOFF();
 	}else{
 		console.log("서버꺼");
 		sendCommand('dlna off');
-		removeFolder();//폴더목록 삭제
+		//removeFolder();//폴더목록 삭제
 		postNotification("T-DLNA OFF");
+		removeFolder();//기존의 리스트 삭제
+		checkFolder();//폴더 새로 생성
 	}
 		
 }
@@ -417,10 +455,7 @@ function checkName(name){
 		sendCommand(str);
 	}
 }
-function checkFolder(){
-	console.log("미디어 폴더목록 조회");
-	sendCommand('media folder');
-}
+
 function btn_ok(){
 	//device이름 input 태그 표시
 	var name = $('#diviceNameInput').val();
