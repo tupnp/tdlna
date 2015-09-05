@@ -32,11 +32,11 @@ var gServiceAppId = 'org.tizen.tdlnaservice',
 
 function postNotification(msg){
 	/* Application control */
-	var appControl = new tizen.ApplicationControl("http://tizen.org/appcontrol/operation/create_content", null, "image/png", null, null);
+	var appControl = new tizen.ApplicationControl("http://tizen.org/appcontrol/operation/create_content", null, null, null, null);
 	tizen.notification.removeAll();
 	if (msg.indexOf("ON") >= 0) {
 		notificationStarting = true;
-		contentText = "You can play media at DLNA device.";
+		var contentText = "You can play media at DLNA device.";
 		var notificationDict = {
 			/* Notification content */
 			content : contentText,
@@ -53,26 +53,17 @@ function postNotification(msg){
 			 * Application control to be launched when the user selects the
 			 * notification
 			 */
-			appControl : appControl
+			appControl : appControl,
+			detailInfo:"postNotification();"
 		};
 		notification = new tizen.StatusNotification("ONGOING", msg,
 				notificationDict);
 
 		tizen.notification.post(notification);
 	} else {
-//		alert(notification.NotificationId());
-//		tizen.notification.remove(notification.NotificationId());
 		notificationStarting = false;
 		tizen.notification.removeAll();
 	}
-// try {
-//	      // Uses a variable for the previously posted notification.
-//	      notification.content = msg;
-//	      tizen.notification.update(notification);
-//	 } catch (err) {
-//	      console.log (err.name + ": " + err.message);
-//	 }
-	 
 }
 
 function addFolderContents(count_v,count_i,count_a){
@@ -511,7 +502,9 @@ $(document).delegate('#setting', 'pageinit', function onMainPageInit() {
                     console.error('Error: ', exc.message);
                 }
             } else {
-                history.back();
+//                history.back();
+            	location.href = "index.html";
+
             }
         }
     });

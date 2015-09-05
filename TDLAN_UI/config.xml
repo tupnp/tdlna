@@ -1,5 +1,9 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <widget xmlns="http://www.w3.org/ns/widgets" xmlns:tizen="http://tizen.org/ns/widgets" id="http://BSSM/tDLNA" version="1.0.0" viewmodes="maximized">
+    <tizen:app-control>
+        <tizen:src name="setting.html"/>
+        <tizen:operation name="http://tizen.org/appcontrol/operation/create_content"/>
+    </tizen:app-control>
     <tizen:application id="X0OmcPEKY7.TDLNA" package="X0OmcPEKY7" required_version="2.3"/>
     <content src="index.html"/>
     <feature name="http://tizen.org/feature/screen.size.all"/>
@@ -11,5 +15,5 @@
     <tizen:privilege name="http://tizen.org/privilege/application.info"/>
     <tizen:privilege name="http://tizen.org/privilege/notification"/>
     <tizen:profile name="mobile"/>
-    <tizen:setting context-menu="disable"/>
+    <tizen:setting screen-orientation="portrait" context-menu="disable" background-support="disable" encryption="disable" install-location="auto" hwkey-event="enable"/>
 </widget>
