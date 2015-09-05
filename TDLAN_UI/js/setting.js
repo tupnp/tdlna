@@ -27,7 +27,8 @@ var gServiceAppId = 'org.tizen.tdlnaservice',
     isStarting = false,
     notificationStarting = false,
     notification,
-    start;
+    start,
+    isResume = false;
 
 function postNotification(msg){
 	/* Application control */
@@ -79,10 +80,11 @@ function addFolderContents(count_v,count_i,count_a){
 	'use strict';
 	var listArray = document.getElementsByName("checkFolderLi"),
 	 listIndex = listArray.length - 1,
-	 listID = "contentsID"+listIndex;
+//	 listID = "contentsID"+listIndex,
+	 str;
 	$('#'+'contentsID'+listIndex).empty();
 	
-	var str = '<a class="vedio">v:'+count_v+'</a>'+
+	str  = '<a class="vedio">v:'+count_v+'</a>'+
 	'<a class="image"> i:'+count_i+'</a>'+
 	'<a class="audio"> m:'+count_a+'</a>';
 	
@@ -91,8 +93,9 @@ function addFolderContents(count_v,count_i,count_a){
 
 function uncheckListOFF(){
 	console.log("체크리스트만 남김");
-	var alllist = document.getElementById("listParent");   // Get the <ul> element with id="myList"
-	var listArray = document.getElementsByName("checkFolderLi"), listIndex = 0;
+	var alllist = document.getElementById("listParent"),
+	listArray = document.getElementsByName("checkFolderLi"), listIndex = 0;
+	
 	console.log(listArray.length + " : 라인 갯수");
 	while(true){
 		console.log(listIndex + " : listIndex");
@@ -172,7 +175,7 @@ function writeToScreen(message) {
 
 function sendCommand(command) {
     'use strict';
-    if(command != 'undefined'){
+    if(command !== 'undefined'){
     gRemoteMessagePort.sendMessage([{ key: 'command', value: command }],
         gLocalMessagePort);
     }
@@ -187,6 +190,7 @@ function checkFolder(){
 
 function failedStart(){
 	alert("실패!!");
+	$('.ui-toggle-switch').trigger('click');
 }
 
 
@@ -256,8 +260,7 @@ function checkState(){
 function checkName(name){
 	  // 특수문자 제거
 	console.log("1:"+name);
-	var val = name,str;
-	var pattern = /[^(a-zA-Z0-9ㄱ-ㅎㅏ-ㅣ가-힣)]/gi;
+	var val = name,str,pattern = /[^(a-zA-Z0-9ㄱ-ㅎㅏ-ㅣ가-힣)]/gi;
 	if(pattern.test(name)){
 		name = val.replace(pattern,"");
 	}
@@ -298,7 +301,7 @@ function changeSwitch(state){
 
 function onReceive(data) {
     'use strict';
-    var message, i , state, contents;
+    var message, i , state, contents, index_path, path, name;
     for (i in data) {
     	console.log('receved:' + data[i].value);
         if (data.hasOwnProperty(i) && data[i].key === 'server') {
@@ -309,17 +312,14 @@ function onReceive(data) {
 			} else */
 			if (data[i].value === 'STATE:OFF') {// DLNA가 꺼진 상태
 				console.log('STATE OFF 상태');
-				state = 'OFF';
 				sendCommand('getDeviceId|');//디바이스 아이디 가져오기
 			    checkFolder();
+			    isResume = true;
 			} else if (data[i].value === 'STATE:ON') {//  DLNA가 ON 상태
 				console.log('STATE ON 상태');
 				state = 'ON';
 				changeSwitch(state);
 				sendCommand('getDeviceId|');
-//				checkFolder();
-//				buttonOFF();
-//				postNotification("T-DLNA ON");
 			}else if (data[i].value === 'DLNA:ON') {// DLNA : ON 상태로 상태 바뀜
 				console.log('DLNA ON 성공');
 				postNotification("T-DLNA ON");
@@ -328,25 +328,31 @@ function onReceive(data) {
 				console.log('DLNA OFF 성공');
 				postNotification("T-DLNA OFF");
 				checkFolder();
+				isResume = true;
 			}else if (data[i].value.indexOf('tDlnaName/') >= 0) {
 				// alert('DLNA NAME:'+data[i].value);
-				var name = data[i].value.split('/');
+				name = data[i].value.split('/');
 				// 이름 바꾸기
 				$('#diviceName').text(name[1]);
 			}
-			else if(data[i].value.indexOf('failed_start') >= 0){
+			else if(data[i].value.indexOf('DLNA:Failed') >= 0){
 				failedStart();
 			}else if (data[i].value === 'DLNA:RUNNING') {// 이전부터 실행중
 				console.log('이미 실행중');
 				checkFolder();
-				uncheckListOFF();
 			}
 		}
         else if (data.hasOwnProperty(i) && data[i].key === 'folder_path') {
-			message = data[i].value;
-			if (data[i].value.indexOf('folder:') >= 0) {
+        	console.log("폴더수신 : "+data[i].value);
+        	path = data[i].value.split('|');
+        	console.log("폴더갯수 : "+path.length);
+			for(index_path = 0 ; index_path < path.length - 1 ; index_path++){
 //				alert("폴더경로 수신!" + data[i].value);
-				addFolder(message);
+				addFolder(path[index_path]);
+			}
+			//폴더가 다 만든상태
+			if(!isResume){//버튼 클릭이 아님
+				uncheckListOFF();
 			}
 		}
 //        else if (data.hasOwnProperty(i) && data[i].key === 'folder_contents') {
