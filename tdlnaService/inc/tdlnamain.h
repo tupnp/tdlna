@@ -8,4 +8,5 @@ void setDeviceProperty(void* data);
 void* tdlnamain(void* data);
 void* ssdpAlive(void* data);
 int WifiState();
+void cpu_power_lock();
 #endif

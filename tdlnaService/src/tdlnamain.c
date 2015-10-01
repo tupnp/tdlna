@@ -22,6 +22,7 @@
 #include <pthread.h>
 #include <system_settings.h>   //serUUID (getMAC Addr)
 #include <wifi.h>
+#include <device/power.h>
 
 #include "upnphttp.h"
 #include "upnpglobalvars.h"
@@ -130,6 +131,7 @@ void* ssdpAlive(void* data){
 		SendSSDPNotifies(lan_addr[0].snotify, lan_addr[0].str, runtime_vars.port, runtime_vars.notify_interval);
 		//sSleep(ad, runtime_vars.notify_interval - 10 ); // 딜레이를 기존보다 10초 정도 적게 보냄
 		sSleep(ad, 5);
+		cpu_power_lock();
 	}
 
 	dlog_print(DLOG_INFO, "tdlna", "(Thread) GoodBye~ (ssdp) %d", ad->run_tdlna);
@@ -531,4 +533,10 @@ int WifiState()
     {
       return 0;
     }
+}
+
+void cpu_power_lock()
+{
+     int error;
+     error = device_power_request_lock(POWER_LOCK_CPU, 0);
 }

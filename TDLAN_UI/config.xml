@@ -12,7 +12,6 @@
     <name xml:lang="kr">Korea Name</name>
     <name>T-DLNA</name>
     <tizen:privilege name="http://tizen.org/privilege/application.launch"/>
-    <tizen:privilege name="http://tizen.org/privilege/application.info"/>
     <tizen:privilege name="http://tizen.org/privilege/notification"/>
     <tizen:profile name="mobile"/>
     <tizen:setting screen-orientation="portrait" context-menu="disable" background-support="disable" encryption="disable" install-location="auto" hwkey-event="enable"/>
