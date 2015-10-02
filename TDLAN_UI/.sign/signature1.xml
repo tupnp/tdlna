@@ -4,7 +4,7 @@
 <SignatureMethod Algorithm="http://www.w3.org/2001/04/xmldsig-more#rsa-sha256"></SignatureMethod>
 <Reference URI="author-signature.xml">
 <DigestMethod Algorithm="http://www.w3.org/2001/04/xmlenc#sha256"></DigestMethod>
-<DigestValue>xV6ZEKxNQ6evvA7tln8ydo8meIRaPhVaRYhP3PN92Zc=</DigestValue>
+<DigestValue>tYeIE7Ckk3f0u/Mo2asjaEsRSmjENOspMkeFPAPexqw=</DigestValue>
 </Reference>
 <Reference URI="bin%2Ftdlnaservice">
 <DigestMethod Algorithm="http://www.w3.org/2001/04/xmlenc#sha256"></DigestMethod>
@@ -12,7 +12,7 @@
 </Reference>
 <Reference URI="config.xml">
 <DigestMethod Algorithm="http://www.w3.org/2001/04/xmlenc#sha256"></DigestMethod>
-<DigestValue>T2hFLwewd581U4qA8XQ478q1jGYIJ2cyVJ/kax3F6rM=</DigestValue>
+<DigestValue>qhlAGnd5101+4Q1iC1yKadyrYTnl7h9ap76KH8O7BHA=</DigestValue>
 </Reference>
 <Reference URI="res%2Fwgt%2Fcheck_checked.png">
 <DigestMethod Algorithm="http://www.w3.org/2001/04/xmlenc#sha256"></DigestMethod>
@@ -24,7 +24,7 @@
 </Reference>
 <Reference URI="res%2Fwgt%2Fconfig.xml">
 <DigestMethod Algorithm="http://www.w3.org/2001/04/xmlenc#sha256"></DigestMethod>
-<DigestValue>GVu3r5aU5K7+Q7jOAb1A+AtdAouDg5LS8+lRWCcwSEQ=</DigestValue>
+<DigestValue>srIkvgidURAPs6hpzzGTQiu/mb6Ao3anT15G8VkpCTM=</DigestValue>
 </Reference>
 <Reference URI="res%2Fwgt%2Fcss%2Fstyle.css">
 <DigestMethod Algorithm="http://www.w3.org/2001/04/xmlenc#sha256"></DigestMethod>
@@ -48,7 +48,7 @@
 </Reference>
 <Reference URI="res%2Fwgt%2Fjs%2Fsetting.js">
 <DigestMethod Algorithm="http://www.w3.org/2001/04/xmlenc#sha256"></DigestMethod>
-<DigestValue>iJtiG9ohNVvERcgj9fDJDILncU92yjJwMNd047FCvXA=</DigestValue>
+<DigestValue>NguvNq6baj6MpWfJ8m8yGwkd7c64FgxehTmOs+wkK8o=</DigestValue>
 </Reference>
 <Reference URI="res%2Fwgt%2Flib%2Fjquery.js">
 <DigestMethod Algorithm="http://www.w3.org/2001/04/xmlenc#sha256"></DigestMethod>
@@ -2200,7 +2200,7 @@
 </Reference>
 <Reference URI="res%2Fwgt%2Fsetting.html">
 <DigestMethod Algorithm="http://www.w3.org/2001/04/xmlenc#sha256"></DigestMethod>
-<DigestValue>myhJtMwuPqVWSw+jON2rFRlOXP0AjAjvXyn66KkzzRA=</DigestValue>
+<DigestValue>DXQPluWoSVPRN+y+mVtwMc5Isd7wkwPQcBEEYEVfSf0=</DigestValue>
 </Reference>
 <Reference URI="res%2Fwgt%2Fversion.txt">
 <DigestMethod Algorithm="http://www.w3.org/2001/04/xmlenc#sha256"></DigestMethod>
@@ -2219,11 +2219,11 @@
 </Reference>
 </SignedInfo>
 <SignatureValue>
-ovHxUK5dtLeABzY3mw/WA5X3KBsQ015Mn7Ox34fXayeeaErNzBe27sWi4Bt8TcCEONH+ZZ/Nsi+L
-MSLmYM1yQbCW/rG5l8THpK9Ig9QSQYv9dhqUjpIBEQ/WNL8Q2SUvcyBwogodh51iGH995z43PjN2
-Ze/1FrgVv6AJ33O1RaDo8j9WQWONOVdmnh15sL1vdoW6s796ZkUMAM5QdjTdLgoiZpyFRvcWQsis
-n0rIJW1H7C+37ASw8TPYUsfBWQtFJAFhyEm+pQN05ZRvtjqHAhuH3eo8/UKbh0wgZYHiVshaO/Tx
-6DAy31BxTPqtAjaTdOMQTL90S4MrbelBhqymKg==
+SAvNzU6F7343mMBzektPP7xyEz9aNoxjlfa9o9Bk5RC0zvJJUSj0cLNfqK3Ut0ikSSPDIsN9ieAs
+K5RgrPQKHm9b4jOf/T931W73hMrNYb1hTJxhips7lNbgjOZkfX3+Y7FE6vDGdT27Jsxx4JKMl8Am
+62McFmgyg6u5WKvb6ZlRPUd/8XPkes3+XP5IvcrINsYKfmymN2cikKwV1UoQd8/Bh2E2pF38RPDw
+phtSNfWQhTNwMxHaVlfOyNwGxUTZzQf7X8zyyby6n/Y9104/RxVd078irKYNVvNvRAStGfTKClUs
+l3IHa58wv2CQIz5NEXdgFEj/vV1aGzayZHe/KQ==
 </SignatureValue>
 <KeyInfo>
 <X509Data>

@@ -28,7 +28,9 @@ var gServiceAppId = 'X0OmcPEKY7.tdlnaservice',
     notificationStarting = false,
     notification,
     start,
-    isResume = false;
+    isResume = false,
+    deviceName,
+    emptyCheck = true;//선택한 폴더가 없음
 
 function postNotification(msg){
 	/* Application control */
@@ -84,6 +86,7 @@ function addFolderContents(count_v,count_i,count_a){
 
 function uncheckListOFF(){
 	console.log("체크리스트만 남김");
+	emptyCheck = true;
 	var alllist = document.getElementById("listParent"),
 	listArray = document.getElementsByName("checkFolderLi"), listIndex = 0;
 	
@@ -95,6 +98,7 @@ function uncheckListOFF(){
 		}
 		console.log(alllist.childNodes[listIndex].getElementsByTagName("input")[0].getAttribute("value"));
 		if(alllist.childNodes[listIndex].getElementsByTagName("input")[0].getAttribute("value") === "true"){
+			emptyCheck = false;
 			alllist.childNodes[listIndex].getElementsByTagName("input")[0].setAttribute("disabled", "disabled");
 			alllist.childNodes[listIndex].getElementsByTagName("a")[0].setAttribute("onclick", "");
 			listIndex++;
@@ -103,6 +107,7 @@ function uncheckListOFF(){
 			alllist.removeChild(alllist.childNodes[listIndex]);	
 		}
 	}
+	return emptyCheck;
 }
 
 function addFolder(folder_path){
@@ -247,6 +252,7 @@ function changeName(){
 	$('#diviceNameInput').focus();
 	$('#diviceNameInput').val($('#diviceNameInput').val());
 	$('#settingFooter').show();
+	deviceName = name;
 }
 function checkState(){
 	console.log("현재 상태 조회");
@@ -254,18 +260,18 @@ function checkState(){
 }
 
 function checkName(name){
-	  // 특수문자 제거
-	console.log("1:"+name);
-	var val = name,str,pattern = /[^(a-zA-Z0-9ㄱ-ㅎㅏ-ㅣ가-힣\s)]/gi;
-	if(pattern.test(name)){
-		name = val.replace(pattern,"");
-	}
-	console.log("2:"+name);
-	
 	//변경된 이름 전달
 	if(name.length === 0){
 		sendCommand('getDeviceId|&');//빈값입력시
+		return;
 	} else {
+		// 특수문자 제거
+		console.log("1:"+name);
+		var val = name,str,pattern = /[^(a-zA-Z0-9ㄱ-ㅎㅏ-ㅣ가-힣\s)]/gi;
+		if(pattern.test(name)){
+			name = val.replace(pattern,"");
+		}
+		console.log("2:"+name);
 		str = 'getDeviceId|' + name;
 		sendCommand(str);
 	}
@@ -281,7 +287,7 @@ function btn_ok(){
 function btn_cancel(){
 //	alert('취소');
 	$('#diviceNameInput').remove();
-	checkName();
+	$('#diviceName').text(deviceName);
 	$('#settingFooter').css("display","none");
 }
 
@@ -297,7 +303,7 @@ function changeSwitch(state){
 
 function onReceive(data) {
     'use strict';
-    var message, i , state, contents, index_path, path, name;
+    var message, i , state, contents, index_path, path, name, isEmpty = false;
     for (i in data) {
     	console.log('receved:' + data[i].value);
         if (data.hasOwnProperty(i) && data[i].key === 'server') {
@@ -318,8 +324,17 @@ function onReceive(data) {
 				sendCommand('getDeviceId|');
 			}else if (data[i].value === 'DLNA:ON') {// DLNA : ON 상태로 상태 바뀜
 				console.log('DLNA ON 성공');
-				postNotification("T-DLNA ON");
-				uncheckListOFF();
+				isEmpty = uncheckListOFF();//현재 선택한 폴더가 없다면
+				if(isEmpty){
+					console.log('체크한 폴더 없음');
+					changeSwitch('');
+					sendCommand('dlna off');
+					$('#popDiaLog').click();
+					$('#toast').notification('open');					
+//					confirm("공유중인 폴더가 없습니다.\n폴더를 선택해주세요.");		
+				}else{
+					postNotification("T-DLNA ON");
+				}
 			}else if (data[i].value === 'DLNA:OFF') {// DLNA : OFF 로 상태 바뀜
 				console.log('DLNA OFF 성공');
 				postNotification("T-DLNA OFF");
@@ -330,6 +345,7 @@ function onReceive(data) {
 				name = data[i].value.split('/');
 				// 이름 바꾸기
 				$('#diviceName').text(name[1]);
+				deviceName = name[1];
 			}
 			else if(data[i].value.indexOf('DLNA:Failed') >= 0){
 				failedStart();

@@ -57,7 +57,7 @@
 										<div style="font-size: 15pt; color: rgba(0, 80, 179, 1); padding: 5px;">Device name</div>
 										<div id="diviceName"
 											style="font-size: 25pt; color: black; padding: 5px;"
-											onclick="changeName()" >name</div>
+											onclick="changeName(this)" >name</div>
 
 									</div>
 
@@ -77,6 +77,9 @@
 
 				</ul>
 			</div>
+		<div data-role="notification" id="toast" data-type="popup" data-interval="3000">
+			<p>공유중인 폴더가 없습니다. 폴더를 선택해주세요.</p>
+		</div>
 			
 </body>
 </html>
