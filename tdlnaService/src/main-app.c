@@ -31,6 +31,7 @@
 #include <metadata_extractor.h>
 #include <media_content.h>
 
+//T-DLNA Service Application part
 
 // app event callbacks
 static bool _on_create_cb(void *user_data);
