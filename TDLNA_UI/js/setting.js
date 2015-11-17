@@ -14,10 +14,9 @@
  * limitations under the License.
  */
 
-/*jslint devel:true*/
-/*global $, tizen, window, document, history*/
-//X0OmcPEKY7.tdlnaservice 
-//org.tizen.tdlnaservice
+//T-DLNA UI Web Application part
+
+//T-DLNA Service Application part
 var gServiceAppId = 'X0OmcPEKY7.tdlnaservice',
     gServicePortName = 'SAMPLE_PORT',
     gLocalMessagePortName = 'SAMPLE_PORT_REPLY',
